@@ -44,6 +44,7 @@
     "preset": "ts-jest"
   },
   "devDependencies": {
+    "@types/fast-text-encoding": "^1.0.1",
     "@types/jest": "^27.0.1",
     "@types/node": "^16.6.1",
     "jest": "^27.0.6",
@@ -54,7 +55,7 @@
   },
   "dependencies": {
     "base64-arraybuffer": "^1.0.1",
-    "text-encoding-shim": "^1.0.5",
+    "fast-text-encoding": "^1.0.3",
     "tslib": "^2.3.1"
   },
   "author": "Yoshihiro Seki",

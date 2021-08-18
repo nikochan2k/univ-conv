@@ -1,3 +1,4 @@
+import "../polyfill";
 import { Converter, hasBlob, hasBuffer } from "../conv";
 
 const c = new Converter();
