@@ -1,7 +1,7 @@
 export type BinarySource = ArrayBuffer | Uint8Array | Buffer | Blob;
-export type EncodingType = "Base64" | "Text" | "BinaryString";
+export type StringEncoding = "Base64" | "Text" | "BinaryString";
 export interface StringSource {
-  encoding: EncodingType;
+  encoding: StringEncoding;
   value: string;
 }
 export type Source = BinarySource | StringSource;

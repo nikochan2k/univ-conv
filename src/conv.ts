@@ -1,5 +1,5 @@
 import { decode, encode } from "base64-arraybuffer";
-import { EncodingType, Source, StringSource } from "./def";
+import { StringEncoding, Source, StringSource } from "./def";
 
 export const DEFAULT_BUFFER_SIZE = 96 * 1024;
 
@@ -53,7 +53,7 @@ export function isStringSource(src: any): src is StringSource {
   if (typeof src.value !== "string") {
     return false;
   }
-  const encoding = src.encoding as EncodingType;
+  const encoding = src.encoding as StringEncoding;
   return (
     encoding === "Text" || encoding === "Base64" || encoding === "BinaryString"
   );
