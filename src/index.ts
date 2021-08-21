@@ -1,4 +1,3 @@
-import "tslib";
 import "./polyfill";
-export * from "./def";
 export * from "./conv";
+export * from "./def";
