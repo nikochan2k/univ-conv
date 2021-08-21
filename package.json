@@ -1,7 +1,7 @@
 {
   "name": "univ-conv",
   "version": "0.1.2",
-  "description": "Universal Filesystem",
+  "description": "Universal binary and text converter",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "typings": "lib/index.d.ts",
@@ -9,11 +9,13 @@
     "lib"
   ],
   "keywords": [
-    "fs",
-    "filesystem",
-    "storage",
-    "isomorphic",
-    "universal"
+    "converter",
+    "blob",
+    "arraybuffer",
+    "base64",
+    "binarystring",
+    "uint8array",
+    "utf8"
   ],
   "scripts": {
     "clean": "rimraf ./lib",
