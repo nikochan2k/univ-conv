@@ -24,7 +24,10 @@
     "npm-version": "npm version patch",
     "npm-publish": "npm publish",
     "release": "npm-run-all clean compile npm-version npm-publish",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "web-clean": "rimraf ./dist",
+    "web-compile": "webpack",
+    "web-build": "npm-run-all web-clean web-compile"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -48,12 +51,15 @@
   "devDependencies": {
     "@types/fast-text-encoding": "^1.0.1",
     "@types/jest": "^27.0.1",
-    "@types/node": "^16.7.1",
-    "jest": "^27.0.6",
+    "@types/node": "^16.9.1",
+    "jest": "^27.1.1",
     "npm-run-all": "^4.1.5",
     "rimraf": "^3.0.2",
     "ts-jest": "^27.0.5",
-    "typescript": "^4.3.5"
+    "ts-loader": "^9.2.5",
+    "typescript": "^4.4.3",
+    "webpack": "^5.52.1",
+    "webpack-cli": "^4.8.0"
   },
   "dependencies": {
     "base64-arraybuffer": "^1.0.1",
