@@ -59,12 +59,21 @@ export function isStringSource(src: any): src is StringSource {
   );
 }
 
-let hasReadAsArrayBufer = false;
-let hasReadAsBinaryString = false;
+let hasTextOnBlob = false;
+let hasArrayBufferOnBlob = false;
+let hasReadAsArrayBuferOnBlob = false;
+let hasReadAsBinaryStringOnBlob = false;
 if (hasBlob) {
+  if (Blob.prototype.text != null) {
+    hasTextOnBlob = true;
+  }
+  if (Blob.prototype.arrayBuffer != null) {
+    hasArrayBufferOnBlob = true;
+  }
   if (navigator?.product !== "ReactNative") {
-    hasReadAsArrayBufer = FileReader.prototype.readAsArrayBuffer != null;
-    hasReadAsBinaryString = FileReader.prototype.readAsBinaryString != null;
+    hasReadAsArrayBuferOnBlob = FileReader.prototype.readAsArrayBuffer != null;
+    hasReadAsBinaryStringOnBlob =
+      FileReader.prototype.readAsBinaryString != null;
   }
 }
 
@@ -154,6 +163,9 @@ export class Converter {
       if (src.size === 0) {
         return EMPTY_ARRAY_BUFFER;
       }
+      if (hasArrayBufferOnBlob) {
+        return src.arrayBuffer();
+      }
       const u8 = await this.toUint8Array(src);
       return u8.buffer;
     }
@@ -221,8 +233,12 @@ export class Converter {
       }
       return chunks.join("");
     }
-    if (isBlob(src) && hasReadAsBinaryString) {
-      return this._blobToBinaryString(src);
+    if (isBlob(src)) {
+      if (hasReadAsBinaryStringOnBlob) {
+        return this._blobToBinaryString(src);
+      } else if (hasArrayBufferOnBlob) {
+        src = await src.arrayBuffer();
+      }
     }
     if (isStringSource(src)) {
       const value = src.value;
@@ -332,6 +348,9 @@ export class Converter {
       return src.toString("utf8");
     }
     if (isBlob(src)) {
+      if (hasTextOnBlob) {
+        return src.text();
+      }
       return await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onerror = function (ev) {
@@ -370,7 +389,11 @@ export class Converter {
       if (src.size === 0) {
         return EMPTY_U8;
       }
-      if (hasReadAsArrayBufer) {
+      if (hasArrayBufferOnBlob) {
+        const ab = await src.arrayBuffer();
+        return new Uint8Array(ab);
+      }
+      if (hasReadAsArrayBuferOnBlob) {
         return this._blobToUint8Array(src);
       } else {
         return this.toUint8Array({
