@@ -1,5 +1,4 @@
-import "../polyfill";
-import { Converter, hasBlob, hasBuffer } from "../conv";
+import { Converter, hasBlob, hasBuffer } from "../";
 
 const c = new Converter();
 
