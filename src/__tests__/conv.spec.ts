@@ -1,10 +1,8 @@
-import { Converter, hasBlob, hasBuffer } from "../";
-
-const c = new Converter();
+import { converter as c, hasBlob, hasBuffer } from "../";
 
 test("util/binary ArrayBuffer", async () => {
   const expected = "大谷翔平ホームラン";
-  const ab = await c.toArrayBuffer({ value: expected, encoding: "Text" });
+  const ab = await c.toArrayBuffer(expected);
 
   {
     const actual = await c.toText(ab);
@@ -47,7 +45,7 @@ test("util/binary ArrayBuffer", async () => {
 
 test("util/binary Uint8Array", async () => {
   const expected = "大谷翔平ホームラン";
-  const u8 = await c.toUint8Array({ value: expected, encoding: "Text" });
+  const u8 = await c.toUint8Array(expected);
 
   {
     const actual = await c.toText(u8);
@@ -94,7 +92,7 @@ test("util/binary Buffer", async () => {
   }
 
   const expected = "大谷翔平ホームラン";
-  const buffer = await c.toBuffer({ value: expected, encoding: "Text" });
+  const buffer = await c.toBuffer(expected);
 
   {
     const actual = await c.toText(buffer);
@@ -141,7 +139,7 @@ test("util/binary Blob", async () => {
   }
 
   const expected = "大谷翔平ホームラン";
-  const blob = await c.toBlob({ value: expected, encoding: "Text" });
+  const blob = await c.toBlob(expected);
 
   {
     const actual = await c.toText(blob);
@@ -184,7 +182,7 @@ test("util/binary Blob", async () => {
 
 test("util/binary Base64", async () => {
   const expected = "大谷翔平ホームラン";
-  const base64 = await c.toBase64({ value: expected, encoding: "Text" });
+  const base64 = await c.toBase64(expected);
 
   {
     const actual = await c.toText({ value: base64, encoding: "Base64" });
@@ -230,10 +228,7 @@ test("util/binary Base64", async () => {
 
 test("util/binary BinaryString", async () => {
   const expected = "大谷翔平ホームラン";
-  const binaryString = await c.toBinaryString({
-    value: expected,
-    encoding: "Text",
-  });
+  const binaryString = await c.toBinaryString(expected);
 
   {
     const actual = await c.toText({

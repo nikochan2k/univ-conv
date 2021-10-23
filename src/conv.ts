@@ -1,115 +1,35 @@
 import { decode, encode } from "base64-arraybuffer";
-import { StringEncoding, Source, StringSource } from "./def";
+import {
+  hasArrayBufferOnBlob,
+  hasBlob,
+  hasBuffer,
+  hasReadAsArrayBuferOnBlob,
+  hasReadAsBinaryStringOnBlob,
+  hasTextOnBlob,
+  isArrayBuffer,
+  isBlob,
+  isBuffer,
+  isReadable,
+  isReadableStream,
+  isStringSource,
+  isUint8Array,
+} from "./check";
+import { Source } from "./def";
 
 export const DEFAULT_BUFFER_SIZE = 96 * 1024;
-
 export const EMPTY_ARRAY_BUFFER = new ArrayBuffer(0);
-
-export function isArrayBuffer(src: unknown): src is ArrayBuffer {
-  return (
-    src instanceof ArrayBuffer || toString.call(src) === "[object ArrayBuffer]"
-  );
-}
-
 export const EMPTY_U8 = new Uint8Array(0);
-
-export function isUint8Array(src: unknown): src is Uint8Array {
-  return (
-    src instanceof Uint8Array ||
-    toString.call(src) === "[object Uint8Array]" ||
-    toString.call(src) === "[object Buffer]"
-  );
-}
-
-export const hasBuffer = typeof Buffer === "function";
 
 if (hasBuffer) {
   var EMPTY_BUFFER = Buffer.from([]);
 }
 
-export function isBuffer(src: any): src is Buffer {
-  return (
-    hasBuffer &&
-    (src instanceof Buffer || toString.call(src) === "[object Buffer]")
-  );
-}
-
-export const hasBlob = typeof Blob === "function";
-
 if (hasBlob) {
   var EMPTY_BLOB = new Blob([]);
 }
 
-export function isBlob(src: unknown): src is Blob {
-  return (
-    hasBlob && (src instanceof Blob || toString.call(src) === "[object Blob]")
-  );
-}
-
-export function isStringSource(src: any): src is StringSource {
-  if (src == null) {
-    return false;
-  }
-  if (typeof src.value !== "string") {
-    return false;
-  }
-  const encoding = src.encoding as StringEncoding;
-  return (
-    encoding === "Text" || encoding === "Base64" || encoding === "BinaryString"
-  );
-}
-
-let hasTextOnBlob = false;
-let hasArrayBufferOnBlob = false;
-let hasReadAsArrayBuferOnBlob = false;
-let hasReadAsBinaryStringOnBlob = false;
-if (hasBlob) {
-  if (Blob.prototype.text != null) {
-    hasTextOnBlob = true;
-  }
-  if (Blob.prototype.arrayBuffer != null) {
-    hasArrayBufferOnBlob = true;
-  }
-  if (navigator?.product !== "ReactNative") {
-    hasReadAsArrayBuferOnBlob = FileReader.prototype.readAsArrayBuffer != null;
-    hasReadAsBinaryStringOnBlob =
-      FileReader.prototype.readAsBinaryString != null;
-  }
-}
-
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
-
-export function getSize(src: Source) {
-  if (!src) {
-    return 0;
-  }
-  if (isUint8Array(src)) {
-    return src.byteLength;
-  }
-  if (isBlob(src)) {
-    return src.size;
-  }
-  if (isStringSource(src)) {
-    const value = src.value;
-    const encoding = src.encoding;
-    switch (encoding) {
-      case "BinaryString":
-        return value.length;
-      case "Base64":
-        const len = value.length;
-        const baseLen = (len * 3) / 4;
-        let padding = 0;
-        for (let i = len - 1; value[i] === "="; i--) {
-          padding++;
-        }
-        return baseLen - padding;
-      case "Text":
-        return textEncoder.encode(value).byteLength;
-    }
-  }
-  return src.byteLength;
-}
 
 export function dataUrlToBase64(dataUrl: string) {
   const index = dataUrl.indexOf(",");
@@ -117,20 +37,6 @@ export function dataUrlToBase64(dataUrl: string) {
     return dataUrl.substr(index + 1);
   }
   return dataUrl;
-}
-
-export function validateBufferSize(options: { bufferSize?: number }) {
-  if (!options.bufferSize) {
-    options.bufferSize = DEFAULT_BUFFER_SIZE;
-  }
-  const rem = options.bufferSize % 6;
-  if (rem !== 0) {
-    options.bufferSize -= rem;
-    console.info(
-      `"bufferSize" was modified to ${options.bufferSize}. ("bufferSize" must be divisible by 6.)`
-    );
-  }
-  return options.bufferSize;
 }
 
 export interface ConverterOptions {
@@ -144,7 +50,43 @@ export class Converter {
     if (!options) {
       options = {};
     }
-    this.bufferSize = validateBufferSize(options);
+    this.bufferSize = this._validateBufferSize(options);
+  }
+
+  public async getSize(src: Source) {
+    if (!src) {
+      return 0;
+    }
+
+    if (isReadable(src) || isReadableStream(src)) {
+      src = await this.toUint8Array(src);
+    }
+    if (isUint8Array(src)) {
+      return src.byteLength;
+    }
+    if (isBlob(src)) {
+      return src.size;
+    }
+    if (typeof src === "string") {
+      return this._textToUint8Array(src);
+    }
+    if (isStringSource(src)) {
+      const value = src.value;
+      const encoding = src.encoding;
+      switch (encoding) {
+        case "BinaryString":
+          return value.length;
+        case "Base64":
+          const len = value.length;
+          const baseLen = (len * 3) / 4;
+          let padding = 0;
+          for (let i = len - 1; value[i] === "="; i--) {
+            padding++;
+          }
+          return baseLen - padding;
+      }
+    }
+    return src.byteLength;
   }
 
   public async toArrayBuffer(src: Source): Promise<ArrayBuffer> {
@@ -169,7 +111,12 @@ export class Converter {
       const u8 = await this.toUint8Array(src);
       return u8.buffer;
     }
-    if (isStringSource(src)) {
+    if (
+      typeof src === "string" ||
+      isStringSource(src) ||
+      isReadable(src) ||
+      isReadableStream(src)
+    ) {
       const u8 = await this.toUint8Array(src);
       return u8.buffer;
     }
@@ -296,6 +243,20 @@ export class Converter {
     if (isBuffer(src)) {
       return src;
     }
+    if (isReadable(src)) {
+      const readable = src;
+      return new Promise<Buffer>((resolve, reject) => {
+        const buffer = Array<any>();
+        readable.on("data", (chunk) => buffer.push(chunk));
+        readable.on("end", () => resolve(Buffer.concat(buffer)));
+        readable.on("error", (err) =>
+          reject(`error converting stream - ${err}`)
+        );
+      });
+    }
+    if (isReadableStream(src)) {
+      src = await this.toUint8Array(src);
+    }
     if (isUint8Array(src)) {
       if (src.byteLength === 0) {
         return EMPTY_BUFFER;
@@ -308,42 +269,44 @@ export class Converter {
       }
       return Buffer.from(await this.toArrayBuffer(src));
     }
+    if (typeof src === "string") {
+      const u8 = await this._textToUint8Array(src);
+      return Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength);
+    }
     if (isStringSource(src)) {
       const encoding = src.encoding;
-      if (encoding === "Text") {
-        const u8 = await this._textToUint8Array(src.value);
-        return Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength);
-      } else {
-        const value = src.value;
-        const awaitingSize = this.bufferSize;
-        let byteLength = 0;
-        const chunks: Buffer[] = [];
-        for (
-          let start = 0, end = value.length;
-          start < end;
-          start += awaitingSize
-        ) {
-          const str = value.slice(start, start + awaitingSize);
-          const chunk = await (encoding === "Base64"
-            ? this._base64ToBuffer(str)
-            : this._binaryStringToBuffer(str));
-          byteLength += chunk.byteLength;
-          chunks.push(chunk);
-        }
-        let offset = 0;
-        const buffer = Buffer.alloc(byteLength);
-        for (const chunk of chunks) {
-          buffer.set(chunk, offset);
-          offset += chunk.byteLength;
-        }
-        return buffer;
+      const value = src.value;
+      const awaitingSize = this.bufferSize;
+      let byteLength = 0;
+      const chunks: Buffer[] = [];
+      for (
+        let start = 0, end = value.length;
+        start < end;
+        start += awaitingSize
+      ) {
+        const str = value.slice(start, start + awaitingSize);
+        const chunk = await (encoding === "Base64"
+          ? this._base64ToBuffer(str)
+          : this._binaryStringToBuffer(str));
+        byteLength += chunk.byteLength;
+        chunks.push(chunk);
       }
+      let offset = 0;
+      const buffer = Buffer.alloc(byteLength);
+      for (const chunk of chunks) {
+        buffer.set(chunk, offset);
+        offset += chunk.byteLength;
+      }
+      return buffer;
     }
 
     return Buffer.from(src);
   }
 
   public async toText(src: Source): Promise<string> {
+    if (typeof src === "string") {
+      return src;
+    }
     if (isBuffer(src)) {
       return src.toString("utf8");
     }
@@ -361,16 +324,6 @@ export class Converter {
         };
         reader.readAsText(src);
       });
-    }
-    if (isStringSource(src)) {
-      const value = src.value;
-      if (!value) {
-        return "";
-      }
-      const encoding = src.encoding;
-      if (encoding === "Text") {
-        return value;
-      }
     }
 
     const u8 = await this.toUint8Array(src);
@@ -402,6 +355,25 @@ export class Converter {
         });
       }
     }
+    if (isReadableStream(src)) {
+      const reader = src.getReader();
+      const u8 = new Uint8Array(0);
+      let offset = 0;
+      let res = await reader.read();
+      while (!res.done) {
+        const chunk = await this.toUint8Array(res.value);
+        u8.set(chunk, offset);
+        offset += chunk.byteLength;
+        res = await reader.read();
+      }
+      return u8;
+    }
+    if (isReadable(src)) {
+      return this.toBuffer(src);
+    }
+    if (typeof src === "string") {
+      return await this._textToUint8Array(src);
+    }
     if (isStringSource(src)) {
       const value = src.value;
       if (!value) {
@@ -409,9 +381,7 @@ export class Converter {
       }
 
       const encoding = src.encoding;
-      if (encoding === "Text") {
-        return await this._textToUint8Array(value);
-      } else if (encoding === "Base64") {
+      if (encoding === "Base64") {
         return new Uint8Array(await this._base64ToArrayBuffer(value));
       } else {
         return Uint8Array.from(value.split(""), (e) => e.charCodeAt(0));
@@ -539,4 +509,20 @@ export class Converter {
   private async _textToUint8Array(text: string) {
     return textEncoder.encode(text);
   }
+
+  private _validateBufferSize(options: { bufferSize?: number }) {
+    if (!options.bufferSize) {
+      options.bufferSize = DEFAULT_BUFFER_SIZE;
+    }
+    const rem = options.bufferSize % 6;
+    if (rem !== 0) {
+      options.bufferSize -= rem;
+      console.info(
+        `"bufferSize" was modified to ${options.bufferSize}. ("bufferSize" must be divisible by 6.)`
+      );
+    }
+    return options.bufferSize;
+  }
 }
+
+export const converter = new Converter();
