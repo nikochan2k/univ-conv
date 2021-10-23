@@ -1,10 +1,14 @@
 import { decode, encode } from "base64-arraybuffer";
+import { Readable } from "stream";
+import { hasReadable, isBrowser } from ".";
 import {
   hasArrayBufferOnBlob,
   hasBlob,
   hasBuffer,
+  hasReadableStream,
   hasReadAsArrayBuferOnBlob,
   hasReadAsBinaryStringOnBlob,
+  hasStreamOnBlob,
   hasTextOnBlob,
   isArrayBuffer,
   isBlob,
@@ -23,9 +27,28 @@ export const EMPTY_U8 = new Uint8Array(0);
 if (hasBuffer) {
   var EMPTY_BUFFER = Buffer.from([]);
 }
-
 if (hasBlob) {
   var EMPTY_BLOB = new Blob([]);
+}
+if (hasReadableStream) {
+  var EMPTY_READABLE_STREAM = new ReadableStream({
+    start: (converter) => {
+      if (hasBlob) {
+        converter.enqueue(EMPTY_BLOB);
+      } else {
+        converter.enqueue(EMPTY_U8);
+      }
+      converter.close();
+    },
+  });
+}
+if (hasReadable) {
+  var EMPTY_READABLE = new Readable({
+    read() {
+      this.push(EMPTY_BUFFER);
+      this.push(null);
+    },
+  });
 }
 
 const textEncoder = new TextEncoder();
@@ -246,12 +269,10 @@ export class Converter {
     if (isReadable(src)) {
       const readable = src;
       return new Promise<Buffer>((resolve, reject) => {
-        const buffer = Array<any>();
+        const buffer: Uint8Array[] = [];
         readable.on("data", (chunk) => buffer.push(chunk));
         readable.on("end", () => resolve(Buffer.concat(buffer)));
-        readable.on("error", (err) =>
-          reject(`error converting stream - ${err}`)
-        );
+        readable.on("error", (err) => reject(err));
       });
     }
     if (isReadableStream(src)) {
@@ -301,6 +322,145 @@ export class Converter {
     }
 
     return Buffer.from(src);
+  }
+
+  public async toReadable(src: Source): Promise<Readable> {
+    if (!hasReadable) {
+      throw new Error("Readable is not supported");
+    }
+    if (!src) {
+      return EMPTY_READABLE;
+    }
+
+    if (isReadable(src)) {
+      return src;
+    }
+    if (isReadableStream(src)) {
+      const reader = src.getReader();
+      return new Readable({
+        read() {
+          reader
+            .read()
+            .then(({ value, done }) => {
+              this.push(done ? null : value);
+            })
+            .catch((e) => {
+              this.emit("error", e);
+              this.push(null);
+            });
+        },
+      });
+    }
+
+    const buffer = await this.toBuffer(src);
+    const bufferSize = this.bufferSize;
+    const length = buffer.byteLength;
+    let begin = 0;
+    return new Readable({
+      read: async function () {
+        do {
+          const chunk = await new Promise<any>((resolve, reject) => {
+            try {
+              const end = begin + bufferSize;
+              const sliced = buffer.slice(begin, end);
+              begin += sliced.byteLength;
+              resolve(sliced);
+            } catch (err) {
+              this.push(null);
+              reject(err);
+            }
+          });
+          this.push(chunk);
+        } while (begin < length);
+        this.push(null);
+      },
+    });
+  }
+
+  public async toReadableStream(src: Source): Promise<ReadableStream<any>> {
+    if (!hasReadableStream) {
+      throw new Error("ReadableStream is not supported");
+    }
+    if (!src) {
+      return EMPTY_READABLE_STREAM;
+    }
+
+    if (isReadableStream(src)) {
+      return src;
+    }
+    if (isReadable(src)) {
+      const readable = src;
+      return new ReadableStream({
+        start: (converter) => {
+          readable.on("error", (err) => {
+            throw err;
+          });
+          readable.on("data", (chunk) => {
+            converter.enqueue(chunk);
+          });
+          readable.on("end", () => {
+            converter.close();
+          });
+        },
+        cancel: () => {
+          readable.destroy();
+        },
+      });
+    }
+    if (isBlob(src)) {
+      if (hasStreamOnBlob) {
+        return src.stream() as any;
+      }
+    }
+
+    const bufferSize = this.bufferSize;
+    if (hasBlob && isBrowser) {
+      const blob = await this.toBlob(src);
+      const size = blob.size;
+      let begin = 0;
+      return new ReadableStream({
+        start: async (converter) => {
+          do {
+            const chunk = await new Promise<any>((resolve, reject) => {
+              try {
+                const end = begin + bufferSize;
+                const sliced = blob.slice(begin, end);
+                begin += sliced.size;
+                resolve(sliced);
+              } catch (err) {
+                converter.close();
+                reject(err);
+              }
+            });
+            converter.enqueue(chunk);
+          } while (begin < size);
+          converter.close();
+        },
+      });
+    }
+
+    const u8 = await this.toUint8Array(src);
+    const length = u8.byteLength;
+    let begin = 0;
+    return new ReadableStream({
+      start: async (converter) => {
+        do {
+          const chunk = await new Promise<any>((resolve, reject) => {
+            try {
+              const end = begin + bufferSize;
+              const sliced = u8.slice(begin, end);
+              begin += sliced.byteLength;
+              resolve(sliced);
+            } catch (err) {
+              converter.close();
+              reject(err);
+            }
+          });
+          converter.enqueue(chunk);
+        } while (begin < length);
+        converter.close();
+      },
+    });
   }
 
   public async toText(src: Source): Promise<string> {
@@ -387,7 +547,9 @@ export class Converter {
         return Uint8Array.from(value.split(""), (e) => e.charCodeAt(0));
       }
     }
-
+    if (hasBuffer && !isBrowser) {
+      return this.toBuffer(src);
+    }
     return new Uint8Array(src);
   }
 
@@ -461,11 +623,11 @@ export class Converter {
       return EMPTY_U8;
     }
 
-    const awaitingSize = this.bufferSize;
+    const bufferSize = this.bufferSize;
     let byteLength = 0;
     const chunks: ArrayBuffer[] = [];
-    for (let start = 0, end = blob.size; start < end; start += awaitingSize) {
-      const blobChunk = blob.slice(start, start + awaitingSize);
+    for (let start = 0, end = blob.size; start < end; start += bufferSize) {
+      const blobChunk = blob.slice(start, start + bufferSize);
       const chunk = await new Promise<ArrayBuffer>((resolve, reject) => {
         const reader = new FileReader();
         reader.onerror = (ev) => {

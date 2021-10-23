@@ -1,9 +1,10 @@
 import { Readable } from "stream";
 import { StringEncoding, StringSource } from "./def";
 
+export const hasReadableStream = typeof ReadableStream === "function";
 export const hasBuffer = typeof Buffer === "function";
-
 export const hasBlob = typeof Blob === "function";
+export const hasReadable = hasBuffer;
 
 export function isBlob(src: unknown): src is Blob {
   return (
@@ -43,7 +44,7 @@ export function isBuffer(src: any): src is Buffer {
 export function isReadable(stream: any): stream is Readable {
   return (
     stream &&
-    hasBuffer &&
+    hasReadableStream &&
     typeof stream.pipe === "function" &&
     typeof stream._read === "function" &&
     typeof stream._readableState === "object"
@@ -62,12 +63,16 @@ export function isStringSource(src: any): src is StringSource {
 }
 
 export let hasTextOnBlob = false;
+export let hasStreamOnBlob = false;
 export let hasArrayBufferOnBlob = false;
 export let hasReadAsArrayBuferOnBlob = false;
 export let hasReadAsBinaryStringOnBlob = false;
 if (hasBlob) {
   if (Blob.prototype.text != null) {
     hasTextOnBlob = true;
+  }
+  if (Blob.prototype.stream != null) {
+    hasStreamOnBlob = true;
   }
   if (Blob.prototype.arrayBuffer != null) {
     hasArrayBufferOnBlob = true;
@@ -78,3 +83,6 @@ if (hasBlob) {
       FileReader.prototype.readAsBinaryString != null;
   }
 }
+
+export const isBrowser = () =>
+  ![typeof window, typeof document].includes("undefined");
