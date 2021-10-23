@@ -1,6 +1,6 @@
 import { decode, encode } from "base64-arraybuffer";
 import { Readable } from "stream";
-import { hasReadable, isBrowser } from ".";
+import { hasReadable, isBrowser, isWritable, StreamDestination } from ".";
 import {
   hasArrayBufferOnBlob,
   hasBlob,
@@ -110,6 +110,41 @@ export class Converter {
       }
     }
     return src.byteLength;
+  }
+
+  public async pipe(src: Source, writable: StreamDestination) {
+    if (isWritable(writable)) {
+      const readable = await this.toReadable(src);
+      await new Promise<void>((resolve, reject) => {
+        readable.on("error", (err) => {
+          reject(err);
+        });
+        writable.on("error", (err) => {
+          reject(err);
+        });
+        writable.on("close", () => {
+          resolve();
+        });
+        readable.pipe(writable);
+      });
+    } else {
+      const readable = await this.toReadableStream(src);
+      if (typeof readable.pipeTo === "function") {
+        await readable.pipeTo(writable);
+      } else {
+        const reader = readable.getReader();
+        const writer = writable.getWriter();
+        let done = false;
+        do {
+          const result = await reader.read();
+          if (result.value) {
+            await writer.write(result.value);
+          }
+          done = result.done;
+        } while (!done);
+        await writer.close();
+      }
+    }
   }
 
   public async toArrayBuffer(src: Source): Promise<ArrayBuffer> {

@@ -1,10 +1,12 @@
-import { Readable } from "stream";
+import { Readable, Writable } from "stream";
 import { StringEncoding, StringSource } from "./def";
 
 export const hasReadableStream = typeof ReadableStream === "function";
+export const hasWritableStream = typeof WritableStream === "function";
 export const hasBuffer = typeof Buffer === "function";
 export const hasBlob = typeof Blob === "function";
-export const hasReadable = hasBuffer;
+export const hasReadable = typeof Readable === "function";
+export const hasWritable = typeof Writable === "function";
 
 export function isBlob(src: unknown): src is Blob {
   return (
@@ -28,9 +30,19 @@ export function isUint8Array(src: unknown): src is Uint8Array {
 
 export function isReadableStream(stream: any): stream is ReadableStream<any> {
   return (
+    hasReadableStream &&
     stream &&
     typeof stream.getReader === "function" &&
     typeof stream.cancel === "function"
+  );
+}
+
+export function isWritableStream(stream: any): stream is WritableStream<any> {
+  return (
+    hasWritableStream &&
+    stream &&
+    typeof stream.getWriter === "function" &&
+    typeof stream.close === "function"
   );
 }
 
@@ -44,10 +56,18 @@ export function isBuffer(src: any): src is Buffer {
 export function isReadable(stream: any): stream is Readable {
   return (
     stream &&
-    hasReadableStream &&
+    hasReadable &&
     typeof stream.pipe === "function" &&
-    typeof stream._read === "function" &&
-    typeof stream._readableState === "object"
+    typeof stream._read === "function"
+  );
+}
+
+export function isWritable(stream: any): stream is Writable {
+  return (
+    stream &&
+    hasWritable &&
+    typeof stream.pipe === "function" &&
+    typeof stream._write === "function"
   );
 }
 
