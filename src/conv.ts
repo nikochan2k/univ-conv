@@ -24,8 +24,10 @@ import {
   isStringSource,
   isUint8Array,
   isWritable,
+  handleReadableStream,
 } from "./util";
 import { Source, StreamDestination } from "./def";
+import { handleReadable } from ".";
 
 export const DEFAULT_BUFFER_SIZE = 96 * 1024;
 
@@ -105,16 +107,10 @@ export class Converter {
       if (typeof readable.pipeTo === "function") {
         await readable.pipeTo(writable);
       } else {
-        const reader = readable.getReader();
         const writer = writable.getWriter();
-        let done = false;
-        do {
-          const result = await reader.read();
-          if (result.value) {
-            await writer.write(result.value);
-          }
-          done = result.done;
-        } while (!done);
+        await handleReadableStream(readable, async (chunk) => {
+          await writer.write(chunk);
+        });
         await writer.close();
       }
     }
@@ -254,16 +250,11 @@ export class Converter {
       return src;
     }
     if (isReadable(src)) {
-      const readable = src;
-      if (readable.destroyed) {
-        return EMPTY_BUFFER;
-      }
-      return new Promise<Buffer>((resolve, reject) => {
-        const chunks: Uint8Array[] = [];
-        readable.on("data", (chunk) => chunks.push(chunk));
-        readable.on("end", () => resolve(Buffer.concat(chunks)));
-        readable.on("error", (err) => reject(err));
+      const chunks: Uint8Array[] = [];
+      await handleReadable(src, async (chunk) => {
+        chunks.push(chunk);
       });
+      return Buffer.concat(chunks);
     }
     if (isReadableStream(src)) {
       src = await this.toUint8Array(src);
@@ -500,17 +491,13 @@ export class Converter {
       }
     }
     if (isReadableStream(src)) {
-      const reader = src.getReader();
       const chunks: Uint8Array[] = [];
       let length = 0;
-      let res = await reader.read();
-      while (!res.done) {
-        const chunk = await this.toUint8Array(res.value);
+      await handleReadableStream(src, async (data) => {
+        const chunk = await this.toUint8Array(data);
         chunks.push(chunk);
         length += chunk.byteLength;
-        res = await reader.read();
-      }
-
+      });
       const u8 = new Uint8Array(length);
       let offset = 0;
       for (const chunk of chunks) {
