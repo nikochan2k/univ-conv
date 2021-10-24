@@ -201,7 +201,7 @@ export async function handleReadable(
   }
   return new Promise<void>((resolve, reject) => {
     readable.on("error", (e) => reject(e));
-    readable.on("end", () => resolve());
+    readable.on("close", () => resolve());
     readable.on("data", (chunk) => onData(chunk));
   });
 }

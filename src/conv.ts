@@ -106,7 +106,7 @@ export class Converter {
       await new Promise<void>((resolve, reject) => {
         readable.on("error", (err) => reject(err));
         writable.on("error", (err) => reject(err));
-        writable.on("finish", () => resolve());
+        writable.on("close", () => resolve());
         readable.pipe(writable);
       });
     } else {
@@ -415,7 +415,7 @@ export class Converter {
             throw err;
           });
           readable.on("data", (chunk) => converter.enqueue(chunk));
-          readable.on("end", () => converter.close());
+          readable.on("close", () => converter.close());
         },
         cancel: () => readable.destroy(),
       });
