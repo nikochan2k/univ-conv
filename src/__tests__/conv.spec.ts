@@ -1,5 +1,5 @@
 import { converter as c, hasBlob, hasBuffer } from "../";
-import { hasReadable, hasReadableStream } from "../check";
+import { hasReadable, hasReadableStream } from "../util";
 
 it("util/binary ArrayBuffer", async () => {
   const expected = "大谷翔平ホームラン";

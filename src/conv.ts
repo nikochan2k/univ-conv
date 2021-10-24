@@ -24,7 +24,7 @@ import {
   isStringSource,
   isUint8Array,
   isWritable,
-} from "./check";
+} from "./util";
 import { Source, StreamDestination } from "./def";
 
 export const DEFAULT_BUFFER_SIZE = 96 * 1024;
