@@ -45,7 +45,7 @@ export interface ConverterOptions {
 }
 
 export class Converter {
-  private bufferSize: number;
+  public bufferSize: number;
 
   constructor(options?: ConverterOptions) {
     if (!options) {
