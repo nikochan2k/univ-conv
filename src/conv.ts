@@ -152,12 +152,6 @@ export class Converter {
       return EMPTY_ARRAY_BUFFER;
     }
 
-    if (isUint8Array(src)) {
-      if (src.byteLength === 0) {
-        return EMPTY_ARRAY_BUFFER;
-      }
-      return src.buffer.slice(src.byteOffset, src.byteOffset + src.byteLength);
-    }
     if (isBlob(src)) {
       if (src.size === 0) {
         return EMPTY_ARRAY_BUFFER;
@@ -165,8 +159,7 @@ export class Converter {
       if (hasArrayBufferOnBlob) {
         return src.arrayBuffer();
       }
-      const u8 = await this.toUint8Array(src);
-      return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
+      src = await this.toUint8Array(src);
     }
     if (
       typeof src === "string" ||
@@ -174,8 +167,13 @@ export class Converter {
       isReadable(src) ||
       isReadableStream(src)
     ) {
-      const u8 = await this.toUint8Array(src);
-      return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
+      src = await this.toUint8Array(src);
+    }
+    if (isUint8Array(src)) {
+      if (src.byteLength === 0) {
+        return EMPTY_ARRAY_BUFFER;
+      }
+      return src.buffer.slice(src.byteOffset, src.byteOffset + src.byteLength);
     }
 
     return src;
@@ -190,10 +188,7 @@ export class Converter {
         start < end;
         start += bufferSize
       ) {
-        const buf = src.slice(
-          start,
-          end < bufferSize ? end : start + bufferSize
-        );
+        const buf = src.slice(start, bufferSize);
         const chunk = await this._bufferToBase64(buf);
         chunks.push(chunk);
       }
@@ -214,10 +209,8 @@ export class Converter {
     const u8 = await this.toUint8Array(src);
     const chunks: string[] = [];
     for (let start = 0, end = u8.byteLength; start < end; start += bufferSize) {
-      const buf = u8.buffer.slice(
-        start,
-        end < bufferSize ? end : start + bufferSize
-      );
+      const sliced = u8.slice(start, bufferSize);
+      const buf = await this.toArrayBuffer(sliced);
       const chunk = await this._arrayBufferToBase64(buf);
       chunks.push(chunk);
     }
@@ -225,15 +218,15 @@ export class Converter {
   }
 
   public async toBinaryString(src: Source): Promise<string> {
-    const awaitingSize = this.bufferSize;
+    const bufferSize = this.bufferSize;
     if (isBuffer(src)) {
       const chunks: string[] = [];
       for (
         let start = 0, end = src.byteLength;
         start < end;
-        start += awaitingSize
+        start += bufferSize
       ) {
-        const buf = src.slice(start, start + awaitingSize);
+        const buf = src.slice(start, start + bufferSize);
         const chunk = await this._bufferToBinaryString(buf);
         chunks.push(chunk);
       }
@@ -258,12 +251,8 @@ export class Converter {
 
     const u8 = await this.toUint8Array(src);
     const chunks: string[] = [];
-    for (
-      let begin = 0, end = u8.byteLength;
-      begin < end;
-      begin += awaitingSize
-    ) {
-      const u8Chunk = u8.slice(begin, begin + awaitingSize);
+    for (let start = 0, end = u8.byteLength; start < end; start += bufferSize) {
+      const u8Chunk = u8.slice(start, start + bufferSize);
       const chunk = await this._uint8ArrayToBinaryString(u8Chunk);
       chunks.push(chunk);
     }
@@ -336,15 +325,12 @@ export class Converter {
     if (isStringSource(src)) {
       const encoding = src.encoding;
       const value = src.value;
-      const awaitingSize = this.bufferSize;
+      const end = value.length;
+      const bufferSize = this.bufferSize;
       let byteLength = 0;
       const chunks: Buffer[] = [];
-      for (
-        let start = 0, end = value.length;
-        start < end;
-        start += awaitingSize
-      ) {
-        const str = value.slice(start, start + awaitingSize);
+      for (let start = 0; start < end; start += bufferSize) {
+        const str = value.slice(start, start + bufferSize);
         const chunk = await (encoding === "Base64"
           ? this._base64ToBuffer(str)
           : this._binaryStringToBuffer(str));
@@ -397,15 +383,15 @@ export class Converter {
     const buffer = await this.toBuffer(src);
     const bufferSize = this.bufferSize;
     const length = buffer.byteLength;
-    let begin = 0;
+    let start = 0;
     return new Readable({
       read: async function () {
         do {
           const chunk = await new Promise<any>((resolve, reject) => {
             try {
-              const end = begin + bufferSize;
-              const sliced = buffer.slice(begin, end);
-              begin += sliced.byteLength;
+              const end = start + bufferSize;
+              const sliced = buffer.slice(start, end);
+              start += sliced.byteLength;
               resolve(sliced);
             } catch (err) {
               this.push(null);
@@ -413,7 +399,7 @@ export class Converter {
             }
           });
           this.push(chunk);
-        } while (begin < length);
+        } while (start < length);
         this.push(null);
       },
     });
@@ -462,15 +448,15 @@ export class Converter {
     if (hasBlob && isBrowser) {
       const blob = await this.toBlob(src);
       const size = blob.size;
-      let begin = 0;
+      let start = 0;
       return new ReadableStream({
         start: async (converter) => {
           do {
             const chunk = await new Promise<any>((resolve, reject) => {
               try {
-                const end = begin + bufferSize;
-                const sliced = blob.slice(begin, end);
-                begin += sliced.size;
+                const end = start + bufferSize;
+                const sliced = blob.slice(start, end);
+                start += sliced.size;
                 resolve(sliced);
               } catch (err) {
                 converter.close();
@@ -478,7 +464,7 @@ export class Converter {
               }
             });
             converter.enqueue(chunk);
-          } while (begin < size);
+          } while (start < size);
           converter.close();
         },
       });
@@ -486,15 +472,15 @@ export class Converter {
 
     const u8 = await this.toUint8Array(src);
     const length = u8.byteLength;
-    let begin = 0;
+    let start = 0;
     return new ReadableStream({
       start: async (converter) => {
         do {
           const chunk = await new Promise<any>((resolve, reject) => {
             try {
-              const end = begin + bufferSize;
-              const sliced = u8.slice(begin, end);
-              begin += sliced.byteLength;
+              const end = start + bufferSize;
+              const sliced = u8.slice(start, end);
+              start += sliced.byteLength;
               resolve(sliced);
             } catch (err) {
               converter.close();
@@ -502,7 +488,7 @@ export class Converter {
             }
           });
           converter.enqueue(chunk);
-        } while (begin < length);
+        } while (start < length);
         converter.close();
       },
     });
@@ -625,10 +611,10 @@ export class Converter {
       return "";
     }
 
-    const awaitingSize = this.bufferSize;
+    const bufferSize = this.bufferSize;
     const chunks: string[] = [];
-    for (let start = 0, end = blob.size; start < end; start += awaitingSize) {
-      const blobChunk = blob.slice(start, start + awaitingSize);
+    for (let start = 0, end = blob.size; start < end; start += bufferSize) {
+      const blobChunk = blob.slice(start, start + bufferSize);
       const chunk = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onerror = function (ev) {
@@ -650,10 +636,10 @@ export class Converter {
       return "";
     }
 
-    const awaitingSize = this.bufferSize;
+    const bufferSize = this.bufferSize;
     const chunks: string[] = [];
-    for (let start = 0, end = blob.size; start < end; start += awaitingSize) {
-      const blobChunk = blob.slice(start, start + awaitingSize);
+    for (let start = 0, end = blob.size; start < end; start += bufferSize) {
+      const blobChunk = blob.slice(start, start + bufferSize);
       const chunk = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onerror = function (ev) {
