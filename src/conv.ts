@@ -10,7 +10,6 @@ import {
   hasReadAsBinaryStringOnBlob,
   hasStreamOnBlob,
   hasTextOnBlob,
-  isArrayBuffer,
   isBlob,
   isBuffer,
   isReadable,
@@ -116,15 +115,9 @@ export class Converter {
     if (isWritable(writable)) {
       const readable = await this.toReadable(src);
       await new Promise<void>((resolve, reject) => {
-        readable.on("error", (err) => {
-          reject(err);
-        });
-        writable.on("error", (err) => {
-          reject(err);
-        });
-        writable.on("close", () => {
-          resolve();
-        });
+        readable.on("error", (err) => reject(err));
+        writable.on("error", (err) => reject(err));
+        writable.on("finish", () => resolve());
         readable.pipe(writable);
       });
     } else {
@@ -160,8 +153,7 @@ export class Converter {
         return src.arrayBuffer();
       }
       src = await this.toUint8Array(src);
-    }
-    if (
+    } else if (
       typeof src === "string" ||
       isStringSource(src) ||
       isReadable(src) ||
@@ -183,11 +175,8 @@ export class Converter {
     const bufferSize = this.bufferSize;
     if (isBuffer(src)) {
       const chunks: string[] = [];
-      for (
-        let start = 0, end = src.byteLength;
-        start < end;
-        start += bufferSize
-      ) {
+      const end = src.byteLength;
+      for (let start = 0; start < end; start += bufferSize) {
         const buf = src.slice(start, bufferSize);
         const chunk = await this._bufferToBase64(buf);
         chunks.push(chunk);
@@ -221,11 +210,8 @@ export class Converter {
     const bufferSize = this.bufferSize;
     if (isBuffer(src)) {
       const chunks: string[] = [];
-      for (
-        let start = 0, end = src.byteLength;
-        start < end;
-        start += bufferSize
-      ) {
+      const end = src.byteLength;
+      for (let start = 0; start < end; start += bufferSize) {
         const buf = src.slice(start, start + bufferSize);
         const chunk = await this._bufferToBinaryString(buf);
         chunks.push(chunk);
@@ -271,10 +257,6 @@ export class Converter {
     if (isBlob(src)) {
       return src;
     }
-    if (isArrayBuffer(src)) {
-      return new Blob([src]);
-    }
-
     const ab = await this.toArrayBuffer(src);
     return new Blob([ab]);
   }
@@ -426,16 +408,10 @@ export class Converter {
           readable.on("error", (err) => {
             throw err;
           });
-          readable.on("data", (chunk) => {
-            converter.enqueue(chunk);
-          });
-          readable.on("end", () => {
-            converter.close();
-          });
+          readable.on("data", (chunk) => converter.enqueue(chunk));
+          readable.on("end", () => converter.close());
         },
-        cancel: () => {
-          readable.destroy();
-        },
+        cancel: () => readable.destroy(),
       });
     }
     if (isBlob(src)) {
