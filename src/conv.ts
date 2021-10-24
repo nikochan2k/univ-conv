@@ -156,8 +156,7 @@ export class Converter {
       if (src.byteLength === 0) {
         return EMPTY_ARRAY_BUFFER;
       }
-      const u8 = src.slice(src.byteOffset, src.byteOffset + src.byteLength);
-      return u8.buffer;
+      return src.buffer.slice(src.byteOffset, src.byteOffset + src.byteLength);
     }
     if (isBlob(src)) {
       if (src.size === 0) {
@@ -167,7 +166,7 @@ export class Converter {
         return src.arrayBuffer();
       }
       const u8 = await this.toUint8Array(src);
-      return u8.buffer;
+      return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
     }
     if (
       typeof src === "string" ||
@@ -176,22 +175,25 @@ export class Converter {
       isReadableStream(src)
     ) {
       const u8 = await this.toUint8Array(src);
-      return u8.buffer;
+      return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
     }
 
     return src;
   }
 
   public async toBase64(src: Source): Promise<string> {
-    const awaitingSize = this.bufferSize;
+    const bufferSize = this.bufferSize;
     if (isBuffer(src)) {
       const chunks: string[] = [];
       for (
         let start = 0, end = src.byteLength;
         start < end;
-        start += awaitingSize
+        start += bufferSize
       ) {
-        const buf = src.slice(start, start + awaitingSize);
+        const buf = src.slice(
+          start,
+          end < bufferSize ? end : start + bufferSize
+        );
         const chunk = await this._bufferToBase64(buf);
         chunks.push(chunk);
       }
@@ -211,12 +213,11 @@ export class Converter {
 
     const u8 = await this.toUint8Array(src);
     const chunks: string[] = [];
-    for (
-      let begin = 0, end = u8.byteLength;
-      begin < end;
-      begin += awaitingSize
-    ) {
-      const buf = u8.slice(begin, begin + awaitingSize).buffer;
+    for (let start = 0, end = u8.byteLength; start < end; start += bufferSize) {
+      const buf = u8.buffer.slice(
+        start,
+        end < bufferSize ? end : start + bufferSize
+      );
       const chunk = await this._arrayBufferToBase64(buf);
       chunks.push(chunk);
     }
@@ -303,10 +304,13 @@ export class Converter {
     }
     if (isReadable(src)) {
       const readable = src;
+      if (readable.destroyed) {
+        return EMPTY_BUFFER;
+      }
       return new Promise<Buffer>((resolve, reject) => {
-        const buffer: Uint8Array[] = [];
-        readable.on("data", (chunk) => buffer.push(chunk));
-        readable.on("end", () => resolve(Buffer.concat(buffer)));
+        const chunks: Uint8Array[] = [];
+        readable.on("data", (chunk) => chunks.push(chunk));
+        readable.on("end", () => resolve(Buffer.concat(chunks)));
         readable.on("error", (err) => reject(err));
       });
     }
@@ -372,6 +376,9 @@ export class Converter {
     }
     if (isReadableStream(src)) {
       const reader = src.getReader();
+      if (await reader.closed) {
+        return EMPTY_READABLE;
+      }
       return new Readable({
         read() {
           reader
@@ -425,6 +432,9 @@ export class Converter {
     }
     if (isReadable(src)) {
       const readable = src;
+      if (readable.destroyed) {
+        return EMPTY_READABLE_STREAM;
+      }
       return new ReadableStream({
         start: (converter) => {
           readable.on("error", (err) => {
@@ -552,6 +562,9 @@ export class Converter {
     }
     if (isReadableStream(src)) {
       const reader = src.getReader();
+      if (await reader.closed) {
+        return EMPTY_U8;
+      }
       const u8 = new Uint8Array(0);
       let offset = 0;
       let res = await reader.read();
@@ -564,6 +577,9 @@ export class Converter {
       return u8;
     }
     if (isReadable(src)) {
+      if (src.destroyed) {
+        return EMPTY_U8;
+      }
       return this.toBuffer(src);
     }
     if (typeof src === "string") {

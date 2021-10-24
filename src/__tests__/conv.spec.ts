@@ -6,31 +6,31 @@ test("util/binary ArrayBuffer", async () => {
 
   {
     const actual = await c.toText(ab);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
     const u8 = await c.toUint8Array(ab);
     const actual = await c.toText(u8);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   if (hasBlob) {
     const blob = await c.toBlob(ab);
     const actual = await c.toText(blob);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   if (hasBuffer) {
     const buf = await c.toBuffer(ab);
     const actual = await c.toText(buf);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
     const base64 = await c.toBase64(ab);
     const actual = await c.toText({ value: base64, encoding: "Base64" });
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
@@ -39,7 +39,7 @@ test("util/binary ArrayBuffer", async () => {
       value: binaryString,
       encoding: "BinaryString",
     });
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 });
 
@@ -49,31 +49,31 @@ test("util/binary Uint8Array", async () => {
 
   {
     const actual = await c.toText(u8);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
     const ab = await c.toArrayBuffer(u8);
     const actual = await c.toText(ab);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   if (hasBlob) {
     const blob = await c.toBlob(u8);
     const actual = await c.toText(blob);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   if (hasBuffer) {
     const buf = await c.toBuffer(u8);
     const actual = await c.toText(buf);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
     const base64 = await c.toBase64(u8);
     const actual = await c.toText({ value: base64, encoding: "Base64" });
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
@@ -82,7 +82,7 @@ test("util/binary Uint8Array", async () => {
       value: binaryString,
       encoding: "BinaryString",
     });
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 });
 
@@ -96,31 +96,31 @@ test("util/binary Buffer", async () => {
 
   {
     const actual = await c.toText(buffer);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
     const ab = await c.toArrayBuffer(buffer);
     const actual = await c.toText(ab);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
     const u8 = await c.toUint8Array(buffer);
     const actual = await c.toText(u8);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   if (hasBlob) {
     const blob = await c.toBlob(buffer);
     const actual = await c.toText(blob);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
     const base64 = await c.toBase64(buffer);
     const actual = await c.toText({ value: base64, encoding: "Base64" });
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
@@ -129,7 +129,7 @@ test("util/binary Buffer", async () => {
       value: binaryString,
       encoding: "BinaryString",
     });
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 });
 
@@ -143,31 +143,31 @@ test("util/binary Blob", async () => {
 
   {
     const actual = await c.toText(blob);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
     const ab = await c.toArrayBuffer(blob);
     const actual = await c.toText(ab);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
     const u8 = await c.toUint8Array(blob);
     const actual = await c.toText(u8);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   if (hasBuffer) {
     const buffer = await c.toBuffer(blob);
     const actual = await c.toText(buffer);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
     const base64 = await c.toBase64(blob);
     const actual = await c.toText({ value: base64, encoding: "Base64" });
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
@@ -176,7 +176,7 @@ test("util/binary Blob", async () => {
       value: binaryString,
       encoding: "BinaryString",
     });
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 });
 
@@ -186,31 +186,31 @@ test("util/binary Base64", async () => {
 
   {
     const actual = await c.toText({ value: base64, encoding: "Base64" });
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
     const ab = await c.toArrayBuffer({ value: base64, encoding: "Base64" });
     const actual = await c.toText(ab);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
     const u8 = await c.toUint8Array({ value: base64, encoding: "Base64" });
     const actual = await c.toText(u8);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   if (hasBlob) {
     const blob = await c.toBlob({ value: base64, encoding: "Base64" });
     const actual = await c.toText(blob);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   if (hasBuffer) {
     const buf = await c.toBuffer({ value: base64, encoding: "Base64" });
     const actual = await c.toText(buf);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
@@ -222,7 +222,7 @@ test("util/binary Base64", async () => {
       value: binaryString,
       encoding: "BinaryString",
     });
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 });
 
@@ -235,7 +235,7 @@ test("util/binary BinaryString", async () => {
       value: binaryString,
       encoding: "BinaryString",
     });
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
@@ -244,7 +244,7 @@ test("util/binary BinaryString", async () => {
       encoding: "BinaryString",
     });
     const actual = await c.toText(ab);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
@@ -253,7 +253,7 @@ test("util/binary BinaryString", async () => {
       encoding: "BinaryString",
     });
     const actual = await c.toText(u8);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   if (hasBlob) {
@@ -262,7 +262,7 @@ test("util/binary BinaryString", async () => {
       encoding: "BinaryString",
     });
     const actual = await c.toText(blob);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   if (hasBuffer) {
@@ -271,7 +271,7 @@ test("util/binary BinaryString", async () => {
       encoding: "BinaryString",
     });
     const actual = await c.toText(buf);
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
   }
 
   {
@@ -280,6 +280,51 @@ test("util/binary BinaryString", async () => {
       encoding: "BinaryString",
     });
     const actual = await c.toText({ value: base64, encoding: "Base64" });
-    expect(expected).toBe(actual);
+    expect(actual).toBe(expected);
+  }
+});
+
+test("util/binary Readable", async () => {
+  const expected = "大谷翔平ホームラン";
+
+  {
+    const readable = await c.toReadable(expected);
+    const actual = await c.toText(readable);
+    expect(actual).toBe(expected);
+  }
+
+  {
+    const readable = await c.toReadable(expected);
+    const ab = await c.toArrayBuffer(readable);
+    const actual = await c.toText(ab);
+    expect(actual).toBe(expected);
+  }
+
+  {
+    const readable = await c.toReadable(expected);
+    const u8 = await c.toUint8Array(readable);
+    const actual = await c.toText(u8);
+    expect(actual).toBe(expected);
+  }
+
+  if (hasBlob) {
+    const readable = await c.toReadable(expected);
+    const blob = await c.toBlob(readable);
+    const actual = await c.toText(blob);
+    expect(actual).toBe(expected);
+  }
+
+  if (hasBuffer) {
+    const readable = await c.toReadable(expected);
+    const buf = await c.toBuffer(readable);
+    const actual = await c.toText(buf);
+    expect(actual).toBe(expected);
+  }
+
+  {
+    const readable = await c.toReadable(expected);
+    const base64 = await c.toBase64(readable);
+    const actual = await c.toText({ value: base64, encoding: "Base64" });
+    expect(actual).toBe(expected);
   }
 });
