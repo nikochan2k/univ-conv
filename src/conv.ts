@@ -104,9 +104,18 @@ export class Converter {
     if (isWritable(writable)) {
       const readable = await this.toReadable(src);
       await new Promise<void>((resolve, reject) => {
-        readable.on("error", (err) => reject(err));
-        writable.on("error", (err) => reject(err));
-        writable.on("close", () => resolve());
+        readable.on("error", (err) => {
+          writable.destroy();
+          reject(err);
+        });
+        writable.on("error", (err) => {
+          readable.destroy();
+          reject(err);
+        });
+        writable.on("finish", () => {
+          writable.destroy();
+          resolve();
+        });
         readable.pipe(writable);
       });
     } else {
@@ -358,11 +367,17 @@ export class Converter {
           reader
             .read()
             .then(({ value, done }) => {
-              this.push(done ? null : value);
+              if (done) {
+                this.push(null);
+                this.destroy();
+                reader.cancel();
+              } else {
+                this.push(value);
+              }
             })
             .catch((e) => {
-              this.emit("error", e);
-              this.push(null);
+              this.destroy(e);
+              reader.cancel(e);
             });
         },
       });
@@ -382,13 +397,14 @@ export class Converter {
               start += sliced.byteLength;
               resolve(sliced);
             } catch (err) {
-              this.push(null);
+              this.destroy(err as any);
               reject(err);
             }
           });
           this.push(chunk);
         } while (start < length);
         this.push(null);
+        this.destroy();
       },
     });
   }
@@ -412,12 +428,15 @@ export class Converter {
       return new ReadableStream({
         start: (converter) => {
           readable.on("error", (err) => {
+            converter.close();
             throw err;
           });
+          readable.on("end", () => {
+            converter.close();
+          });
           readable.on("data", (chunk) => converter.enqueue(chunk));
-          readable.on("close", () => converter.close());
         },
-        cancel: () => readable.destroy(),
+        cancel: (err) => readable.destroy(err),
       });
     }
     if (isBlob(src)) {

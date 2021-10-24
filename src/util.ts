@@ -182,13 +182,19 @@ export async function handleReadableStream(
   onData: (chunk: any) => Promise<void>
 ): Promise<void> {
   const reader = stream.getReader();
-  let res = await reader.read();
-  while (!res.done) {
-    const chunk = res.value;
-    if (chunk != null) {
-      await onData(chunk);
+  try {
+    let res = await reader.read();
+    while (!res.done) {
+      const chunk = res.value;
+      if (chunk != null) {
+        await onData(chunk);
+      }
+      res = await reader.read();
     }
-    res = await reader.read();
+    reader.cancel();
+  } catch (err) {
+    reader.cancel(err);
+    throw err;
   }
 }
 
@@ -201,7 +207,7 @@ export async function handleReadable(
   }
   return new Promise<void>((resolve, reject) => {
     readable.on("error", (e) => reject(e));
-    readable.on("close", () => resolve());
+    readable.on("end", () => resolve());
     readable.on("data", (chunk) => onData(chunk));
   });
 }
