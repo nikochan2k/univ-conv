@@ -1,13 +1,11 @@
 module.exports = {
   mode: "production",
   entry: {
-    index: "./src/index.ts",
+    "conv.spec": "./src/__tests__/conv.spec.ts",
   },
   output: {
-    filename: "univ-conv.js",
+    filename: "[name].js",
     path: __dirname + "/dist",
-    libraryTarget: "umd",
-    globalObject: "this",
   },
   module: {
     rules: [

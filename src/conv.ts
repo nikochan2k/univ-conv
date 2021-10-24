@@ -1,6 +1,5 @@
 import { decode, encode } from "base64-arraybuffer";
 import { Readable } from "stream";
-import { StreamDestination } from ".";
 import {
   EMPTY_ARRAY_BUFFER,
   EMPTY_BLOB,
@@ -26,7 +25,7 @@ import {
   isUint8Array,
   isWritable,
 } from "./check";
-import { Source } from "./def";
+import { Source, StreamDestination } from "./def";
 
 export const DEFAULT_BUFFER_SIZE = 96 * 1024;
 

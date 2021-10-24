@@ -27,7 +27,11 @@
     "test": "jest --runInBand",
     "web-clean": "rimraf ./dist",
     "web-compile": "webpack",
-    "web-build": "npm-run-all web-clean web-compile"
+    "web-build": "npm-run-all web-clean web-compile",
+    "web-compile-test": "webpack --config webpack.config.test.js",
+    "web-build-test": "npm-run-all web-clean web-compile-test",
+    "karma": "karma start",
+    "web-test": "npm-run-all web-build-test karma"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -52,7 +56,12 @@
     "@types/fast-text-encoding": "^1.0.1",
     "@types/jest": "^27.0.2",
     "@types/node": "^16.11.4",
+    "expect": "^27.3.1",
+    "jasmine": "^3.10.0",
     "jest": "^27.3.1",
+    "karma": "^6.3.5",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-jasmine": "^4.0.1",
     "npm-run-all": "^4.1.5",
     "rimraf": "^3.0.2",
     "ts-jest": "^27.0.7",
