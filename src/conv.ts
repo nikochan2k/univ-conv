@@ -1,54 +1,34 @@
 import { decode, encode } from "base64-arraybuffer";
 import { Readable } from "stream";
-import { hasReadable, isBrowser, isWritable, StreamDestination } from ".";
+import { StreamDestination } from ".";
 import {
+  EMPTY_ARRAY_BUFFER,
+  EMPTY_BLOB,
+  EMPTY_BUFFER,
+  EMPTY_READABLE,
+  EMPTY_READABLE_STREAM,
+  EMPTY_U8,
   hasArrayBufferOnBlob,
   hasBlob,
   hasBuffer,
+  hasReadable,
   hasReadableStream,
   hasReadAsArrayBuferOnBlob,
   hasReadAsBinaryStringOnBlob,
   hasStreamOnBlob,
   hasTextOnBlob,
   isBlob,
+  isBrowser,
   isBuffer,
   isReadable,
   isReadableStream,
   isStringSource,
   isUint8Array,
+  isWritable,
 } from "./check";
 import { Source } from "./def";
 
 export const DEFAULT_BUFFER_SIZE = 96 * 1024;
-export const EMPTY_ARRAY_BUFFER = new ArrayBuffer(0);
-export const EMPTY_U8 = new Uint8Array(0);
-
-if (hasBuffer) {
-  var EMPTY_BUFFER = Buffer.from([]);
-}
-if (hasBlob) {
-  var EMPTY_BLOB = new Blob([]);
-}
-if (hasReadableStream) {
-  var EMPTY_READABLE_STREAM = new ReadableStream({
-    start: (converter) => {
-      if (hasBlob) {
-        converter.enqueue(EMPTY_BLOB);
-      } else {
-        converter.enqueue(EMPTY_U8);
-      }
-      converter.close();
-    },
-  });
-}
-if (hasReadable) {
-  var EMPTY_READABLE = new Readable({
-    read() {
-      this.push(EMPTY_BUFFER);
-      this.push(null);
-    },
-  });
-}
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();

@@ -1,12 +1,54 @@
 import { Readable, Writable } from "stream";
 import { StringEncoding, StringSource } from "./def";
 
-export const hasReadableStream = typeof ReadableStream === "function";
-export const hasWritableStream = typeof WritableStream === "function";
-export const hasBuffer = typeof Buffer === "function";
-export const hasBlob = typeof Blob === "function";
-export const hasReadable = typeof Readable === "function";
-export const hasWritable = typeof Writable === "function";
+export const EMPTY_ARRAY_BUFFER = new ArrayBuffer(0);
+export const EMPTY_U8 = new Uint8Array(0);
+
+export let EMPTY_BUFFER: Buffer;
+export let hasBuffer = false;
+try {
+  EMPTY_BUFFER = Buffer.from([]);
+  hasBuffer = true;
+} catch {}
+
+export let EMPTY_BLOB: Blob;
+export let hasBlob = false;
+try {
+  EMPTY_BLOB = new Blob([]);
+  hasBlob = true;
+} catch {}
+
+export let EMPTY_READABLE_STREAM: ReadableStream;
+export let hasReadableStream = false;
+export let hasWritableStream = false;
+try {
+  EMPTY_READABLE_STREAM = new ReadableStream({
+    start: (converter) => {
+      if (hasBlob) {
+        converter.enqueue(EMPTY_BLOB);
+      } else {
+        converter.enqueue(EMPTY_U8);
+      }
+      converter.close();
+    },
+  });
+  hasReadableStream = true;
+  hasWritableStream = true;
+} catch {}
+
+export let EMPTY_READABLE: Readable;
+export let hasReadable = false;
+export let hasWritable = false;
+try {
+  EMPTY_READABLE = new Readable({
+    read() {
+      this.push(EMPTY_BUFFER);
+      this.push(null);
+    },
+  });
+  hasReadable = true;
+  hasWritable = true;
+} catch {}
 
 export function isBlob(src: unknown): src is Blob {
   return (
