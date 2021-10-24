@@ -155,6 +155,12 @@ export const isBrowser = ![typeof window, typeof document].includes(
   "undefined"
 );
 
+export const isNode = !!(
+  typeof process !== "undefined" &&
+  process.versions &&
+  process.versions.node
+);
+
 export function handleFileReader<T extends string | ArrayBuffer>(
   trigger: (reader: FileReader) => void,
   transform: (data: any) => any

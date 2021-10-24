@@ -1,8 +1,10 @@
 import { decode, encode } from "base64-arraybuffer";
 import { Readable } from "stream";
 import {
+  BinarySource,
   handleFileReader,
   handleStreamSource,
+  isNode,
   isStreamSource,
   StreamSource,
 } from ".";
@@ -194,6 +196,16 @@ export class Converter {
       chunks.push(chunk);
     }
     return chunks.join("");
+  }
+
+  public toBinarySource(src: Source): Promise<BinarySource> {
+    if (isBrowser) {
+      return this.toBlob(src);
+    } else if (isNode) {
+      return this.toBuffer(src);
+    } else {
+      return this.toUint8Array(src);
+    }
   }
 
   public async toBinaryString(src: Source): Promise<string> {
@@ -462,6 +474,14 @@ export class Converter {
         converter.close();
       },
     });
+  }
+
+  public toStreamSource(src: Source): Promise<StreamSource> {
+    if (isBrowser) {
+      return this.toReadableStream(src);
+    } else {
+      return this.toReadable(src);
+    }
   }
 
   public async toText(src: Source): Promise<string> {
