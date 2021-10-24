@@ -54,7 +54,7 @@ export class Converter {
     this.bufferSize = this._validateBufferSize(options);
   }
 
-  public async getSize(src: Source) {
+  public async getSize(src: Source): Promise<number> {
     if (!src) {
       return 0;
     }
@@ -69,7 +69,8 @@ export class Converter {
       return src.size;
     }
     if (typeof src === "string") {
-      return this._textToUint8Array(src);
+      const u8 = await this._textToUint8Array(src);
+      return u8.byteLength;
     }
     if (isStringSource(src)) {
       const value = src.value;
@@ -323,9 +324,6 @@ export class Converter {
     }
     if (isReadableStream(src)) {
       const reader = src.getReader();
-      if (await reader.closed) {
-        return EMPTY_READABLE;
-      }
       return new Readable({
         read() {
           reader
@@ -503,17 +501,21 @@ export class Converter {
     }
     if (isReadableStream(src)) {
       const reader = src.getReader();
-      if (await reader.closed) {
-        return EMPTY_U8;
-      }
-      const u8 = new Uint8Array(0);
-      let offset = 0;
+      const chunks: Uint8Array[] = [];
+      let length = 0;
       let res = await reader.read();
       while (!res.done) {
         const chunk = await this.toUint8Array(res.value);
+        chunks.push(chunk);
+        length += chunk.byteLength;
+        res = await reader.read();
+      }
+
+      const u8 = new Uint8Array(length);
+      let offset = 0;
+      for (const chunk of chunks) {
         u8.set(chunk, offset);
         offset += chunk.byteLength;
-        res = await reader.read();
       }
       return u8;
     }
