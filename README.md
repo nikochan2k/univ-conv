@@ -1,3 +1,3 @@
-# isomorphic-fs
+# univ-conv
 
-The isomorphic FileSystem API.
+Universal binary and text converter.
