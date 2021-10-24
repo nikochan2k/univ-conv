@@ -27,7 +27,7 @@ import {
   handleReadableStream,
 } from "./util";
 import { Source, StreamDestination } from "./def";
-import { handleReadable } from ".";
+import { handleFileReader, handleReadable } from ".";
 
 export const DEFAULT_BUFFER_SIZE = 96 * 1024;
 
@@ -103,12 +103,12 @@ export class Converter {
         readable.pipe(writable);
       });
     } else {
-      const readable = await this.toReadableStream(src);
-      if (typeof readable.pipeTo === "function") {
-        await readable.pipeTo(writable);
+      const stream = await this.toReadableStream(src);
+      if (typeof stream.pipeTo === "function") {
+        await stream.pipeTo(writable);
       } else {
         const writer = writable.getWriter();
-        await handleReadableStream(readable, async (chunk) => {
+        await handleReadableStream(stream, async (chunk) => {
           await writer.write(chunk);
         });
         await writer.close();
@@ -449,16 +449,10 @@ export class Converter {
       if (hasTextOnBlob) {
         return src.text();
       }
-      return await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = function (ev) {
-          reject(reader.error || ev);
-        };
-        reader.onload = function () {
-          resolve(reader.result as string);
-        };
-        reader.readAsText(src);
-      });
+      return handleFileReader(
+        (reader) => reader.readAsText(src),
+        (data) => data
+      );
     }
 
     const u8 = await this.toUint8Array(src);
@@ -559,17 +553,10 @@ export class Converter {
     const chunks: string[] = [];
     for (let start = 0, end = blob.size; start < end; start += bufferSize) {
       const blobChunk = blob.slice(start, start + bufferSize);
-      const chunk = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = function (ev) {
-          reject(reader.error || ev);
-        };
-        reader.onload = function () {
-          const base64 = dataUrlToBase64(reader.result as string);
-          resolve(base64);
-        };
-        reader.readAsDataURL(blobChunk);
-      });
+      const chunk: string = await handleFileReader(
+        (reader) => reader.readAsDataURL(blobChunk),
+        (data) => dataUrlToBase64(data as string)
+      );
       chunks.push(chunk);
     }
     return chunks.join("");
@@ -584,16 +571,10 @@ export class Converter {
     const chunks: string[] = [];
     for (let start = 0, end = blob.size; start < end; start += bufferSize) {
       const blobChunk = blob.slice(start, start + bufferSize);
-      const chunk = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = function (ev) {
-          reject(reader.error || ev);
-        };
-        reader.onload = function () {
-          resolve(reader.result as string);
-        };
-        reader.readAsBinaryString(blobChunk);
-      });
+      const chunk: string = await handleFileReader(
+        (reader) => reader.readAsBinaryString(blobChunk),
+        (data) => data
+      );
       chunks.push(chunk);
     }
     return chunks.join("");

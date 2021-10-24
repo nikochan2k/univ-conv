@@ -149,6 +149,22 @@ if (hasBlob) {
 export const isBrowser = () =>
   ![typeof window, typeof document].includes("undefined");
 
+export function handleFileReader<T extends string | ArrayBuffer>(
+  trigger: (reader: FileReader) => void,
+  transform: (data: any) => any
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = function (ev) {
+      reject(reader.error || ev);
+    };
+    reader.onload = function () {
+      resolve(transform(reader.result));
+    };
+    trigger(reader);
+  });
+}
+
 export async function handleReadableStream(
   stream: ReadableStream,
   onData: (chunk: any) => Promise<void>
@@ -158,7 +174,7 @@ export async function handleReadableStream(
   while (!res.done) {
     const chunk = res.value;
     if (chunk != null) {
-      onData(chunk);
+      await onData(chunk);
     }
     res = await reader.read();
   }
