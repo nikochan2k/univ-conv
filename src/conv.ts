@@ -1,12 +1,20 @@
 import { decode, encode } from "base64-arraybuffer";
 import { Readable } from "stream";
 import {
+  handleFileReader,
+  handleStreamSource,
+  isStreamSource,
+  StreamSource,
+} from ".";
+import { Source, StreamDestination } from "./def";
+import {
   EMPTY_ARRAY_BUFFER,
   EMPTY_BLOB,
   EMPTY_BUFFER,
   EMPTY_READABLE,
   EMPTY_READABLE_STREAM,
   EMPTY_U8,
+  handleReadableStream,
   hasArrayBufferOnBlob,
   hasBlob,
   hasBuffer,
@@ -24,10 +32,7 @@ import {
   isStringSource,
   isUint8Array,
   isWritable,
-  handleReadableStream,
 } from "./util";
-import { Source, StreamDestination } from "./def";
-import { handleFileReader, handleReadable } from ".";
 
 export const DEFAULT_BUFFER_SIZE = 96 * 1024;
 
@@ -148,6 +153,15 @@ export class Converter {
   }
 
   public async toBase64(src: Source): Promise<string> {
+    if (!src) {
+      return "";
+    }
+
+    if (isStreamSource(src)) {
+      const binary = await this._streamToBinary(src);
+      return this.toBase64(binary);
+    }
+
     const bufferSize = this.bufferSize;
     if (isBuffer(src)) {
       const chunks: string[] = [];
@@ -183,6 +197,15 @@ export class Converter {
   }
 
   public async toBinaryString(src: Source): Promise<string> {
+    if (!src) {
+      return "";
+    }
+
+    if (isStreamSource(src)) {
+      const binary = await this._streamToBinary(src);
+      return this.toBinaryString(binary);
+    }
+
     const bufferSize = this.bufferSize;
     if (isBuffer(src)) {
       const chunks: string[] = [];
@@ -225,14 +248,17 @@ export class Converter {
     if (!hasBlob) {
       throw new Error("Blob is not supported");
     }
-
     if (!src) {
       return EMPTY_BLOB;
     }
-
     if (isBlob(src)) {
       return src;
     }
+
+    if (isStreamSource(src)) {
+      return this._streamToBlob(src);
+    }
+
     const ab = await this.toArrayBuffer(src);
     return new Blob([ab]);
   }
@@ -241,24 +267,24 @@ export class Converter {
     if (!hasBuffer) {
       throw new Error("Buffer is not suppoted.");
     }
-
     if (!src) {
       return EMPTY_BUFFER;
     }
-
     if (isBuffer(src)) {
       return src;
     }
-    if (isReadable(src)) {
-      const chunks: Uint8Array[] = [];
-      await handleReadable(src, async (chunk) => {
-        chunks.push(chunk);
+
+    if (isStreamSource(src)) {
+      const buffers: Buffer[] = [];
+      await handleStreamSource(src, async (chunk: any) => {
+        buffers.push(await this.toBuffer(chunk));
       });
-      return Buffer.concat(chunks);
+      if (buffers.length === 1) {
+        return buffers[0]!;
+      }
+      return Buffer.concat(buffers);
     }
-    if (isReadableStream(src)) {
-      src = await this.toUint8Array(src);
-    }
+
     if (isUint8Array(src)) {
       if (src.byteLength === 0) {
         return EMPTY_BUFFER;
@@ -309,10 +335,10 @@ export class Converter {
     if (!src) {
       return EMPTY_READABLE;
     }
-
     if (isReadable(src)) {
       return src;
     }
+
     if (isReadableStream(src)) {
       const reader = src.getReader();
       return new Readable({
@@ -362,10 +388,10 @@ export class Converter {
     if (!src) {
       return EMPTY_READABLE_STREAM;
     }
-
     if (isReadableStream(src)) {
       return src;
     }
+
     if (isReadable(src)) {
       const readable = src;
       if (readable.destroyed) {
@@ -389,7 +415,7 @@ export class Converter {
     }
 
     const bufferSize = this.bufferSize;
-    if (hasBlob && isBrowser) {
+    if (isBrowser) {
       const blob = await this.toBlob(src);
       const size = blob.size;
       let start = 0;
@@ -439,8 +465,16 @@ export class Converter {
   }
 
   public async toText(src: Source): Promise<string> {
+    if (!src) {
+      return "";
+    }
     if (typeof src === "string") {
       return src;
+    }
+
+    if (isStreamSource(src)) {
+      const binary = await this._streamToBinary(src);
+      return this.toText(binary);
     }
     if (isBuffer(src)) {
       return src.toString("utf8");
@@ -463,9 +497,12 @@ export class Converter {
     if (!src) {
       return EMPTY_U8;
     }
-
     if (isUint8Array(src)) {
       return src;
+    }
+
+    if (isStreamSource(src)) {
+      return this._streamToUint8Array(src);
     }
     if (isBlob(src)) {
       if (src.size === 0) {
@@ -483,28 +520,6 @@ export class Converter {
           encoding: "Base64",
         });
       }
-    }
-    if (isReadableStream(src)) {
-      const chunks: Uint8Array[] = [];
-      let length = 0;
-      await handleReadableStream(src, async (data) => {
-        const chunk = await this.toUint8Array(data);
-        chunks.push(chunk);
-        length += chunk.byteLength;
-      });
-      const u8 = new Uint8Array(length);
-      let offset = 0;
-      for (const chunk of chunks) {
-        u8.set(chunk, offset);
-        offset += chunk.byteLength;
-      }
-      return u8;
-    }
-    if (isReadable(src)) {
-      if (src.destroyed) {
-        return EMPTY_U8;
-      }
-      return this.toBuffer(src);
     }
     if (typeof src === "string") {
       return await this._textToUint8Array(src);
@@ -590,18 +605,14 @@ export class Converter {
     const chunks: ArrayBuffer[] = [];
     for (let start = 0, end = blob.size; start < end; start += bufferSize) {
       const blobChunk = blob.slice(start, start + bufferSize);
-      const chunk = await new Promise<ArrayBuffer>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = (ev) => {
-          reject(reader.error || ev);
-        };
-        reader.onload = () => {
-          const chunk = reader.result as ArrayBuffer;
+      const chunk: ArrayBuffer = await handleFileReader(
+        (reader) => reader.readAsArrayBuffer(blobChunk),
+        (data) => {
+          const chunk = data as ArrayBuffer;
           byteLength += chunk.byteLength;
-          resolve(chunk);
-        };
-        reader.readAsArrayBuffer(blobChunk);
-      });
+          return chunk;
+        }
+      );
       chunks.push(chunk);
     }
 
@@ -628,6 +639,42 @@ export class Converter {
 
   protected async _uint8ArrayToText(u8: Uint8Array) {
     return textDecoder.decode(u8);
+  }
+
+  private async _streamToBinary(src: StreamSource) {
+    if (isBrowser) {
+      return this._streamToBlob(src);
+    } else {
+      return this._streamToUint8Array(src);
+    }
+  }
+
+  private async _streamToBlob(src: StreamSource) {
+    const blobs: Blob[] = [];
+    await handleStreamSource(src, async (chunk: any) => {
+      blobs.push(await this.toBlob(chunk));
+    });
+    if (blobs.length === 1) {
+      return blobs[0]!;
+    }
+    return new Blob(blobs);
+  }
+
+  private async _streamToUint8Array(src: StreamSource) {
+    const chunks: Uint8Array[] = [];
+    let length = 0;
+    await handleStreamSource(src, async (chunk) => {
+      const u8Chunk = await this.toUint8Array(chunk);
+      chunks.push(u8Chunk);
+      length += u8Chunk.byteLength;
+    });
+    const u8 = new Uint8Array(length);
+    let offset = 0;
+    for (const chunk of chunks) {
+      u8.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    return u8;
   }
 
   private async _textToUint8Array(text: string) {

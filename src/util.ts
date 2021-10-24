@@ -1,4 +1,5 @@
 import { Readable, Writable } from "stream";
+import { StreamSource } from ".";
 import { StringEncoding, StringSource } from "./def";
 
 export const EMPTY_ARRAY_BUFFER = new ArrayBuffer(0);
@@ -113,6 +114,10 @@ export function isWritable(stream: any): stream is Writable {
   );
 }
 
+export function isStreamSource(src: any): src is StreamSource {
+  return isReadable(src) || isReadableStream(src);
+}
+
 export function isStringSource(src: any): src is StringSource {
   if (src == null) {
     return false;
@@ -146,8 +151,9 @@ if (hasBlob) {
   }
 }
 
-export const isBrowser = () =>
-  ![typeof window, typeof document].includes("undefined");
+export const isBrowser = ![typeof window, typeof document].includes(
+  "undefined"
+);
 
 export function handleFileReader<T extends string | ArrayBuffer>(
   trigger: (reader: FileReader) => void,
@@ -192,4 +198,15 @@ export async function handleReadable(
     readable.on("end", () => resolve());
     readable.on("data", (chunk) => onData(chunk));
   });
+}
+
+export async function handleStreamSource(
+  source: StreamSource,
+  onData: (chunk: any) => Promise<void>
+): Promise<void> {
+  if (isReadableStream(source)) {
+    return handleReadableStream(source, onData);
+  } else {
+    return handleReadable(source, onData);
+  }
 }
