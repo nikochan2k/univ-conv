@@ -104,18 +104,9 @@ export class Converter {
     if (isWritable(writable)) {
       const readable = await this.toReadable(src);
       await new Promise<void>((resolve, reject) => {
-        readable.on("error", (err) => {
-          writable.destroy();
-          reject(err);
-        });
-        writable.on("error", (err) => {
-          readable.destroy();
-          reject(err);
-        });
-        writable.on("finish", () => {
-          writable.destroy();
-          resolve();
-        });
+        readable.on("error", (err) => reject(err));
+        writable.on("error", (err) => reject(err));
+        writable.on("finish", () => resolve());
         readable.pipe(writable);
       });
     } else {
@@ -427,13 +418,8 @@ export class Converter {
       }
       return new ReadableStream({
         start: (converter) => {
-          readable.on("error", (err) => {
-            converter.close();
-            throw err;
-          });
-          readable.on("end", () => {
-            converter.close();
-          });
+          readable.on("error", (err) => converter.error(err));
+          readable.on("end", () => converter.close());
           readable.on("data", (chunk) => converter.enqueue(chunk));
         },
         cancel: (err) => readable.destroy(err),
