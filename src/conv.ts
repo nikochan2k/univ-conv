@@ -360,14 +360,12 @@ export class Converter {
             .then(({ value, done }) => {
               if (done) {
                 this.push(null);
-                this.destroy();
                 reader.cancel();
               } else {
                 this.push(value);
               }
             })
             .catch((e) => {
-              this.destroy(e);
               reader.cancel(e);
             });
         },
@@ -381,21 +379,19 @@ export class Converter {
     return new Readable({
       read: async function () {
         do {
-          const chunk = await new Promise<any>((resolve, reject) => {
+          const chunk = await new Promise<Buffer>((resolve, reject) => {
             try {
               const end = start + bufferSize;
               const sliced = buffer.slice(start, end);
               start += sliced.byteLength;
               resolve(sliced);
             } catch (err) {
-              this.destroy(err as any);
               reject(err);
             }
           });
           this.push(chunk);
         } while (start < length);
         this.push(null);
-        this.destroy();
       },
     });
   }
