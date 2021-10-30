@@ -1,6 +1,7 @@
 import { decode, encode } from "base64-arraybuffer";
 import { Readable } from "stream";
-import { EMPTY_U8 } from "./check";
+import { EMPTY_U8, isReadableStream } from "./check";
+import { ReadableStreamData } from "./def";
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -92,6 +93,17 @@ export async function handleReadable(
     readable.on("end", () => resolve());
     readable.on("data", (chunk) => onData(chunk));
   });
+}
+
+export async function handleReadableStreamData(
+  data: ReadableStreamData,
+  onData: (chunk: any) => Promise<void>
+): Promise<void> {
+  if (isReadableStream(data)) {
+    return handleReadableStream(data, onData);
+  } else {
+    return handleReadable(data, onData);
+  }
 }
 
 export function dataUrlToBase64(dataUrl: string) {

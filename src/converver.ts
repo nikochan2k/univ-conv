@@ -1,28 +1,5 @@
 import { Readable } from "stream";
 import {
-  arrayBufferToBase64,
-  base64ToArrayBuffer,
-  base64ToBuffer,
-  binaryStringToBuffer,
-  bufferToBase64,
-  bufferToBinaryString,
-  textToUint8Array,
-  uint8ArrayToBinaryString,
-  uint8ArrayToText,
-  handleFileReader,
-  handleReadableStream,
-  DEFAULT_BUFFER_SIZE,
-  blobToUint8Array,
-  blobToBase64,
-  blobToBinaryString,
-} from "./common";
-import {
-  BinaryData,
-  Data,
-  ReadableStreamData,
-  WritableStreamData,
-} from "./def";
-import {
   EMPTY_ARRAY_BUFFER,
   EMPTY_BLOB,
   EMPTY_BUFFER,
@@ -49,7 +26,30 @@ import {
   isUint8Array,
   isWritable,
 } from "./check";
-import { handleReadable } from ".";
+import {
+  arrayBufferToBase64,
+  base64ToArrayBuffer,
+  base64ToBuffer,
+  binaryStringToBuffer,
+  blobToBase64,
+  blobToBinaryString,
+  blobToUint8Array,
+  bufferToBase64,
+  bufferToBinaryString,
+  DEFAULT_BUFFER_SIZE,
+  handleFileReader,
+  handleReadableStream,
+  handleReadableStreamData,
+  textToUint8Array,
+  uint8ArrayToBinaryString,
+  uint8ArrayToText,
+} from "./common";
+import {
+  BinaryData,
+  Data,
+  ReadableStreamData,
+  WritableStreamData,
+} from "./def";
 
 export interface ConverterOptions {
   bufferSize?: number;
@@ -293,7 +293,7 @@ export class Converter {
 
     if (isReadableStreamData(data)) {
       const buffers: Buffer[] = [];
-      await this._handleReadableStreamData(data, async (chunk: any) => {
+      await handleReadableStreamData(data, async (chunk: any) => {
         buffers.push(await this.toBuffer(chunk));
       });
       if (buffers.length === 1) {
@@ -482,7 +482,7 @@ export class Converter {
     });
   }
 
-  public toStreamData(data: Data): Promise<ReadableStreamData> {
+  public toReadableStreamData(data: Data): Promise<ReadableStreamData> {
     if (isBrowser) {
       return this.toReadableStream(data);
     } else {
@@ -569,18 +569,7 @@ export class Converter {
     return new Uint8Array(data);
   }
 
-  private async _handleReadableStreamData(
-    data: ReadableStreamData,
-    onData: (chunk: any) => Promise<void>
-  ): Promise<void> {
-    if (isReadableStream(data)) {
-      return handleReadableStream(data, onData);
-    } else {
-      return handleReadable(data, onData);
-    }
-  }
-
-  private async _streamToBinaryData(readable: ReadableStreamData) {
+  public async _streamToBinaryData(readable: ReadableStreamData) {
     if (isBrowser) {
       return this._streamToBlob(readable);
     } else {
@@ -590,7 +579,7 @@ export class Converter {
 
   private async _streamToBlob(readable: ReadableStreamData) {
     const blobs: Blob[] = [];
-    await this._handleReadableStreamData(readable, async (chunk: any) => {
+    await handleReadableStreamData(readable, async (chunk: any) => {
       blobs.push(await this.toBlob(chunk));
     });
     if (blobs.length === 1) {
@@ -602,7 +591,7 @@ export class Converter {
   private async _streamToUint8Array(readable: ReadableStreamData) {
     const chunks: Uint8Array[] = [];
     let length = 0;
-    await this._handleReadableStreamData(readable, async (chunk) => {
+    await handleReadableStreamData(readable, async (chunk) => {
       const u8Chunk = await this.toUint8Array(chunk);
       chunks.push(u8Chunk);
       length += u8Chunk.byteLength;
