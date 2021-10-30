@@ -17,8 +17,8 @@ module.exports = {
   },
   resolve: {
     extensions: [".ts", ".js"],
-    alias: {
-      stream: "./stream-mock.js",
+    fallback: {
+      stream: false,
     },
   },
 };

@@ -1,3 +1,3 @@
 # univ-conv
 
-Universal binary and text converter.
+The universal binary and text converter.

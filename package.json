@@ -1,7 +1,7 @@
 {
   "name": "univ-conv",
   "version": "0.1.16",
-  "description": "Universal binary and text converter",
+  "description": "The universal binary and text converter",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "typings": "lib/index.d.ts",
