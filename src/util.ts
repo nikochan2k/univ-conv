@@ -1,6 +1,5 @@
 import { Readable, Writable } from "stream";
-import { StreamSource } from ".";
-import { StringEncoding, StringSource } from "./def";
+import { ReadableStreamData, StringData, StringEncoding } from "./def";
 
 export const EMPTY_ARRAY_BUFFER = new ArrayBuffer(0);
 export const EMPTY_U8 = new Uint8Array(0);
@@ -51,23 +50,27 @@ try {
   hasWritable = true;
 } catch {}
 
-export function isBlob(src: unknown): src is Blob {
+export function isBlob(data: unknown): data is Blob {
   return (
-    hasBlob && (src instanceof Blob || toString.call(src) === "[object Blob]")
+    hasBlob &&
+    (data instanceof Blob ||
+      toString.call(data) === "[object Blob]" ||
+      toString.call(data) === "[object File]")
   );
 }
 
-export function isArrayBuffer(src: unknown): src is ArrayBuffer {
+export function isArrayBuffer(data: unknown): data is ArrayBuffer {
   return (
-    src instanceof ArrayBuffer || toString.call(src) === "[object ArrayBuffer]"
+    data instanceof ArrayBuffer ||
+    toString.call(data) === "[object ArrayBuffer]"
   );
 }
 
-export function isUint8Array(src: unknown): src is Uint8Array {
+export function isUint8Array(data: unknown): data is Uint8Array {
   return (
-    src instanceof Uint8Array ||
-    toString.call(src) === "[object Uint8Array]" ||
-    isBuffer(src)
+    data instanceof Uint8Array ||
+    toString.call(data) === "[object Uint8Array]" ||
+    isBuffer(data)
   );
 }
 
@@ -89,10 +92,10 @@ export function isWritableStream(stream: any): stream is WritableStream<any> {
   );
 }
 
-export function isBuffer(src: any): src is Buffer {
+export function isBuffer(data: any): data is Buffer {
   return (
     hasBuffer &&
-    (src instanceof Buffer || toString.call(src) === "[object Buffer]")
+    (data instanceof Buffer || toString.call(data) === "[object Buffer]")
   );
 }
 
@@ -114,18 +117,18 @@ export function isWritable(stream: any): stream is Writable {
   );
 }
 
-export function isStreamSource(src: any): src is StreamSource {
-  return isReadable(src) || isReadableStream(src);
+export function isReadableStreamData(data: any): data is ReadableStreamData {
+  return isReadable(data) || isReadableStream(data);
 }
 
-export function isStringSource(src: any): src is StringSource {
-  if (src == null) {
+export function isStringData(data: any): data is StringData {
+  if (data == null) {
     return false;
   }
-  if (typeof src.value !== "string") {
+  if (typeof data.value !== "string") {
     return false;
   }
-  const encoding = src.encoding as StringEncoding;
+  const encoding = data.encoding as StringEncoding;
   return encoding === "Base64" || encoding === "BinaryString";
 }
 
@@ -212,13 +215,13 @@ export async function handleReadable(
   });
 }
 
-export async function handleStreamSource(
-  source: StreamSource,
+export async function handleReadableStreamData(
+  data: ReadableStreamData,
   onData: (chunk: any) => Promise<void>
 ): Promise<void> {
-  if (isReadableStream(source)) {
-    return handleReadableStream(source, onData);
+  if (isReadableStream(data)) {
+    return handleReadableStream(data, onData);
   } else {
-    return handleReadable(source, onData);
+    return handleReadable(data, onData);
   }
 }
