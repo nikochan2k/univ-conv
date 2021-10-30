@@ -47,7 +47,9 @@ import {
 import {
   BinaryData,
   Data,
+  DataType,
   ReadableStreamData,
+  ReturnDataType,
   WritableStreamData,
 } from "./def";
 
@@ -63,6 +65,47 @@ export class Converter {
       options = {};
     }
     this.bufferSize = this._validateBufferSize(options);
+  }
+
+  public async convert<T extends DataType>(
+    data: Data,
+    type: T
+  ): Promise<ReturnDataType<T>> {
+    let converted: any;
+    switch (type) {
+      case "ArrayBuffer":
+        converted = converter.toArrayBuffer(data);
+        break;
+      case "Uint8Array":
+        converted = converter.toUint8Array(data);
+        break;
+      case "Buffer":
+        converted = converter.toBuffer(data);
+        break;
+      case "Blob":
+        converted = converter.toBlob(data);
+        break;
+      case "Readable":
+        converted = converter.toReadable(data);
+        break;
+      case "ReadableStream":
+        converted = converter.toReadableStream(data);
+        break;
+      case "Base64":
+        const base64 = await converter.toBase64(data);
+        converted = { value: base64, encoding: "Base64" };
+        break;
+      case "BinaryString":
+        const binaryString = await converter.toBinaryString(data);
+        converted = { value: binaryString, encoding: "BinaryString" };
+        break;
+      case "UTF8":
+        converted = converter.toText(data);
+        break;
+      default:
+        throw new TypeError(`Illegal ReturnDataType: ${type}`);
+    }
+    return converted;
   }
 
   public async getSize(data: Data): Promise<number> {
@@ -569,7 +612,7 @@ export class Converter {
     return new Uint8Array(data);
   }
 
-  public async _streamToBinaryData(readable: ReadableStreamData) {
+  private async _streamToBinaryData(readable: ReadableStreamData) {
     if (isBrowser) {
       return this._streamToBlob(readable);
     } else {
