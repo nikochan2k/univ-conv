@@ -1,5 +1,6 @@
 import { decode, encode } from "base64-arraybuffer";
 import { Readable } from "stream";
+import { EMPTY_ARRAY_BUFFER, EMPTY_BUFFER } from ".";
 import { EMPTY_U8, isReadableStream } from "./check";
 import { ReadableStreamData } from "./def";
 
@@ -8,40 +9,67 @@ const textDecoder = new TextDecoder();
 
 export const DEFAULT_BUFFER_SIZE = 96 * 1024;
 
-export async function uint8ArrayToText(u8: Uint8Array) {
+export async function uint8ArrayToText(u8: Uint8Array): Promise<string> {
+  if (u8.byteLength === 0) return "";
   return textDecoder.decode(u8);
 }
 
-export async function textToUint8Array(text: string) {
+export async function uint8ArrayToBuffer(u8: Uint8Array): Promise<Buffer> {
+  if (u8.length === 0) return EMPTY_BUFFER;
+  return Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength);
+}
+
+export async function textToUint8Array(text: string): Promise<Uint8Array> {
+  if (!text) return EMPTY_U8;
   return textEncoder.encode(text);
 }
 
-export async function bufferToBase64(buffer: Buffer) {
+export async function bufferToBase64(buffer: Buffer): Promise<string> {
+  if (buffer.byteLength === 0) return "";
   return buffer.toString("base64");
 }
 
-export async function bufferToBinaryString(buffer: Buffer) {
+export async function bufferToBinaryString(buffer: Buffer): Promise<string> {
+  if (buffer.byteLength === 0) return "";
   return buffer.toString("binary");
 }
 
-export async function uint8ArrayToBinaryString(u8: Uint8Array) {
+export async function uint8ArrayToBinaryString(
+  u8: Uint8Array
+): Promise<string> {
+  if (u8.byteLength === 0) return "";
   return Array.from(u8, (e) => String.fromCharCode(e)).join("");
 }
 
-export async function arrayBufferToBase64(buffer: ArrayBuffer) {
+export async function arrayBufferToBase64(
+  buffer: ArrayBuffer
+): Promise<string> {
+  if (buffer.byteLength === 0) return "";
   return encode(buffer);
 }
 
-export async function base64ToArrayBuffer(base64: string) {
+export async function base64ToArrayBuffer(
+  base64: string
+): Promise<ArrayBuffer> {
+  if (!base64) return EMPTY_ARRAY_BUFFER;
   return decode(base64);
 }
 
-export async function base64ToBuffer(base64: string) {
+export async function base64ToBuffer(base64: string): Promise<Buffer> {
+  if (!base64) return EMPTY_BUFFER;
   return Buffer.from(base64, "base64");
 }
 
-export async function binaryStringToBuffer(bin: string) {
+export async function binaryStringToBuffer(bin: string): Promise<Buffer> {
+  if (!bin) return EMPTY_BUFFER;
   return Buffer.from(bin, "binary");
+}
+
+export async function binaryStringToUint8Array(
+  bin: string
+): Promise<Uint8Array> {
+  if (!bin) return EMPTY_BUFFER;
+  return Uint8Array.from(bin.split(""), (e) => e.charCodeAt(0));
 }
 
 export function handleFileReader<T extends string | ArrayBuffer>(
