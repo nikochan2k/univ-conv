@@ -18,6 +18,15 @@ try {
   hasBlob = true;
 } catch {}
 
+export const EMPTY_BASE64: StringData = {
+  encoding: "Base64",
+  value: "",
+};
+export const EMPTY_BINARY_STRING: StringData = {
+  encoding: "BinaryString",
+  value: "",
+};
+
 export let EMPTY_READABLE_STREAM: ReadableStream;
 export let hasReadableStream = false;
 export let hasWritableStream = false;
