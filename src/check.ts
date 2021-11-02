@@ -10,7 +10,7 @@ try {
   EMPTY_BUFFER = Buffer.from([]);
   hasBuffer = true;
 } catch (e) {
-  console.warn(e);
+  console.trace(e);
 }
 
 export let EMPTY_BLOB: Blob;
@@ -19,7 +19,7 @@ try {
   EMPTY_BLOB = new Blob([]);
   hasBlob = true;
 } catch (e) {
-  console.warn(e);
+  console.trace(e);
 }
 
 export const EMPTY_BASE64: StringData = {
@@ -48,7 +48,7 @@ try {
   hasReadableStream = true;
   hasWritableStream = true;
 } catch (e) {
-  console.warn(e);
+  console.trace(e);
 }
 
 export let EMPTY_READABLE: Readable;
@@ -64,7 +64,7 @@ try {
   hasReadable = true;
   hasWritable = true;
 } catch (e) {
-  console.warn(e);
+  console.trace(e);
 }
 
 export function isBlob(data: unknown): data is Blob {
