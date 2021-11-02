@@ -4,6 +4,7 @@ import {
   binaryStringToUint8Array,
   EMPTY_BASE64,
   EMPTY_BINARY_STRING,
+  mergeString,
   StringData,
   uint8ArrayToBuffer,
 } from ".";
@@ -66,7 +67,7 @@ import {
   mergeBuffer,
   mergeReadables,
   mergeReadableStream,
-  mergeString,
+  mergeStringData,
   mergeUint8Array,
 } from "./merge";
 
@@ -88,7 +89,7 @@ export class Converter {
     data: Data,
     type: T
   ): Promise<ReturnDataType<T>> {
-    let converted: any;
+    let converted: Promise<Data>;
     switch (type) {
       case "ArrayBuffer":
         converted = converter.toArrayBuffer(data);
@@ -109,12 +110,10 @@ export class Converter {
         converted = converter.toReadableStream(data);
         break;
       case "Base64":
-        const base64 = await converter.toBase64(data);
-        converted = { value: base64, encoding: "Base64" };
+        converted = converter.toBase64(data);
         break;
       case "BinaryString":
-        const binaryString = await converter.toBinaryString(data);
-        converted = { value: binaryString, encoding: "BinaryString" };
+        converted = converter.toBinaryString(data);
         break;
       case "UTF8":
         converted = converter.toText(data);
@@ -122,7 +121,7 @@ export class Converter {
       default:
         throw new TypeError(`Illegal DataType: ${type}`);
     }
-    return converted;
+    return converted as Promise<ReturnDataType<T>>;
   }
 
   public async convertAll<T extends DataType>(
@@ -152,7 +151,7 @@ export class Converter {
       return data.size;
     }
     if (typeof data === "string") {
-      const u8 = await textToUint8Array(data);
+      const u8 = textToUint8Array(data);
       return u8.byteLength;
     }
     if (isStringData(data)) {
@@ -161,7 +160,7 @@ export class Converter {
       switch (encoding) {
         case "BinaryString":
           return value.length;
-        case "Base64":
+        case "Base64": {
           const len = value.length;
           const baseLen = (len * 3) / 4;
           let padding = 0;
@@ -169,6 +168,7 @@ export class Converter {
             padding++;
           }
           return baseLen - padding;
+        }
       }
     }
     return data.byteLength;
@@ -178,44 +178,44 @@ export class Converter {
     chunks: Data[],
     type: T
   ): Promise<ReturnDataType<T>> {
-    let results: any;
-    if (type === "Base64") {
-      results = await this.convertAll(chunks, "Uint8Array");
-    } else {
-      results = await this.convertAll(chunks, type);
-    }
-    let converted: any;
+    const results = await this.convertAll(
+      chunks,
+      type === "Base64" ? "Uint8Array" : type
+    );
+    let converted: Data;
     switch (type) {
       case "ArrayBuffer":
-        converted = mergeArrayBuffer(results);
+        converted = mergeArrayBuffer(results as ArrayBuffer[]);
         break;
       case "Uint8Array":
-        converted = mergeUint8Array(results);
+        converted = mergeUint8Array(results as Uint8Array[]);
         break;
       case "Buffer":
-        converted = mergeBuffer(results);
+        converted = mergeBuffer(results as Buffer[]);
         break;
       case "Blob":
-        converted = mergeBlob(results);
+        converted = mergeBlob(results as Blob[]);
         break;
       case "Readable":
-        converted = mergeReadables(results);
+        converted = mergeReadables(results as Readable[]);
         break;
       case "ReadableStream":
-        converted = mergeReadableStream(results);
+        converted = mergeReadableStream(results as ReadableStream<unknown>[]);
         break;
       case "Base64":
-        converted = mergeArrayBuffer(results);
+        converted = mergeArrayBuffer(results as ArrayBuffer[]);
         converted = await this.toBase64(converted);
         break;
       case "BinaryString":
+        converted = mergeStringData(results as unknown as StringData[], type);
+        break;
       case "UTF8":
-        converted = mergeString(results);
+        converted = mergeString(results as string[]);
         break;
       default:
         throw new TypeError(`Illegal DataType: ${type}`);
     }
-    return converted;
+    return converted as ReturnDataType<T>;
   }
 
   public async pipe(input: Data, output: WritableStreamData) {
@@ -233,9 +233,7 @@ export class Converter {
         await stream.pipeTo(output);
       } else {
         const writer = output.getWriter();
-        await handleReadableStream(stream, async (chunk) => {
-          await writer.write(chunk);
-        });
+        await handleReadableStream(stream, (chunk) => writer.write(chunk));
         await writer.close();
       }
     }
@@ -279,14 +277,14 @@ export class Converter {
       return this.toBase64(binary);
     }
     if (isBuffer(data)) {
-      return { encoding: "Base64", value: await bufferToBase64(data) };
+      return { encoding: "Base64", value: bufferToBase64(data) };
     }
     if (isStringData(data) && data.encoding === "Base64") {
       return data;
     }
 
     const buffer = await this.toArrayBuffer(data);
-    return { encoding: "Base64", value: await arrayBufferToBase64(buffer) };
+    return { encoding: "Base64", value: arrayBufferToBase64(buffer) };
   }
 
   public toBinaryData(data: Data): Promise<BinaryData> {
@@ -309,7 +307,7 @@ export class Converter {
         const value = await blobToBinaryString(data);
         return { encoding: "BinaryString", value };
       } else if (hasStreamOnBlob) {
-        data = data.stream() as unknown as ReadableStream<any>;
+        data = data.stream() as unknown as ReadableStream<unknown>;
       } else if (hasArrayBufferOnBlob) {
         data = await data.arrayBuffer();
       }
@@ -319,7 +317,7 @@ export class Converter {
       return this.toBinaryString(binary);
     }
     if (isBuffer(data)) {
-      const value = await bufferToBinaryString(data);
+      const value = bufferToBinaryString(data);
       return { encoding: "BinaryString", value };
     }
     if (isStringData(data) && data.encoding === "BinaryString") {
@@ -327,7 +325,7 @@ export class Converter {
     }
 
     const u8 = await this.toUint8Array(data);
-    const value = await uint8ArrayToBinaryString(u8);
+    const value = uint8ArrayToBinaryString(u8);
     return { encoding: "BinaryString", value };
   }
 
@@ -371,12 +369,12 @@ export class Converter {
       return uint8ArrayToBuffer(data);
     }
     if (isBlob(data) && hasStreamOnBlob) {
-      data = data.stream() as unknown as ReadableStream<any>;
+      data = data.stream() as unknown as ReadableStream<unknown>;
     }
     if (isReadableStreamData(data)) {
       const chunks: Buffer[] = [];
-      await handleReadableStreamData(data, async (chunk: any) => {
-        chunks.push(await this.toBuffer(chunk));
+      await handleReadableStreamData(data, async (chunk) => {
+        chunks.push(await this.toBuffer(chunk as Data));
       });
       return mergeBuffer(chunks);
     }
@@ -403,7 +401,7 @@ export class Converter {
       return data;
     }
     if (isBlob(data) && hasStreamOnBlob) {
-      data = data.stream() as unknown as ReadableStream<any>;
+      data = data.stream() as unknown as ReadableStream<unknown>;
     }
     if (isReadableStream(data)) {
       const reader = data.getReader();
@@ -418,9 +416,9 @@ export class Converter {
                 this.push(value);
               }
             })
-            .catch((e) => {
+            .catch(async (e) => {
               reader.releaseLock();
-              reader.cancel(e);
+              await reader.cancel(e);
             });
         },
       });
@@ -450,7 +448,7 @@ export class Converter {
     });
   }
 
-  public async toReadableStream(data: Data): Promise<ReadableStream<any>> {
+  public async toReadableStream(data: Data): Promise<ReadableStream<unknown>> {
     if (!hasReadableStream) {
       throw new Error("ReadableStream is not supported");
     }
@@ -459,7 +457,7 @@ export class Converter {
     }
 
     if (isBlob(data) && hasStreamOnBlob) {
-      data = data.stream() as unknown as ReadableStream<any>;
+      data = data.stream() as unknown as ReadableStream<unknown>;
     }
     if (isReadableStream(data)) {
       return data;
@@ -475,7 +473,7 @@ export class Converter {
           readable.on("end", () => converter.close());
           readable.on("data", (chunk) => converter.enqueue(chunk));
         },
-        cancel: (err) => readable.destroy(err),
+        cancel: (err) => readable.destroy(err as Error),
       });
     }
 
@@ -487,7 +485,7 @@ export class Converter {
       return new ReadableStream({
         start: async (converter) => {
           do {
-            const chunk = await new Promise<any>((resolve, reject) => {
+            const chunk = await new Promise<unknown>((resolve, reject) => {
               try {
                 const end = start + bufferSize;
                 const sliced = blob.slice(start, end);
@@ -511,7 +509,7 @@ export class Converter {
     return new ReadableStream({
       start: async (converter) => {
         do {
-          const chunk = await new Promise<any>((resolve, reject) => {
+          const chunk = await new Promise<unknown>((resolve, reject) => {
             try {
               const end = start + bufferSize;
               const sliced = u8.slice(start, end);
@@ -554,7 +552,7 @@ export class Converter {
       }
       return handleFileReader(
         (reader) => reader.readAsText(data),
-        (data) => data
+        (data) => data as string
       );
     }
 
@@ -582,7 +580,7 @@ export class Converter {
         return blobToUint8Array(data);
       }
       if (hasStreamOnBlob) {
-        data = data.stream() as unknown as ReadableStream<any>;
+        data = data.stream() as unknown as ReadableStream<unknown>;
       } else {
         data = {
           value: await blobToBase64(data),
@@ -594,7 +592,7 @@ export class Converter {
       return this._streamToUint8Array(data);
     }
     if (typeof data === "string") {
-      return await textToUint8Array(data);
+      return textToUint8Array(data);
     }
     if (isStringData(data)) {
       const value = data.value;
@@ -606,7 +604,7 @@ export class Converter {
         if (isNode) {
           return base64ToBuffer(value);
         } else {
-          data = await base64ToArrayBuffer(value);
+          data = base64ToArrayBuffer(value);
         }
       } else {
         if (isNode) {
@@ -632,8 +630,8 @@ export class Converter {
 
   private async _streamToBlob(readable: ReadableStreamData) {
     const blobs: Blob[] = [];
-    await handleReadableStreamData(readable, async (chunk: any) => {
-      blobs.push(await this.toBlob(chunk));
+    await handleReadableStreamData(readable, async (chunk) => {
+      blobs.push(await this.toBlob(chunk as Data));
     });
     return mergeBlob(blobs);
   }
@@ -641,7 +639,7 @@ export class Converter {
   private async _streamToUint8Array(readable: ReadableStreamData) {
     const chunks: Uint8Array[] = [];
     await handleReadableStreamData(readable, async (chunk) => {
-      const u8 = await this.toUint8Array(chunk);
+      const u8 = await this.toUint8Array(chunk as Data);
       chunks.push(u8);
     });
     return mergeUint8Array(chunks);

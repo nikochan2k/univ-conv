@@ -1,5 +1,5 @@
 import { Readable, Writable } from "stream";
-import { ReadableStreamData, StringData, StringEncoding } from "./def";
+import { ReadableStreamData, StringData } from "./def";
 
 export const EMPTY_ARRAY_BUFFER = new ArrayBuffer(0);
 export const EMPTY_U8 = new Uint8Array(0);
@@ -9,14 +9,18 @@ export let hasBuffer = false;
 try {
   EMPTY_BUFFER = Buffer.from([]);
   hasBuffer = true;
-} catch {}
+} catch (e) {
+  console.warn(e);
+}
 
 export let EMPTY_BLOB: Blob;
 export let hasBlob = false;
 try {
   EMPTY_BLOB = new Blob([]);
   hasBlob = true;
-} catch {}
+} catch (e) {
+  console.warn(e);
+}
 
 export const EMPTY_BASE64: StringData = {
   encoding: "Base64",
@@ -43,7 +47,9 @@ try {
   });
   hasReadableStream = true;
   hasWritableStream = true;
-} catch {}
+} catch (e) {
+  console.warn(e);
+}
 
 export let EMPTY_READABLE: Readable;
 export let hasReadable = false;
@@ -57,7 +63,9 @@ try {
   });
   hasReadable = true;
   hasWritable = true;
-} catch {}
+} catch (e) {
+  console.warn(e);
+}
 
 export function isBlob(data: unknown): data is Blob {
   return (
@@ -83,61 +91,68 @@ export function isUint8Array(data: unknown): data is Uint8Array {
   );
 }
 
-export function isReadableStream(stream: any): stream is ReadableStream<any> {
+export function isReadableStream(
+  stream: unknown
+): stream is ReadableStream<unknown> {
   return (
     hasReadableStream &&
-    stream &&
-    typeof stream.getReader === "function" &&
-    typeof stream.cancel === "function"
+    stream != null &&
+    typeof (stream as ReadableStream<unknown>).getReader === "function" &&
+    typeof (stream as ReadableStream<unknown>).cancel === "function"
   );
 }
 
-export function isWritableStream(stream: any): stream is WritableStream<any> {
+export function isWritableStream(
+  stream: unknown
+): stream is WritableStream<unknown> {
   return (
     hasWritableStream &&
-    stream &&
-    typeof stream.getWriter === "function" &&
-    typeof stream.close === "function"
+    stream != null &&
+    typeof (stream as WritableStream<unknown>).getWriter === "function" &&
+    typeof (stream as WritableStream<unknown>).close === "function"
   );
 }
 
-export function isBuffer(data: any): data is Buffer {
+export function isBuffer(data: unknown): data is Buffer {
   return (
     hasBuffer &&
     (data instanceof Buffer || toString.call(data) === "[object Buffer]")
   );
 }
 
-export function isReadable(stream: any): stream is Readable {
+export function isReadable(stream: unknown): stream is Readable {
   return (
-    stream &&
     hasReadable &&
-    typeof stream.pipe === "function" &&
-    typeof stream._read === "function"
+    stream != null &&
+    typeof (stream as Readable).pipe === "function" &&
+    typeof (stream as Readable)._read === "function"
   );
 }
 
-export function isWritable(stream: any): stream is Writable {
+export function isWritable(stream: unknown): stream is Writable {
   return (
-    stream &&
     hasWritable &&
-    typeof stream.pipe === "function" &&
-    typeof stream._write === "function"
+    stream != null &&
+    typeof (stream as Writable).pipe === "function" &&
+    typeof (stream as Writable)._write === "function"
   );
 }
 
-export function isReadableStreamData(data: any): data is ReadableStreamData {
+export function isReadableStreamData(
+  data: unknown
+): data is ReadableStreamData {
   return isReadable(data) || isReadableStream(data);
 }
 
-export function isStringData(data: any): data is StringData {
+export function isStringData(data: unknown): data is StringData {
   if (data == null) {
     return false;
   }
-  if (typeof data.value !== "string") {
+  const sd = data as StringData;
+  if (typeof sd.value !== "string") {
     return false;
   }
-  const encoding = data.encoding as StringEncoding;
+  const encoding = sd.encoding;
   return encoding === "Base64" || encoding === "BinaryString";
 }
 
