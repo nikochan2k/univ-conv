@@ -127,10 +127,11 @@ export async function handleReadableStream(
       }
       res = await reader.read();
     }
-    await reader.cancel();
   } catch (err) {
     await reader.cancel(err);
     throw err;
+  } finally {
+    await stream.cancel();
   }
 }
 

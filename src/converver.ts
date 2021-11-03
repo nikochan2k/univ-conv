@@ -425,27 +425,7 @@ export class Converter {
     }
 
     const buffer = await this.toBuffer(data);
-    const bufferSize = this.bufferSize;
-    const length = buffer.byteLength;
-    let start = 0;
-    return new Readable({
-      read: async function () {
-        do {
-          const chunk = await new Promise<Buffer>((resolve, reject) => {
-            try {
-              const end = start + bufferSize;
-              const sliced = buffer.slice(start, end);
-              start += sliced.byteLength;
-              resolve(sliced);
-            } catch (err) {
-              reject(err);
-            }
-          });
-          this.push(chunk);
-        } while (start < length);
-        this.push(null);
-      },
-    });
+    return Readable.from(buffer);
   }
 
   public async toReadableStream(data: Data): Promise<ReadableStream<unknown>> {
@@ -480,6 +460,9 @@ export class Converter {
     const bufferSize = this.bufferSize;
     if (isBrowser) {
       const blob = await this.toBlob(data);
+      if (hasStreamOnBlob) {
+        return blob.stream() as unknown as ReadableStream<unknown>;
+      }
       const size = blob.size;
       let start = 0;
       return new ReadableStream({
