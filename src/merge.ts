@@ -1,4 +1,4 @@
-import { Readable } from "stream";
+import { PassThrough, Readable } from "stream";
 import {
   EMPTY_ARRAY_BUFFER,
   EMPTY_BLOB,
@@ -102,53 +102,56 @@ export function mergeString(chunks: string[]): string {
 }
 
 export function mergeReadables(readables: Readable[]): Readable {
-  if (!readables || readables.length === 0) {
+  const end = readables.length;
+  if (!readables || end === 0) {
     return EMPTY_READABLE;
   }
-  if (readables.length === 1) {
+  if (end === 1) {
     return readables[0] as Readable;
   }
 
-  return new Readable({
-    read: async function () {
-      for (const readable of readables) {
-        const result = await new Promise<boolean>((resolve) => {
-          readable.on("error", (err) => {
-            this.emit("error", err);
-            resolve(false);
-          });
-          readable.on("end", () => resolve(true));
-          readable.on("data", (data) => this.push(data));
-        });
-        if (!result) {
-          return;
-        }
+  let waiting = end;
+  let pass = new PassThrough();
+  for (let i = 0; i < end; i++) {
+    const readable = readables[i] as Readable;
+    pass = readable.pipe(pass, { end: false });
+    readable.once("error", (e) => {
+      pass.emit("error", e);
+      for (let j = i; j < end; j++) {
+        const r = readables[j] as Readable;
+        r.destroy();
       }
-      this.push(null);
-    },
-  });
+    });
+    readable.once("end", () => --waiting === 0 && pass.emit("end"));
+  }
+  return pass;
 }
 
 export function mergeReadableStream(
-  chunks: ReadableStream<unknown>[]
+  streams: ReadableStream<unknown>[]
 ): ReadableStream<unknown> {
-  if (!chunks || chunks.length === 0) {
+  const end = streams.length;
+  if (!streams || end === 0) {
     return EMPTY_READABLE_STREAM;
   }
-  if (chunks.length === 1) {
-    return chunks[0] as ReadableStream<unknown>;
+  if (end === 1) {
+    return streams[0] as ReadableStream<unknown>;
   }
 
   return new ReadableStream({
     start: async (converter) => {
-      for (const chunk of chunks) {
+      for (let i = 0; i < end; i++) {
+        const stream = streams[i] as ReadableStream<unknown>;
         try {
-          await handleReadableStream(chunk, (chunk) =>
+          await handleReadableStream(stream, (chunk) =>
             converter.enqueue(chunk)
           );
         } catch (e) {
-          converter.close();
           converter.error(e);
+          for (let j = i; j < end; j++) {
+            const s = streams[j] as ReadableStream<unknown>;
+            s.cancel(); // eslint-disable-line
+          }
         }
       }
       converter.close();

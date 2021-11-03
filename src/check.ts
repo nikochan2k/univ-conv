@@ -9,18 +9,14 @@ export let hasBuffer = false;
 try {
   EMPTY_BUFFER = Buffer.from([]);
   hasBuffer = true;
-} catch (e) {
-  console.debug(e);
-}
+} catch {} // eslint-disable-line
 
 export let EMPTY_BLOB: Blob;
 export let hasBlob = false;
 try {
   EMPTY_BLOB = new Blob([]);
   hasBlob = true;
-} catch (e) {
-  console.debug(e);
-}
+} catch {} // eslint-disable-line
 
 export const EMPTY_BASE64: StringData = {
   encoding: "Base64",
@@ -47,9 +43,7 @@ try {
   });
   hasReadableStream = true;
   hasWritableStream = true;
-} catch (e) {
-  console.debug(e);
-}
+} catch {} // eslint-disable-line
 
 export let EMPTY_READABLE: Readable;
 export let hasReadable = false;
@@ -63,9 +57,7 @@ try {
   });
   hasReadable = true;
   hasWritable = true;
-} catch (e) {
-  console.debug(e);
-}
+} catch {} // eslint-disable-line
 
 export function isBlob(data: unknown): data is Blob {
   return (
