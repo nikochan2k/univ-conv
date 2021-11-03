@@ -410,10 +410,11 @@ export class Converter {
           reader
             .read()
             .then(({ value, done }) => {
+              if (value) {
+                this.push(value);
+              }
               if (done) {
                 this.push(null);
-              } else {
-                this.push(value);
               }
             })
             .catch(async (e) => {
