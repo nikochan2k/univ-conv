@@ -2,6 +2,7 @@ import { Readable } from "stream";
 import {
   binaryStringToBuffer,
   binaryStringToUint8Array,
+  closeStream,
   EMPTY_BASE64,
   EMPTY_BINARY_STRING,
   mergeString,
@@ -237,17 +238,19 @@ export class Converter {
         readable.pipe(output);
       });
     } else {
-      const stream = await this.toReadableStream(input);
-      if (typeof stream.pipeTo === "function") {
-        await stream.pipeTo(output);
-      } else {
-        const writer = output.getWriter();
-        await handleReadableStream(stream, (chunk) => writer.write(chunk));
-        writer.releaseLock();
-        writer.close().catch((e) => console.warn(e));
+      let stream: ReadableStream | undefined;
+      try {
+        stream = await this.toReadableStream(input);
+        if (typeof stream.pipeTo === "function") {
+          await stream.pipeTo(output);
+        } else {
+          const writer = output.getWriter();
+          await handleReadableStream(stream, (chunk) => writer.write(chunk));
+        }
+      } finally {
+        closeStream(output);
+        closeStream(stream);
       }
-      stream.cancel().catch((e) => console.warn(e));
-      output.close().catch((e) => console.warn(e));
     }
   }
 
@@ -416,6 +419,7 @@ export class Converter {
       data = data.stream() as unknown as ReadableStream<unknown>;
     }
     if (isReadableStream(data)) {
+      const stream = data;
       const reader = data.getReader();
       return new Readable({
         read() {
@@ -427,11 +431,16 @@ export class Converter {
               }
               if (done) {
                 this.push(null);
+                reader.releaseLock();
+                reader.cancel().catch((e) => console.warn(e));
               }
             })
             .catch((e) => {
               reader.releaseLock();
               reader.cancel(e).catch((e) => console.warn(e));
+            })
+            .finally(() => {
+              stream.cancel().catch((e) => console.warn(e));
             });
         },
       });

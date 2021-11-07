@@ -1,5 +1,6 @@
 import { PassThrough, Readable } from "stream";
 import {
+  closeStream,
   EMPTY_ARRAY_BUFFER,
   EMPTY_BLOB,
   EMPTY_BUFFER,
@@ -153,7 +154,7 @@ export function mergeReadableStream(
           converter.error(e);
           for (let j = i; j < end; j++) {
             const s = streams[j] as ReadableStream<unknown>;
-            s.cancel().catch((e) => console.warn(e));
+            closeStream(s);
           }
         });
     } else {

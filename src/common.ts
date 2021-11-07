@@ -97,20 +97,39 @@ export function binaryStringToUint8Array(bin: string): Uint8Array {
   return Uint8Array.from(bin.split(""), (e) => e.charCodeAt(0));
 }
 
-export function closeReadable(
+export function closeStream(
   stream:
     | Readable
     | Writable
     | ReadableStream<unknown>
-    | WritableStream<unknown>,
+    | WritableStream<unknown>
+    | undefined,
   reason?: unknown
 ) {
+  if (!stream) {
+    return;
+  }
+
   if (isReadable(stream) || isWritable(stream)) {
     stream.destroy(reason as Error | undefined);
   } else if (isReadableStream(stream)) {
-    stream.cancel(reason).catch((e) => console.warn(e));
+    const reader = stream.getReader();
+    reader.releaseLock();
+    reader
+      .cancel()
+      .catch((e) => console.warn(e))
+      .finally(() => {
+        stream.cancel(reason).catch((e) => console.warn(e));
+      });
   } else {
-    stream.close().catch((e) => console.warn(e));
+    const writer = stream.getWriter();
+    writer.releaseLock();
+    writer
+      .close()
+      .catch((e) => console.warn(e))
+      .finally(() => {
+        stream.close().catch((e) => console.warn(e));
+      });
   }
 }
 
