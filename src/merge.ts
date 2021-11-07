@@ -110,21 +110,26 @@ export function mergeReadables(readables: Readable[]): Readable {
     return readables[0] as Readable;
   }
 
-  let waiting = end;
-  let pass = new PassThrough();
-  for (let i = 0; i < end; i++) {
-    const readable = readables[i] as Readable;
-    pass = readable.pipe(pass, { end: false });
-    readable.once("error", (e) => {
-      pass.emit("error", e);
-      for (let j = i; j < end; j++) {
-        const r = readables[j] as Readable;
-        r.destroy();
-      }
-    });
-    readable.once("end", () => --waiting === 0 && pass.emit("end"));
-  }
-  return pass;
+  const pt = new PassThrough();
+  const process = (i: number) => {
+    if (i < end) {
+      const readable = readables[i] as Readable;
+      readable.pipe(pt, { end: false });
+      readable.once("error", (e) => {
+        readable.unpipe();
+        pt.emit("error", e);
+        for (let j = i; j < end; j++) {
+          const r = readables[j] as Readable;
+          r.destroy();
+        }
+      });
+      readable.once("end", () => process(++i));
+    } else {
+      pt.emit("end");
+    }
+  };
+  process(0);
+  return pt;
 }
 
 export function mergeReadableStream(
@@ -138,23 +143,26 @@ export function mergeReadableStream(
     return streams[0] as ReadableStream<unknown>;
   }
 
-  return new ReadableStream({
-    start: async (converter) => {
-      for (let i = 0; i < end; i++) {
-        const stream = streams[i] as ReadableStream<unknown>;
-        try {
-          await handleReadableStream(stream, (chunk) =>
-            converter.enqueue(chunk)
-          );
-        } catch (e) {
+  const process = (converter: ReadableStreamController<unknown>, i: number) => {
+    if (i < end) {
+      const stream = streams[i] as ReadableStream<unknown>;
+      handleReadableStream(stream, (chunk) => converter.enqueue(chunk))
+        .then(() => process(converter, ++i))
+        .catch((e) => {
           converter.error(e);
           for (let j = i; j < end; j++) {
             const s = streams[j] as ReadableStream<unknown>;
             s.cancel(); // eslint-disable-line
           }
-        }
-      }
+        });
+    } else {
       converter.close();
+    }
+  };
+
+  return new ReadableStream({
+    start: (converter) => {
+      process(converter, 0);
     },
   });
 }
