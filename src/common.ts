@@ -108,9 +108,9 @@ export function closeReadable(
   if (isReadable(stream) || isWritable(stream)) {
     stream.destroy(reason as Error | undefined);
   } else if (isReadableStream(stream)) {
-    stream.cancel(reason); // eslint-disable-line
+    stream.cancel(reason).catch((e) => console.warn(e));
   } else {
-    stream.close(); // eslint-disable-line
+    stream.close().catch((e) => console.warn(e));
   }
 }
 
@@ -145,13 +145,13 @@ export async function handleReadableStream(
       res = await reader.read();
     }
     reader.releaseLock();
-    await reader.cancel();
+    reader.cancel().catch((e) => console.warn(e));
   } catch (err) {
     reader.releaseLock();
-    await reader.cancel(err);
+    reader.cancel(err).catch((e) => console.warn(e));
     throw err;
   } finally {
-    await stream.cancel();
+    stream.cancel().catch((e) => console.warn(e));
   }
 }
 

@@ -153,7 +153,7 @@ export function mergeReadableStream(
           converter.error(e);
           for (let j = i; j < end; j++) {
             const s = streams[j] as ReadableStream<unknown>;
-            s.cancel(); // eslint-disable-line
+            s.cancel().catch((e) => console.warn(e));
           }
         });
     } else {

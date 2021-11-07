@@ -244,10 +244,10 @@ export class Converter {
         const writer = output.getWriter();
         await handleReadableStream(stream, (chunk) => writer.write(chunk));
         writer.releaseLock();
-        await writer.close();
+        writer.close().catch((e) => console.warn(e));
       }
-      stream.cancel(); // eslint-disable-line
-      output.close(); // eslint-disable-line
+      stream.cancel().catch((e) => console.warn(e));
+      output.close().catch((e) => console.warn(e));
     }
   }
 
@@ -429,9 +429,9 @@ export class Converter {
                 this.push(null);
               }
             })
-            .catch(async (e) => {
+            .catch((e) => {
               reader.releaseLock();
-              await reader.cancel(e);
+              reader.cancel(e).catch((e) => console.warn(e));
             });
         },
       });
