@@ -222,9 +222,18 @@ export class Converter {
     if (isWritable(output)) {
       const readable = await this.toReadable(input);
       await new Promise<void>((resolve, reject) => {
-        readable.on("error", (err) => reject(err));
-        output.on("error", (err) => reject(err));
-        output.on("finish", () => resolve());
+        const onError = (err: Error) => {
+          reject(err);
+          readable.destroy();
+          output.destroy();
+          readable.removeAllListeners();
+          output.removeAllListeners();
+        };
+        readable.once("error", onError);
+        output.once("error", onError);
+        output.once("finish", () => {
+          resolve();
+        });
         readable.pipe(output);
       });
     } else {
@@ -234,8 +243,11 @@ export class Converter {
       } else {
         const writer = output.getWriter();
         await handleReadableStream(stream, (chunk) => writer.write(chunk));
+        writer.releaseLock();
         await writer.close();
       }
+      stream.cancel(); // eslint-disable-line
+      output.close(); // eslint-disable-line
     }
   }
 
@@ -450,11 +462,21 @@ export class Converter {
       }
       return new ReadableStream({
         start: (converter) => {
-          readable.on("error", (err) => converter.error(err));
-          readable.on("end", () => converter.close());
+          readable.once("error", (err) => {
+            converter.error(err);
+            readable.destroy();
+            readable.removeAllListeners();
+          });
+          readable.once("end", () => {
+            converter.close();
+            readable.removeAllListeners();
+          });
           readable.on("data", (chunk) => converter.enqueue(chunk));
         },
-        cancel: (err) => readable.destroy(err as Error),
+        cancel: (err) => {
+          readable.destroy(err as Error);
+          readable.removeAllListeners();
+        },
       });
     }
 

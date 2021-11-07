@@ -8,7 +8,7 @@ export interface StringData {
 
 export type BinaryData = ArrayBuffer | Uint8Array | Buffer | Blob;
 export type BlockData = string | BinaryData | StringData;
-export type ReadableStreamData = ReadableStream<any> | Readable;
+export type ReadableStreamData = ReadableStream<unknown> | Readable;
 export type Data = BlockData | ReadableStreamData;
 
 export type BinaryType = "ArrayBuffer" | "Uint8Array" | "Buffer" | "Blob";
@@ -32,9 +32,9 @@ export type ReturnDataType<T extends DataType> = T extends "ArrayBuffer"
   : T extends "UTF8"
   ? string
   : T extends "ReadableStream"
-  ? ReadableStream<any>
+  ? ReadableStream<unknown>
   : T extends "Readable"
   ? Readable
   : never;
 
-export type WritableStreamData = WritableStream<any> | Writable;
+export type WritableStreamData = WritableStream<unknown> | Writable;

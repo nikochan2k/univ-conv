@@ -122,10 +122,11 @@ export function mergeReadables(readables: Readable[]): Readable {
           const r = readables[j] as Readable;
           r.destroy();
         }
+        pt.destroy();
       });
       readable.once("end", () => process(++i));
     } else {
-      pt.emit("end");
+      pt.end();
     }
   };
   process(0);

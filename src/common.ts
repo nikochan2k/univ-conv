@@ -1,6 +1,6 @@
 import { decode, encode } from "base64-arraybuffer";
-import { Readable } from "stream";
-import { EMPTY_ARRAY_BUFFER, EMPTY_BUFFER } from ".";
+import { Readable, Writable } from "stream";
+import { EMPTY_ARRAY_BUFFER, EMPTY_BUFFER, isReadable, isWritable } from ".";
 import { EMPTY_U8, isReadableStream } from "./check";
 import { ReadableStreamData } from "./def";
 
@@ -97,6 +97,23 @@ export function binaryStringToUint8Array(bin: string): Uint8Array {
   return Uint8Array.from(bin.split(""), (e) => e.charCodeAt(0));
 }
 
+export function closeReadable(
+  stream:
+    | Readable
+    | Writable
+    | ReadableStream<unknown>
+    | WritableStream<unknown>,
+  reason?: unknown
+) {
+  if (isReadable(stream) || isWritable(stream)) {
+    stream.destroy(reason as Error | undefined);
+  } else if (isReadableStream(stream)) {
+    stream.cancel(reason); // eslint-disable-line
+  } else {
+    stream.close(); // eslint-disable-line
+  }
+}
+
 export function handleFileReader<T extends string | ArrayBuffer>(
   trigger: (reader: FileReader) => void,
   transform: (data: string | ArrayBuffer | null) => T
@@ -143,8 +160,15 @@ export async function handleReadable(
     return;
   }
   return new Promise<void>((resolve, reject) => {
-    readable.on("error", (e) => reject(e));
-    readable.on("end", () => resolve());
+    readable.once("error", (e) => {
+      reject(e);
+      readable.destroy();
+      readable.removeAllListeners();
+    });
+    readable.once("end", () => {
+      resolve();
+      readable.removeAllListeners();
+    });
     readable.on("data", (chunk) => void (async () => await onData(chunk))());
   });
 }
