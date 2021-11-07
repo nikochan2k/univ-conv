@@ -144,7 +144,10 @@ export async function handleReadableStream(
       }
       res = await reader.read();
     }
+    reader.releaseLock();
+    await reader.cancel();
   } catch (err) {
+    reader.releaseLock();
     await reader.cancel(err);
     throw err;
   } finally {
