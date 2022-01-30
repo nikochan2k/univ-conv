@@ -1,7 +1,13 @@
 import { decode, encode } from "base64-arraybuffer";
 import { Readable, Writable } from "stream";
-import { EMPTY_ARRAY_BUFFER, EMPTY_BUFFER, isReadable, isWritable } from ".";
-import { EMPTY_U8, isReadableStream } from "./check";
+import {
+  EMPTY_ARRAY_BUFFER,
+  EMPTY_BUFFER,
+  EMPTY_U8,
+  isReadable,
+  isReadableStream,
+  isWritable,
+} from "./check";
 import { ReadableStreamData } from "./def";
 
 const textEncoder = new TextEncoder();
@@ -209,7 +215,7 @@ export async function handleReadableStreamData(
 export function dataUrlToBase64(dataUrl: string) {
   const index = dataUrl.indexOf(",");
   if (0 <= index) {
-    return dataUrl.substr(index + 1);
+    return dataUrl.substring(index + 1);
   }
   return dataUrl;
 }

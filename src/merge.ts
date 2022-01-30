@@ -1,15 +1,14 @@
 import { PassThrough, Readable } from "stream";
 import {
-  closeStream,
   EMPTY_ARRAY_BUFFER,
   EMPTY_BLOB,
   EMPTY_BUFFER,
+  EMPTY_READABLE,
+  EMPTY_READABLE_STREAM,
   EMPTY_U8,
-  StringData,
-  StringEncoding,
-} from ".";
-import { EMPTY_READABLE, EMPTY_READABLE_STREAM } from "./check";
-import { handleReadableStream } from "./common";
+} from "./check";
+import { closeStream, handleReadableStream } from "./common";
+import { StringData, StringEncoding } from "./def";
 
 export function mergeBlob(chunks: Blob[]): Blob {
   if (chunks.length === 0) {

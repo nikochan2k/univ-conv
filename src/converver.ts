@@ -1,16 +1,8 @@
 import { Readable } from "stream";
 import {
-  binaryStringToBuffer,
-  binaryStringToUint8Array,
-  closeStream,
+  EMPTY_ARRAY_BUFFER,
   EMPTY_BASE64,
   EMPTY_BINARY_STRING,
-  mergeString,
-  StringData,
-  uint8ArrayToBuffer,
-} from ".";
-import {
-  EMPTY_ARRAY_BUFFER,
   EMPTY_BLOB,
   EMPTY_BUFFER,
   EMPTY_READABLE,
@@ -41,17 +33,21 @@ import {
   arrayBufferToBase64,
   base64ToArrayBuffer,
   base64ToBuffer,
+  binaryStringToBuffer,
+  binaryStringToUint8Array,
   blobToBase64,
   blobToBinaryString,
   blobToUint8Array,
   bufferToBase64,
   bufferToBinaryString,
+  closeStream,
   DEFAULT_BUFFER_SIZE,
   handleFileReader,
   handleReadableStream,
   handleReadableStreamData,
   textToUint8Array,
   uint8ArrayToBinaryString,
+  uint8ArrayToBuffer,
   uint8ArrayToText,
 } from "./common";
 import {
@@ -60,6 +56,7 @@ import {
   DataType,
   ReadableStreamData,
   ReturnDataType,
+  StringData,
   WritableStreamData,
 } from "./def";
 import {
@@ -68,6 +65,7 @@ import {
   mergeBuffer,
   mergeReadables,
   mergeReadableStream,
+  mergeString,
   mergeStringData,
   mergeUint8Array,
 } from "./merge";
