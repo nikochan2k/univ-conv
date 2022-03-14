@@ -4,6 +4,6 @@ if (!globalThis.TextDecoder || !globalThis.TextEncoder) {
 
 export * from "./def";
 export * from "./check";
-export * from "./common";
+export * from "./converters/common";
 export * from "./merge";
 export * from "./converver";

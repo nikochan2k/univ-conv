@@ -7,7 +7,7 @@ import {
   EMPTY_READABLE_STREAM,
   EMPTY_U8,
 } from "./check";
-import { closeStream, handleReadableStream } from "./common";
+import { closeStream, handleReadableStream } from "./converters/common";
 import { StringData, StringEncoding } from "./def";
 
 export function mergeBlob(chunks: Blob[]): Blob {

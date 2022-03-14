@@ -1,40 +1,50 @@
-import { Readable, Writable } from "stream";
+import {
+  BrowserBinaryData,
+  BrowserBinaryType,
+  BrowserData,
+  BrowserReadableData,
+  BrowserReturnDataType,
+  BrowserStringEncoding,
+  BrowserStringType,
+  BrowserWritable,
+} from "./def-browser";
+import {
+  CommonBinaryData,
+  CommonBinaryType,
+  CommonData,
+  CommonReturnDataType,
+  CommonStringEncoding,
+  CommonStringType,
+} from "./def-common";
+import {
+  NodeBinaryData,
+  NodeBinaryType,
+  NodeData,
+  NodeReadableData,
+  NodeReturnDataType,
+  NodeWritable,
+} from "./def-node";
 
-export type StringEncoding = "Base64" | "BinaryString";
+export type StringEncoding = CommonStringEncoding | BrowserStringEncoding;
 export interface StringData {
   encoding: StringEncoding;
   value: string;
 }
 
-export type BinaryData = ArrayBuffer | Uint8Array | Buffer | Blob;
+export type BinaryData = CommonBinaryData | NodeBinaryData | BrowserBinaryData;
 export type BlockData = string | BinaryData | StringData;
-export type ReadableStreamData = ReadableStream<unknown> | Readable;
-export type Data = BlockData | ReadableStreamData;
+export type ReadableStreamData = NodeReadableData | BrowserReadableData;
+export type Data = CommonData | NodeData | BrowserData;
 
-export type BinaryType = "ArrayBuffer" | "Uint8Array" | "Buffer" | "Blob";
-export type StringType = "Base64" | "BinaryString" | "UTF8";
+export type BinaryType = CommonBinaryType | NodeBinaryType | BrowserBinaryType;
+export type StringType = CommonStringType | BrowserStringType;
 export type BlockType = BinaryType | StringType;
-export type ReadableStreamType = "ReadableStream" | "Readable";
-export type DataType = BlockType | ReadableStreamType;
+export type ReadableType = NodeReadableData | BrowserReadableData;
+export type DataType = BlockType | ReadableType;
 
-export type ReturnDataType<T extends DataType> = T extends "ArrayBuffer"
-  ? ArrayBuffer
-  : T extends "Uint8Array"
-  ? Uint8Array
-  : T extends "Buffer"
-  ? Buffer
-  : T extends "Blob"
-  ? Blob
-  : T extends "Base64"
-  ? string
-  : T extends "BinaryString"
-  ? string
-  : T extends "UTF8"
-  ? string
-  : T extends "ReadableStream"
-  ? ReadableStream<unknown>
-  : T extends "Readable"
-  ? Readable
-  : never;
+export type ReturnDataType<T extends DataType> =
+  | CommonReturnDataType
+  | NodeReturnDataType
+  | BrowserReturnDataType;
 
-export type WritableStreamData = WritableStream<unknown> | Writable;
+export type WritableStreamData = NodeWritable | BrowserWritable;

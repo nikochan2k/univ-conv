@@ -49,7 +49,7 @@ import {
   uint8ArrayToBinaryString,
   uint8ArrayToBuffer,
   uint8ArrayToText,
-} from "./common";
+} from "./converters/common";
 import {
   BinaryData,
   Data,
@@ -252,34 +252,6 @@ export class Converter {
     }
   }
 
-  public async toArrayBuffer(data: Data): Promise<ArrayBuffer> {
-    if (!data) {
-      return EMPTY_ARRAY_BUFFER;
-    }
-
-    if (isBlob(data)) {
-      if (hasArrayBufferOnBlob) {
-        return data.arrayBuffer();
-      }
-      data = await this.toUint8Array(data);
-    } else if (
-      typeof data === "string" ||
-      isStringData(data) ||
-      isReadable(data) ||
-      isReadableStream(data)
-    ) {
-      data = await this.toUint8Array(data);
-    }
-    if (isUint8Array(data)) {
-      return data.buffer.slice(
-        data.byteOffset,
-        data.byteOffset + data.byteLength
-      );
-    }
-
-    return data;
-  }
-
   public async toBase64(data: Data): Promise<StringData> {
     if (!data) {
       return EMPTY_BASE64;
@@ -364,42 +336,41 @@ export class Converter {
     return new Blob([ab]);
   }
 
-  public async toBuffer(data: Data): Promise<Buffer> {
+  public async toBuffer(input: Data): Promise<Buffer> {
     if (!hasBuffer) {
       throw new Error("Buffer is not suppoted.");
     }
-    if (!data) {
+    if (!input) {
       return EMPTY_BUFFER;
     }
-
-    if (isBuffer(data)) {
-      return data;
+    if (isBuffer(input)) {
+      return input;
     }
-    if (typeof data === "string") {
-      data = await this.toUint8Array(data);
+    if (typeof input === "string") {
+      input = await this.toUint8Array(input);
     }
-    if (isUint8Array(data)) {
-      return uint8ArrayToBuffer(data);
+    if (isUint8Array(input)) {
+      return uint8ArrayToBuffer(input);
     }
-    if (isBlob(data) && hasStreamOnBlob) {
-      data = data.stream() as unknown as ReadableStream<unknown>;
+    if (isBlob(input) && hasStreamOnBlob) {
+      input = input.stream() as unknown as ReadableStream<unknown>;
     }
-    if (isReadableStreamData(data)) {
+    if (isReadableStreamData(input)) {
       const chunks: Buffer[] = [];
-      await handleReadableStreamData(data, async (chunk) => {
+      await handleReadableStreamData(input, async (chunk) => {
         chunks.push(await this.toBuffer(chunk as Data));
       });
       return mergeBuffer(chunks);
     }
-    if (isStringData(data)) {
-      const value = data.value;
-      return data.encoding === "Base64"
+    if (isStringData(input)) {
+      const value = input.value;
+      return input.encoding === "Base64"
         ? base64ToBuffer(value)
         : binaryStringToBuffer(value);
     }
 
-    data = await this.toArrayBuffer(data);
-    return Buffer.from(data);
+    input = await this.toArrayBuffer(input);
+    return Buffer.from(input);
   }
 
   public async toReadable(data: Data): Promise<Readable> {
