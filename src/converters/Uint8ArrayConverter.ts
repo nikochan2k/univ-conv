@@ -5,31 +5,30 @@ import {
   BINARY_STRING_CONVERTER,
   BLOB_CONVERTER,
   BUFFER_CONVERTER,
-  EMPTY_ARRAY_BUFFER,
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
   UTF8_CONVERTER,
 } from ".";
-import { Converter, ConvertOptions, initOptions, typeOf } from "./Converter";
+import { AbstractConverter, ConvertOptions, Options } from "./Converter";
 
 export const EMPTY_UINT8_ARRAY = new Uint8Array(0);
 
 const textDecoder = new TextDecoder();
 
-class Uint8ArrayConverter implements Converter<Uint8Array> {
-  public async convert(
-    input: unknown,
-    options?: ConvertOptions
-  ): Promise<Uint8Array> {
-    if (!input) {
-      return EMPTY_UINT8_ARRAY;
-    }
-    if (this.is(input)) {
-      return input;
-    }
+class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
+  public is(input: unknown): input is Uint8Array {
+    return (
+      BUFFER_CONVERTER.is(input) ||
+      input instanceof Uint8Array ||
+      toString.call(input) === "[object Uint8Array]"
+    );
+  }
 
-    options = initOptions(options);
-    const chunkSize = options.chunkSize as number;
+  protected async _convert(
+    input: unknown,
+    options: ConvertOptions
+  ): Promise<Uint8Array | undefined> {
+    const chunkSize = options.chunkSize;
 
     if (typeof input === "string") {
       const encoding = options?.encoding;
@@ -54,26 +53,14 @@ class Uint8ArrayConverter implements Converter<Uint8Array> {
       return READABLE_CONVERTER.toUint8Array(input, chunkSize);
     }
 
-    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-    throw new Error("Illegal input: " + typeOf(input));
+    return undefined;
   }
 
-  public is(input: unknown): input is Uint8Array {
-    return (
-      BUFFER_CONVERTER.is(input) ||
-      input instanceof Uint8Array ||
-      toString.call(input) === "[object Uint8Array]"
-    );
-  }
-
-  public async merge(chunks: Uint8Array[]): Promise<Uint8Array> {
-    if (chunks.length === 0) {
-      return Promise.resolve(EMPTY_UINT8_ARRAY);
-    }
-    if (chunks.length === 1) {
-      return Promise.resolve(chunks[0] as Uint8Array);
-    }
-
+  protected async _merge(
+    chunks: Uint8Array[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: Options
+  ): Promise<Uint8Array> {
     const byteLength = chunks.reduce((sum, chunk) => {
       return sum + chunk.byteLength;
     }, 0);
@@ -88,44 +75,32 @@ class Uint8ArrayConverter implements Converter<Uint8Array> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public toArrayBuffer(input: Uint8Array, _: number): Promise<ArrayBuffer> {
-    if (!input) {
-      return Promise.resolve(EMPTY_ARRAY_BUFFER);
-    }
-
+  protected _toArrayBuffer(input: Uint8Array, _: number): Promise<ArrayBuffer> {
     return Promise.resolve(
       input.buffer.slice(input.byteOffset, input.byteOffset + input.byteLength)
     );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public toBase64(input: Uint8Array, _: number): Promise<string> {
-    if (!input) {
-      return Promise.resolve("");
-    }
-
+  protected _toBase64(input: Uint8Array, _: number): Promise<string> {
     return Promise.resolve(encode(input));
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public toText(input: Uint8Array, _: number): Promise<string> {
-    if (!input) {
-      return Promise.resolve("");
-    }
-
+  protected _toText(input: Uint8Array, _: number): Promise<string> {
     return Promise.resolve(textDecoder.decode(input));
   }
 
-  public toUint8Array(
+  protected _toUint8Array(
     input: Uint8Array,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _: number
   ): Promise<Uint8Array> {
-    if (!input) {
-      return Promise.resolve(EMPTY_UINT8_ARRAY);
-    }
-
     return Promise.resolve(input);
+  }
+
+  protected empty(): Uint8Array {
+    return EMPTY_UINT8_ARRAY;
   }
 }
 

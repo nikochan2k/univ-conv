@@ -9,22 +9,14 @@ import {
   UINT8_ARRAY_CONVERTER,
 } from ".";
 import { handleFileReader } from "./common";
-import { Converter, ConvertOptions, initOptions } from "./Converter";
-import { EMPTY_UINT8_ARRAY } from "./Uint8ArrayConverter";
+import { AbstractConverter, ConvertOptions } from "./Converter";
 
-export const EMPTY_BINARY_STRING = "";
-
-class BinaryStringConverter implements Converter<string> {
-  public async convert(
+class BinaryStringConverter extends AbstractConverter<string> {
+  public async _convert(
     input: unknown,
-    options?: ConvertOptions
+    options: ConvertOptions
   ): Promise<string> {
-    if (!input) {
-      return "";
-    }
-
-    options = initOptions(options);
-    const chunkSize = options.chunkSize as number;
+    const chunkSize = options.chunkSize;
 
     let u8: Uint8Array | undefined;
     if (UINT8_ARRAY_CONVERTER.is(input)) {
@@ -40,7 +32,7 @@ class BinaryStringConverter implements Converter<string> {
       }
     } else if (BLOB_CONVERTER.is(input)) {
       if (hasReadAsBinaryStringOnBlob) {
-        const chunkSize = options.chunkSize as number;
+        const chunkSize = options.chunkSize;
         const chunks: string[] = [];
         for (let start = 0, end = input.size; start < end; start += chunkSize) {
           const blobChunk = input.slice(start, start + chunkSize);
@@ -69,42 +61,30 @@ class BinaryStringConverter implements Converter<string> {
     return typeof input === "string";
   }
 
-  public merge(chunks: string[]): Promise<string> {
+  protected _merge(chunks: string[]): Promise<string> {
     return Promise.resolve(chunks.join(""));
   }
 
-  public async toArrayBuffer(
+  protected async _toArrayBuffer(
     input: string,
     chunkSize: number
   ): Promise<ArrayBuffer> {
-    const u8 = await this.toUint8Array(input, chunkSize);
+    const u8 = await this._toUint8Array(input, chunkSize);
     return ARRAY_BUFFER_CONVERTER.toArrayBuffer(u8, chunkSize);
   }
 
-  public async toBase64(input: string, chunkSize: number): Promise<string> {
-    if (!input) {
-      return "";
-    }
-
-    const u8 = await this.toUint8Array(input, chunkSize);
+  protected async _toBase64(input: string, chunkSize: number): Promise<string> {
+    const u8 = await this._toUint8Array(input, chunkSize);
     return UINT8_ARRAY_CONVERTER.toBase64(u8, chunkSize);
   }
 
-  public async toText(input: string, chunkSize: number): Promise<string> {
-    if (!input) {
-      return "";
-    }
-
-    const u8 = await this.toUint8Array(input, chunkSize);
+  protected async _toText(input: string, chunkSize: number): Promise<string> {
+    const u8 = await this._toUint8Array(input, chunkSize);
     return UINT8_ARRAY_CONVERTER.toText(u8, chunkSize);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public toUint8Array(input: string, _: number): Promise<Uint8Array> {
-    if (!input) {
-      return Promise.resolve(EMPTY_UINT8_ARRAY);
-    }
-
+  protected _toUint8Array(input: string, _: number): Promise<Uint8Array> {
     if (hasBuffer) {
       return Promise.resolve(Buffer.from(input, "binary"));
     } else {
@@ -112,6 +92,10 @@ class BinaryStringConverter implements Converter<string> {
         Uint8Array.from(input.split(""), (e) => e.charCodeAt(0))
       );
     }
+  }
+
+  protected empty(): string {
+    return "";
   }
 }
 

@@ -3,26 +3,25 @@ import {
   ARRAY_BUFFER_CONVERTER,
   BLOB_CONVERTER,
   BUFFER_CONVERTER,
+  EMPTY_READABLE,
   READABLE_STREAM_CONVERTER,
   UINT8_ARRAY_CONVERTER,
 } from ".";
-import { Converter, ConvertOptions, initOptions } from "./Converter";
-import { EMPTY_UINT8_ARRAY } from "./Uint8ArrayConverter";
+import { AbstractConverter, ConvertOptions } from "./Converter";
 
-class ReadableConverter implements Converter<Readable> {
-  public async convert(
+class ReadableConverter extends AbstractConverter<Readable> {
+  public is(input: unknown): input is Readable {
+    return (
+      input != null &&
+      typeof (input as Readable).pipe === "function" &&
+      typeof (input as Readable)._read === "function"
+    );
+  }
+
+  protected async _convert(
     input: unknown,
-    options?: ConvertOptions
+    options: ConvertOptions
   ): Promise<Readable> {
-    if (!input) {
-      return this.createEmptyReadable();
-    }
-    if (this.is(input)) {
-      return input;
-    }
-
-    options = initOptions(options);
-
     if (BLOB_CONVERTER.is(input)) {
       input = input.stream() as unknown as ReadableStream<unknown>;
     }
@@ -58,15 +57,7 @@ class ReadableConverter implements Converter<Readable> {
     return Readable.from(buffer);
   }
 
-  public is(input: unknown): input is Readable {
-    return (
-      input != null &&
-      typeof (input as Readable).pipe === "function" &&
-      typeof (input as Readable)._read === "function"
-    );
-  }
-
-  public merge(readables: Readable[]): Promise<Readable> {
+  protected _merge(readables: Readable[]): Promise<Readable> {
     const end = readables.length;
     if (!readables || end === 0) {
       return Promise.resolve(this.createEmptyReadable());
@@ -98,50 +89,41 @@ class ReadableConverter implements Converter<Readable> {
     return Promise.resolve(pt);
   }
 
-  public async toArrayBuffer(
+  protected async _toArrayBuffer(
     input: Readable,
     chunkSize: number
   ): Promise<ArrayBuffer> {
-    if (!input || input.destroyed) {
-      return EMPTY_UINT8_ARRAY;
-    }
-
-    const u8 = await this.toUint8Array(input, chunkSize);
+    const u8 = await this._toUint8Array(input, chunkSize);
     return ARRAY_BUFFER_CONVERTER.convert(u8);
   }
 
-  public async toBase64(input: Readable, chunkSize: number): Promise<string> {
-    if (!input || input.destroyed) {
-      return "";
-    }
-
-    const u8 = await this.toUint8Array(input, chunkSize);
+  protected async _toBase64(
+    input: Readable,
+    chunkSize: number
+  ): Promise<string> {
+    const u8 = await this._toUint8Array(input, chunkSize);
     return UINT8_ARRAY_CONVERTER.toBase64(u8, chunkSize);
   }
 
-  public async toText(input: Readable, chunkSize: number): Promise<string> {
-    if (!input || input.destroyed) {
-      return "";
-    }
-
-    const u8 = await this.toUint8Array(input, chunkSize);
+  protected async _toText(input: Readable, chunkSize: number): Promise<string> {
+    const u8 = await this._toUint8Array(input, chunkSize);
     return UINT8_ARRAY_CONVERTER.toText(u8, chunkSize);
   }
 
-  public async toUint8Array(
+  protected async _toUint8Array(
     input: Readable,
     chunkSize: number
   ): Promise<Uint8Array> {
-    if (!input || input.destroyed) {
-      return EMPTY_UINT8_ARRAY;
-    }
-
     const chunks: Uint8Array[] = [];
     await this.handleReadable(input, async (chunk) => {
       const u8 = await UINT8_ARRAY_CONVERTER.convert(chunk, { chunkSize });
       chunks.push(u8);
     });
     return UINT8_ARRAY_CONVERTER.merge(chunks);
+  }
+
+  protected empty(): Readable {
+    return EMPTY_READABLE;
   }
 
   private createEmptyReadable(): Promise<Readable> {

@@ -3,28 +3,22 @@ import {
   ARRAY_BUFFER_CONVERTER,
   BINARY_STRING_CONVERTER,
   BLOB_CONVERTER,
-  EMPTY_ARRAY_BUFFER,
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
   UINT8_ARRAY_CONVERTER,
   UTF8_CONVERTER,
 } from ".";
-import { Converter, ConvertOptions, initOptions, typeOf } from "./Converter";
+import { AbstractConverter, ConvertOptions, typeOf } from "./Converter";
 
 const BASE64_REGEXP =
   /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
 
-class Base64Converter implements Converter<string> {
-  public async convert(
+class Base64Converter extends AbstractConverter<string> {
+  public async _convert(
     input: unknown,
-    options?: ConvertOptions
+    options: ConvertOptions
   ): Promise<string> {
-    if (!input) {
-      return "";
-    }
-
-    options = initOptions(options);
-    const chunkSize = options?.chunkSize as number;
+    const chunkSize = options.chunkSize;
 
     let u8: Uint8Array | undefined;
     if (UINT8_ARRAY_CONVERTER.is(input)) {
@@ -36,7 +30,7 @@ class Base64Converter implements Converter<string> {
       } else if (encoding === "BinaryString") {
         return BINARY_STRING_CONVERTER.toBase64(input, chunkSize);
       } else if (encoding === "Base64" || BASE64_CONVERTER.is(input)) {
-        return BASE64_CONVERTER.toBase64(input, chunkSize);
+        return this._toBase64(input, chunkSize);
       }
     } else if (BLOB_CONVERTER.is(input)) {
       return BLOB_CONVERTER.toBase64(input, chunkSize);
@@ -57,7 +51,7 @@ class Base64Converter implements Converter<string> {
     return typeof input === "string" && BASE64_REGEXP.test(input);
   }
 
-  public async merge(chunks: string[]): Promise<string> {
+  protected async _merge(chunks: string[]): Promise<string> {
     if (chunks.length === 0) {
       return "";
     }
@@ -76,30 +70,30 @@ class Base64Converter implements Converter<string> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public toArrayBuffer(input: string, _: number): Promise<ArrayBuffer> {
-    if (!input) {
-      return Promise.resolve(EMPTY_ARRAY_BUFFER);
-    }
-
+  protected _toArrayBuffer(input: string, _: number): Promise<ArrayBuffer> {
     return Promise.resolve(decode(input));
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public toBase64(input: string, _: number): Promise<string> {
+  protected _toBase64(input: string, _: number): Promise<string> {
     return Promise.resolve(input);
   }
 
-  public async toText(input: string, chunkSize: number): Promise<string> {
-    const u8 = await this.toUint8Array(input, chunkSize);
+  protected async _toText(input: string, chunkSize: number): Promise<string> {
+    const u8 = await this._toUint8Array(input, chunkSize);
     return UINT8_ARRAY_CONVERTER.toText(u8, chunkSize);
   }
 
-  public async toUint8Array(
+  protected async _toUint8Array(
     input: string,
     chunkSize: number
   ): Promise<Uint8Array> {
-    const ab = await this.toArrayBuffer(input, chunkSize);
+    const ab = await this._toArrayBuffer(input, chunkSize);
     return ARRAY_BUFFER_CONVERTER.toUint8Array(ab, chunkSize);
+  }
+
+  protected empty(): string {
+    return "";
   }
 }
 

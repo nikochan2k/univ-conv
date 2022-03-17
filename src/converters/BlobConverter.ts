@@ -14,28 +14,27 @@ import {
 } from ".";
 import { dataUrlToBase64, handleFileReader } from "./common";
 import {
-  Converter,
+  AbstractConverter,
   ConvertOptions,
   DEFAULT_BUFFER_SIZE,
-  initOptions,
   typeOf,
 } from "./Converter";
 import { handleReadableStream } from "./ReadableStreamConverter";
 
-class BlobConverter implements Converter<Blob> {
-  public async convert(
-    input: unknown,
-    options?: ConvertOptions
-  ): Promise<Blob> {
-    if (!input) {
-      return EMPTY_BLOB;
-    }
-    if (this.is(input)) {
-      return input;
-    }
+class BlobConverter extends AbstractConverter<Blob> {
+  public is(input: unknown): input is Blob {
+    return (
+      input instanceof Blob ||
+      toString.call(input) === "[object Blob]" ||
+      toString.call(input) === "[object File]"
+    );
+  }
 
-    options = initOptions(options);
-    const chunkSize = options.chunkSize as number;
+  protected async _convert(
+    input: unknown,
+    options: ConvertOptions
+  ): Promise<Blob> {
+    const chunkSize = options.chunkSize;
 
     if (typeof input === "string") {
       const encoding = options?.encoding;
@@ -66,37 +65,19 @@ class BlobConverter implements Converter<Blob> {
     throw new Error("Illegal input: " + typeOf(input));
   }
 
-  public is(input: unknown): input is Blob {
-    return (
-      input instanceof Blob ||
-      toString.call(input) === "[object Blob]" ||
-      toString.call(input) === "[object File]"
-    );
-  }
-
-  public merge(chunks: Blob[]): Promise<Blob> {
-    if (chunks.length === 0) {
-      return Promise.resolve(EMPTY_BLOB);
-    }
-    if (chunks.length === 1) {
-      return Promise.resolve(chunks[0] as Blob);
-    }
-
+  protected _merge(chunks: Blob[]): Promise<Blob> {
     return Promise.resolve(new Blob(chunks));
   }
 
-  public async toArrayBuffer(
+  protected async _toArrayBuffer(
     input: Blob,
     chunkSize: number
   ): Promise<ArrayBuffer> {
-    if (hasArrayBufferOnBlob) {
-      return input.arrayBuffer();
-    }
-    const u8 = await this.toUint8Array(input, chunkSize);
+    const u8 = await this._toUint8Array(input, chunkSize);
     return ARRAY_BUFFER_CONVERTER.toArrayBuffer(u8, chunkSize);
   }
 
-  public async toBase64(input: Blob, chunkSize: number): Promise<string> {
+  protected async _toBase64(input: Blob, chunkSize: number): Promise<string> {
     chunkSize = chunkSize ?? DEFAULT_BUFFER_SIZE;
     const chunks: string[] = [];
     for (let start = 0, end = input.size; start < end; start += chunkSize) {
@@ -111,7 +92,7 @@ class BlobConverter implements Converter<Blob> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public toText(input: Blob, _: number): Promise<string> {
+  protected _toText(input: Blob, _: number): Promise<string> {
     if (hasTextOnBlob) {
       return input.text();
     }
@@ -121,7 +102,7 @@ class BlobConverter implements Converter<Blob> {
     );
   }
 
-  public async toUint8Array(
+  protected async _toUint8Array(
     input: Blob,
     chunkSize: number
   ): Promise<Uint8Array> {
@@ -179,6 +160,10 @@ class BlobConverter implements Converter<Blob> {
       const base64 = chunks.join("");
       return BASE64_CONVERTER.toUint8Array(base64, chunkSize);
     }
+  }
+
+  protected empty(): Blob {
+    return EMPTY_BLOB;
   }
 }
 

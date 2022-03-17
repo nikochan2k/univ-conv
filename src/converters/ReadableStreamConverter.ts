@@ -1,16 +1,12 @@
 import {
   BLOB_CONVERTER,
-  EMPTY_ARRAY_BUFFER,
   EMPTY_READABLE_STREAM,
   hasStreamOnBlob,
   isBrowser,
   READABLE_CONVERTER,
 } from ".";
-import { Converter, ConvertOptions, initOptions } from "./Converter";
-import {
-  EMPTY_UINT8_ARRAY,
-  UINT8_ARRAY_CONVERTER,
-} from "./Uint8ArrayConverter";
+import { AbstractConverter, ConvertOptions } from "./Converter";
+import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
 export async function handleReadableStream(
   stream: ReadableStream,
@@ -37,20 +33,21 @@ export async function handleReadableStream(
   }
 }
 
-class ReadableStreamConverter implements Converter<ReadableStream<unknown>> {
-  public async convert(
+class ReadableStreamConverter extends AbstractConverter<
+  ReadableStream<unknown>
+> {
+  public is(input: unknown): input is ReadableStream {
+    return (
+      input != null &&
+      typeof (input as ReadableStream<unknown>).getReader === "function" &&
+      typeof (input as ReadableStream<unknown>).cancel === "function"
+    );
+  }
+
+  protected async _convert(
     input: unknown,
-    options?: ConvertOptions
+    options: ConvertOptions
   ): Promise<ReadableStream<unknown>> {
-    if (!input) {
-      return EMPTY_READABLE_STREAM;
-    }
-    if (this.is(input)) {
-      return input;
-    }
-
-    options = initOptions(options);
-
     if (BLOB_CONVERTER.is(input)) {
       if (hasStreamOnBlob) {
         return input.stream() as unknown as ReadableStream<unknown>;
@@ -81,7 +78,7 @@ class ReadableStreamConverter implements Converter<ReadableStream<unknown>> {
       });
     }
 
-    const bufferSize = options.chunkSize as number;
+    const chunkSize = options.chunkSize;
     if (isBrowser) {
       const blob = await BLOB_CONVERTER.convert(input, options);
       if (hasStreamOnBlob) {
@@ -94,7 +91,7 @@ class ReadableStreamConverter implements Converter<ReadableStream<unknown>> {
           do {
             const chunk = await new Promise<unknown>((resolve, reject) => {
               try {
-                const end = start + bufferSize;
+                const end = start + chunkSize;
                 const sliced = blob.slice(start, end);
                 start += sliced.size;
                 resolve(sliced);
@@ -118,7 +115,7 @@ class ReadableStreamConverter implements Converter<ReadableStream<unknown>> {
         do {
           const chunk = await new Promise<unknown>((resolve, reject) => {
             try {
-              const end = start + bufferSize;
+              const end = start + chunkSize;
               const sliced = u8.slice(start, end);
               start += sliced.byteLength;
               resolve(sliced);
@@ -134,25 +131,10 @@ class ReadableStreamConverter implements Converter<ReadableStream<unknown>> {
     });
   }
 
-  public is(input: unknown): input is ReadableStream {
-    return (
-      input != null &&
-      typeof (input as ReadableStream<unknown>).getReader === "function" &&
-      typeof (input as ReadableStream<unknown>).cancel === "function"
-    );
-  }
-
-  public merge(
+  protected _merge(
     streams: ReadableStream<unknown>[]
   ): Promise<ReadableStream<unknown>> {
     const end = streams.length;
-    if (!streams || end === 0) {
-      return Promise.resolve(EMPTY_READABLE_STREAM);
-    }
-    if (end === 1) {
-      return Promise.resolve(streams[0] as ReadableStream<unknown>);
-    }
-
     const process = (
       converter: ReadableStreamController<unknown>,
       i: number
@@ -182,26 +164,18 @@ class ReadableStreamConverter implements Converter<ReadableStream<unknown>> {
     );
   }
 
-  public async toArrayBuffer(
+  protected async _toArrayBuffer(
     input: ReadableStream<unknown>,
     chunkSize: number
   ): Promise<ArrayBuffer> {
-    if (!input) {
-      return EMPTY_ARRAY_BUFFER;
-    }
-
     const u8 = await this.toUint8Array(input, chunkSize);
     return UINT8_ARRAY_CONVERTER.toArrayBuffer(u8, chunkSize);
   }
 
-  public async toBase64(
+  protected async _toBase64(
     input: ReadableStream<unknown>,
     chunkSize: number
   ): Promise<string> {
-    if (!input) {
-      return "";
-    }
-
     if (isBrowser) {
       const blob = await BLOB_CONVERTER.convert(input, { chunkSize });
       return BLOB_CONVERTER.toBase64(blob, chunkSize);
@@ -211,14 +185,10 @@ class ReadableStreamConverter implements Converter<ReadableStream<unknown>> {
     }
   }
 
-  public async toText(
+  protected async _toText(
     input: ReadableStream<unknown>,
     chunkSize: number
   ): Promise<string> {
-    if (!input) {
-      return "";
-    }
-
     if (isBrowser) {
       const blob = await BLOB_CONVERTER.convert(input, { chunkSize });
       return BLOB_CONVERTER.toText(blob, chunkSize);
@@ -228,20 +198,20 @@ class ReadableStreamConverter implements Converter<ReadableStream<unknown>> {
     }
   }
 
-  public async toUint8Array(
+  protected async _toUint8Array(
     input: ReadableStream<unknown>,
     chunkSize: number
   ): Promise<Uint8Array> {
-    if (!input) {
-      return EMPTY_UINT8_ARRAY;
-    }
-
     const chunks: Uint8Array[] = [];
     await handleReadableStream(input, async (chunk) => {
       const u8 = await UINT8_ARRAY_CONVERTER.convert(chunk, { chunkSize });
       chunks.push(u8);
     });
     return UINT8_ARRAY_CONVERTER.merge(chunks);
+  }
+
+  protected empty(): ReadableStream<unknown> {
+    return EMPTY_READABLE_STREAM;
   }
 
   private close(stream: ReadableStream<unknown>) {
