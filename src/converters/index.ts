@@ -5,9 +5,8 @@ import { EMPTY_UINT8_ARRAY } from "./Uint8ArrayConverter";
 
 export * from "./ArrayBufferConverter";
 export * from "./Base64Converter";
-export * from "./Uint8ArrayConverter";
-export * from "./UTF8Converter";
 export * from "./BinaryStringConverter";
+export * from "./Uint8ArrayConverter";
 
 export let hasBlob = false;
 export let hasTextOnBlob = false;
@@ -15,7 +14,6 @@ export let hasStreamOnBlob = false;
 export let hasArrayBufferOnBlob = false;
 export let hasReadAsArrayBuferOnBlob = false;
 export let hasReadAsBinaryStringOnBlob = false;
-export const isBrowser = typeof window !== "undefined";
 export let BLOB_CONVERTER: Converter<Blob>;
 export let EMPTY_BLOB: Blob;
 if (typeof Blob === "function") {
@@ -52,7 +50,7 @@ if (typeof ReadableStream === "function") {
     require("./ReadableStreamConverter").READABLE_STREAM_CONVERTER;
   EMPTY_READABLE_STREAM = new ReadableStream({
     start: (converter) => {
-      if (isBrowser) {
+      if (hasBlob) {
         converter.enqueue(EMPTY_BLOB);
       } else {
         converter.enqueue(EMPTY_UINT8_ARRAY);

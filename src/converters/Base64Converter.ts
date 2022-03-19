@@ -1,6 +1,5 @@
 import { decode, encode } from "base64-arraybuffer";
 import {
-  ARRAY_BUFFER_CONVERTER,
   BINARY_STRING_CONVERTER,
   BLOB_CONVERTER,
   READABLE_CONVERTER,
@@ -81,11 +80,9 @@ class Base64Converter extends AbstractConverter<string> {
     return ENCODER.toText(u8, inputEncoding);
   }
 
-  protected _toUint8Array(
-    input: string,
-    chunkSize: number
-  ): Promise<Uint8Array> {
-    return ARRAY_BUFFER_CONVERTER.toUint8Array(decode(input), chunkSize);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected _toUint8Array(input: string, _: number): Promise<Uint8Array> {
+    return Promise.resolve(new Uint8Array(decode(input)));
   }
 
   protected empty(): string {

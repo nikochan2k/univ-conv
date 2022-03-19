@@ -26,25 +26,22 @@ try {
 }
 
 class NodeEncoder implements Encoder {
-  async toText(
-    buffer: Uint8Array,
-    bufferEncoding: BufferEncoding
-  ): Promise<string> {
+  async toText(u8: Uint8Array, bufEnc: BufferEncoding): Promise<string> {
     let buf: Buffer;
-    if (BUFFER_CONVERTER.is(buffer)) {
-      buf = buffer;
+    if (BUFFER_CONVERTER.is(u8)) {
+      buf = u8;
     } else {
-      buf = await BUFFER_CONVERTER.convert(buffer);
+      buf = await BUFFER_CONVERTER.convert(u8);
     }
-    if (ENCODINGS.indexOf(bufferEncoding)) {
-      return buf.toString(bufferEncoding);
+    if (ENCODINGS.indexOf(bufEnc)) {
+      return buf.toString(bufEnc);
     }
     if (convert) {
       try {
         // eslint-disable-next-line
-        return convert(buffer, {
+        return convert(u8, {
           to: "UNICODE",
-          from: bufferEncoding,
+          from: bufEnc,
           type: "string",
         });
       } catch {
@@ -53,20 +50,18 @@ class NodeEncoder implements Encoder {
     }
 
     // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-    throw new Error("Illegal encoding: " + bufferEncoding);
+    throw new Error("Illegal encoding: " + bufEnc);
   }
 
-  toUint8Array(text: string, bufferEncoding: Encoding): Promise<Uint8Array> {
-    if (ENCODINGS.indexOf(bufferEncoding)) {
-      return Promise.resolve(
-        Buffer.from(text, bufferEncoding as BufferEncoding)
-      );
+  toUint8Array(text: string, bufEnc: Encoding): Promise<Uint8Array> {
+    if (ENCODINGS.indexOf(bufEnc)) {
+      return Promise.resolve(Buffer.from(text, bufEnc as BufferEncoding));
     }
     if (convert) {
       try {
         // eslint-disable-next-line
         const ab: ArrayBuffer = convert(text, {
-          to: bufferEncoding.toUpperCase(),
+          to: bufEnc.toUpperCase(),
           from: "UNICODE",
           type: "arraybuffer",
         });
@@ -77,7 +72,7 @@ class NodeEncoder implements Encoder {
     }
 
     // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-    throw new Error("Illegal encoding: " + bufferEncoding);
+    throw new Error("Illegal encoding: " + bufEnc);
   }
 }
 

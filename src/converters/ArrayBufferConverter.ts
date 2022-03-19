@@ -84,7 +84,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     input: ArrayBuffer,
     chunkSize: number
   ): Promise<string> {
-    const u8 = await this.toUint8Array(input, chunkSize);
+    const u8 = new Uint8Array(input);
     return UINT8_ARRAY_CONVERTER.toBase64(u8, chunkSize);
   }
 

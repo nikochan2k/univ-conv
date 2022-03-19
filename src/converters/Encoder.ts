@@ -2,8 +2,8 @@ import { hasBuffer } from ".";
 import { Encoding } from "./Converter";
 
 export interface Encoder {
-  toText(buffer: Uint8Array, bufferEncoding: Encoding): Promise<string>;
-  toUint8Array(text: string, bufferEncoding: Encoding): Promise<Uint8Array>;
+  toText(u8: Uint8Array, bufEnc: Encoding): Promise<string>;
+  toUint8Array(text: string, bufEnc: Encoding): Promise<Uint8Array>;
 }
 
 export let ENCODER: Encoder;

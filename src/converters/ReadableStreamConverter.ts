@@ -3,7 +3,6 @@ import {
   EMPTY_READABLE_STREAM,
   hasBlob,
   hasStreamOnBlob,
-  isBrowser,
   READABLE_CONVERTER,
 } from ".";
 import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
@@ -80,7 +79,7 @@ class ReadableStreamConverter extends AbstractConverter<
     }
 
     const chunkSize = options.chunkSize;
-    if (isBrowser) {
+    if (hasBlob) {
       const blob = await BLOB_CONVERTER.convert(input, options);
       if (hasStreamOnBlob) {
         return blob.stream() as unknown as ReadableStream<unknown>;
@@ -182,7 +181,7 @@ class ReadableStreamConverter extends AbstractConverter<
     input: ReadableStream<unknown>,
     chunkSize: number
   ): Promise<string> {
-    if (isBrowser) {
+    if (hasBlob) {
       const blob = await BLOB_CONVERTER.convert(input, { chunkSize });
       return BLOB_CONVERTER.toBase64(blob, chunkSize);
     } else {

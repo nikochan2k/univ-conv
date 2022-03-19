@@ -16,9 +16,8 @@ import {
   AbstractConverter,
   ConvertOptions,
   dataUrlToBase64,
-  DEFAULT_BUFFER_SIZE,
-  handleFileReader,
   Encoding,
+  handleFileReader,
 } from "./Converter";
 import { ENCODER } from "./Encoder";
 import { handleReadableStream } from "./ReadableStreamConverter";
@@ -82,7 +81,6 @@ class BlobConverter extends AbstractConverter<Blob> {
   }
 
   protected async _toBase64(input: Blob, chunkSize: number): Promise<string> {
-    chunkSize = chunkSize ?? DEFAULT_BUFFER_SIZE;
     const chunks: string[] = [];
     for (let start = 0, end = input.size; start < end; start += chunkSize) {
       const blobChunk = input.slice(start, start + chunkSize);
@@ -122,7 +120,6 @@ class BlobConverter extends AbstractConverter<Blob> {
       return EMPTY_UINT8_ARRAY;
     }
 
-    chunkSize = chunkSize ?? DEFAULT_BUFFER_SIZE;
     if (hasArrayBufferOnBlob) {
       const ab = await input.arrayBuffer();
       return new Uint8Array(ab);
