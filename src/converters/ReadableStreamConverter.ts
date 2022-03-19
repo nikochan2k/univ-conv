@@ -131,6 +131,11 @@ class ReadableStreamConverter extends AbstractConverter<
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected _isEmpty(_: ReadableStream<unknown>): boolean {
+    return false;
+  }
+
   protected _merge(
     streams: ReadableStream<unknown>[]
   ): Promise<ReadableStream<unknown>> {

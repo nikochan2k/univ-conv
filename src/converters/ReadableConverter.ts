@@ -57,6 +57,10 @@ class ReadableConverter extends AbstractConverter<Readable> {
     return Readable.from(buffer);
   }
 
+  protected _isEmpty(input: Readable): boolean {
+    return !input.readable;
+  }
+
   protected _merge(readables: Readable[]): Promise<Readable> {
     const end = readables.length;
     if (!readables || end === 0) {

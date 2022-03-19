@@ -12,11 +12,12 @@ import {
   READABLE_STREAM_CONVERTER,
   UINT8_ARRAY_CONVERTER,
 } from ".";
-import { dataUrlToBase64, handleFileReader } from "./common";
 import {
   AbstractConverter,
   ConvertOptions,
+  dataUrlToBase64,
   DEFAULT_BUFFER_SIZE,
+  handleFileReader,
   typeOf,
 } from "./Converter";
 import { handleReadableStream } from "./ReadableStreamConverter";
@@ -36,16 +37,6 @@ class BlobConverter extends AbstractConverter<Blob> {
   ): Promise<Blob> {
     const chunkSize = options.chunkSize;
 
-    if (typeof input === "string") {
-      const encoding = options?.encoding;
-      if (encoding === "Base64") {
-        input = BASE64_CONVERTER.toUint8Array(input, chunkSize);
-      } else if (encoding === "BinaryString") {
-        input = BINARY_STRING_CONVERTER.toUint8Array(input, chunkSize);
-      } else {
-        return new Blob([input]);
-      }
-    }
     if (READABLE_STREAM_CONVERTER.is(input)) {
       const blobs: Blob[] = [];
       await handleReadableStream(input, async (chunk) => {
@@ -53,16 +44,32 @@ class BlobConverter extends AbstractConverter<Blob> {
       });
       return this.merge(blobs);
     }
+    if (typeof input === "string") {
+      const encoding = options?.encoding;
+      if (!encoding || encoding === "UTF8") {
+        return new Blob([input]);
+      } else if (encoding === "BinaryString") {
+        input = BINARY_STRING_CONVERTER.toUint8Array(input, chunkSize);
+      } else if (encoding === "Base64") {
+        input = BASE64_CONVERTER.toUint8Array(input, chunkSize);
+      }
+
+      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+      throw new Error("Illegal encoding: " + encoding);
+    }
     if (READABLE_CONVERTER.is(input)) {
       input = await READABLE_CONVERTER.toUint8Array(input, chunkSize);
     }
-
     if (UINT8_ARRAY_CONVERTER.is(input)) {
-      return new Blob([input as BlobPart]);
+      return new Blob([input]);
     }
 
     // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
     throw new Error("Illegal input: " + typeOf(input));
+  }
+
+  protected _isEmpty(input: Blob): boolean {
+    return input.size === 0;
   }
 
   protected _merge(chunks: Blob[]): Promise<Blob> {

@@ -36,11 +36,11 @@ class BufferConverter extends AbstractConverter<Buffer> {
 
     let ab: ArrayBuffer | undefined;
     if (BLOB_CONVERTER.is(input)) {
-      ab = await BLOB_CONVERTER.toUint8Array(input, chunkSize);
+      ab = await BLOB_CONVERTER.toArrayBuffer(input, chunkSize);
     } else if (READABLE_CONVERTER.is(input)) {
-      ab = await READABLE_CONVERTER.toUint8Array(input, chunkSize);
+      ab = await READABLE_CONVERTER.toArrayBuffer(input, chunkSize);
     } else if (READABLE_STREAM_CONVERTER.is(input)) {
-      ab = await READABLE_STREAM_CONVERTER.toUint8Array(input, chunkSize);
+      ab = await READABLE_STREAM_CONVERTER.toArrayBuffer(input, chunkSize);
     }
     if (ab) {
       return Buffer.from(ab);
@@ -48,6 +48,10 @@ class BufferConverter extends AbstractConverter<Buffer> {
 
     // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
     throw new Error("Illegal input: " + typeOf(input));
+  }
+
+  protected _isEmpty(input: Buffer): boolean {
+    return 0 === input.byteLength;
   }
 
   protected _merge(chunks: Buffer[]): Promise<Buffer> {

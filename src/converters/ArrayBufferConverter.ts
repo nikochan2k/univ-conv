@@ -57,6 +57,10 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     );
   }
 
+  protected _isEmpty(input: ArrayBuffer): boolean {
+    return 0 === input.byteLength;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _merge(chunks: ArrayBuffer[], _: Options): Promise<ArrayBuffer> {
     const byteLength = chunks.reduce((sum, chunk) => {

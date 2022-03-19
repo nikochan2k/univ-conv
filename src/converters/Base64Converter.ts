@@ -10,9 +10,6 @@ import {
 } from ".";
 import { AbstractConverter, ConvertOptions, typeOf } from "./Converter";
 
-const BASE64_REGEXP =
-  /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
-
 class Base64Converter extends AbstractConverter<string> {
   public async _convert(
     input: unknown,
@@ -29,9 +26,12 @@ class Base64Converter extends AbstractConverter<string> {
         return UTF8_CONVERTER.toBase64(input, chunkSize);
       } else if (encoding === "BinaryString") {
         return BINARY_STRING_CONVERTER.toBase64(input, chunkSize);
-      } else if (encoding === "Base64" || BASE64_CONVERTER.is(input)) {
+      } else if (encoding === "Base64") {
         return this._toBase64(input, chunkSize);
       }
+
+      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+      throw new Error("Illegal encoding: " + encoding);
     } else if (BLOB_CONVERTER.is(input)) {
       return BLOB_CONVERTER.toBase64(input, chunkSize);
     } else if (READABLE_STREAM_CONVERTER.is(input)) {
@@ -48,17 +48,14 @@ class Base64Converter extends AbstractConverter<string> {
   }
 
   public is(input: unknown): input is string {
-    return typeof input === "string" && BASE64_REGEXP.test(input);
+    return typeof input === "string";
+  }
+
+  protected _isEmpty(input: string): boolean {
+    return !input;
   }
 
   protected async _merge(chunks: string[]): Promise<string> {
-    if (chunks.length === 0) {
-      return "";
-    }
-    if (chunks.length === 1) {
-      return chunks[0] as string;
-    }
-
     const bufs: Uint8Array[] = [];
     for (const chunk of chunks) {
       bufs.push(
@@ -80,16 +77,14 @@ class Base64Converter extends AbstractConverter<string> {
   }
 
   protected async _toText(input: string, chunkSize: number): Promise<string> {
-    const u8 = await this._toUint8Array(input, chunkSize);
-    return UINT8_ARRAY_CONVERTER.toText(u8, chunkSize);
+    return ARRAY_BUFFER_CONVERTER.toText(decode(input), chunkSize);
   }
 
-  protected async _toUint8Array(
+  protected _toUint8Array(
     input: string,
     chunkSize: number
   ): Promise<Uint8Array> {
-    const ab = await this._toArrayBuffer(input, chunkSize);
-    return ARRAY_BUFFER_CONVERTER.toUint8Array(ab, chunkSize);
+    return ARRAY_BUFFER_CONVERTER.toUint8Array(decode(input), chunkSize);
   }
 
   protected empty(): string {

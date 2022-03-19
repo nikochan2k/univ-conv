@@ -4,6 +4,8 @@ import {
   BUFFER_CONVERTER,
   READABLE_CONVERTER,
 } from ".";
+import { BASE64_CONVERTER } from "./Base64Converter";
+import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
 import { AbstractConverter, ConvertOptions } from "./Converter";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
@@ -21,7 +23,17 @@ class UTF8Converter extends AbstractConverter<string> {
     const chunkSize = options.chunkSize;
 
     if (typeof input === "string") {
-      return this._toText(input, chunkSize);
+      const encoding = options?.encoding;
+      if (!encoding || encoding === "UTF8") {
+        return input;
+      } else if (encoding === "BinaryString") {
+        return BINARY_STRING_CONVERTER.toText(input, chunkSize);
+      } else if (encoding === "Base64") {
+        return BASE64_CONVERTER.toText(input, chunkSize);
+      }
+
+      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+      throw new Error("Illegal encoding: " + encoding);
     }
     if (ARRAY_BUFFER_CONVERTER.is(input)) {
       return ARRAY_BUFFER_CONVERTER.toText(input, chunkSize);
@@ -40,6 +52,10 @@ class UTF8Converter extends AbstractConverter<string> {
     }
 
     return undefined;
+  }
+
+  protected _isEmpty(input: string): boolean {
+    return !input;
   }
 
   protected _merge(chunks: string[]): Promise<string> {
@@ -70,7 +86,7 @@ class UTF8Converter extends AbstractConverter<string> {
   }
 
   protected empty(): string {
-    throw new Error("Method not implemented.");
+    return "";
   }
 }
 

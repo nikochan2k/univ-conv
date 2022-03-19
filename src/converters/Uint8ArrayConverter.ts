@@ -56,6 +56,10 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     return undefined;
   }
 
+  protected _isEmpty(input: Uint8Array): boolean {
+    return input.byteLength === 0;
+  }
+
   protected async _merge(
     chunks: Uint8Array[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

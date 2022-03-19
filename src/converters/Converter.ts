@@ -26,7 +26,7 @@ export abstract class AbstractConverter<T> implements Converter<T> {
     input: unknown,
     options?: Partial<ConvertOptions>
   ): Promise<T> {
-    if (this.isEmpty(input)) {
+    if (!input) {
       return this.empty();
     }
     if (this.is(input)) {
@@ -53,28 +53,28 @@ export abstract class AbstractConverter<T> implements Converter<T> {
   }
 
   public toArrayBuffer(input: T, chunkSize: number): Promise<ArrayBuffer> {
-    if (this.isEmpty(input)) {
+    if (this._isEmpty(input)) {
       return Promise.resolve(EMPTY_ARRAY_BUFFER);
     }
     return this._toArrayBuffer(input, chunkSize);
   }
 
   public toBase64(input: T, chunkSize: number): Promise<string> {
-    if (this.isEmpty(input)) {
+    if (this._isEmpty(input)) {
       return Promise.resolve("");
     }
     return this._toBase64(input, chunkSize);
   }
 
   public toText(input: T, chunkSize: number): Promise<string> {
-    if (this.isEmpty(input)) {
+    if (this._isEmpty(input)) {
       return Promise.resolve("");
     }
     return this._toText(input, chunkSize);
   }
 
   public toUint8Array(input: T, chunkSize: number): Promise<Uint8Array> {
-    if (this.isEmpty(input)) {
+    if (this._isEmpty(input)) {
       return Promise.resolve(EMPTY_UINT8_ARRAY);
     }
     return this._toUint8Array(input, chunkSize);
@@ -82,14 +82,11 @@ export abstract class AbstractConverter<T> implements Converter<T> {
 
   public abstract is(input: unknown): input is T;
 
-  protected isEmpty(input: unknown) {
-    return !input;
-  }
-
   protected abstract _convert(
     input: unknown,
     options: ConvertOptions
   ): Promise<T | undefined>;
+  protected abstract _isEmpty(input: T): boolean;
   protected abstract _merge(chunks: T[], options: Options): Promise<T>;
   protected abstract _toArrayBuffer(
     input: T,
@@ -117,4 +114,28 @@ export function typeOf(input: unknown): string {
     return (input as any)?.constructor?.name || String.toString.call(input);
   }
   return type;
+}
+
+export function handleFileReader<T extends string | ArrayBuffer>(
+  trigger: (reader: FileReader) => void,
+  transform: (data: string | ArrayBuffer | null) => T
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = function (ev) {
+      reject(reader.error || ev);
+    };
+    reader.onload = function () {
+      resolve(transform(reader.result));
+    };
+    trigger(reader);
+  });
+}
+
+export function dataUrlToBase64(dataUrl: string) {
+  const index = dataUrl.indexOf(",");
+  if (0 <= index) {
+    return dataUrl.substring(index + 1);
+  }
+  return dataUrl;
 }
