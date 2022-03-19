@@ -20,6 +20,7 @@ import {
   handleFileReader,
 } from "./Converter";
 import { ENCODER } from "./Encoder";
+import { HEX_CONVERTER } from "./HexConverter";
 import { handleReadableStream } from "./ReadableStreamConverter";
 
 class BlobConverter extends AbstractConverter<Blob> {
@@ -50,6 +51,8 @@ class BlobConverter extends AbstractConverter<Blob> {
         input = BASE64_CONVERTER.toUint8Array(input, chunkSize);
       } else if (inputEncoding === "binary") {
         input = BINARY_STRING_CONVERTER.toUint8Array(input, chunkSize);
+      } else if (inputEncoding === "hex") {
+        input = HEX_CONVERTER.toUint8Array(input, chunkSize);
       } else {
         input = await ENCODER.toUint8Array(input, inputEncoding);
       }

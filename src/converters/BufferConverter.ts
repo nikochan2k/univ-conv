@@ -1,10 +1,5 @@
-import {
-  BLOB_CONVERTER,
-  EMPTY_BUFFER,
-  READABLE_CONVERTER,
-  READABLE_STREAM_CONVERTER,
-  UINT8_ARRAY_CONVERTER,
-} from ".";
+import { EMPTY_BUFFER, UINT8_ARRAY_CONVERTER } from ".";
+import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
 import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
 import { ENCODER } from "./Encoder";
 
@@ -19,30 +14,21 @@ class BufferConverter extends AbstractConverter<Buffer> {
     input: unknown,
     options: ConvertOptions
   ): Promise<Buffer | undefined> {
-    const chunkSize = options.chunkSize;
-
     if (typeof input === "string") {
       const inputEncoding = options.inputEncoding;
       if (inputEncoding === "base64") {
         return Buffer.from(input, "base64");
       } else if (inputEncoding === "binary") {
         return Buffer.from(input, "binary");
-      } else {
-        input = await ENCODER.toUint8Array(input, inputEncoding);
+      } else if (inputEncoding === "hex") {
+        return Buffer.from(input, "hex");
       }
     }
     if (UINT8_ARRAY_CONVERTER.is(input)) {
       return Buffer.from(input.buffer, input.byteOffset, input.byteLength);
     }
 
-    let ab: ArrayBuffer | undefined;
-    if (BLOB_CONVERTER.is(input)) {
-      ab = await BLOB_CONVERTER.toArrayBuffer(input, chunkSize);
-    } else if (READABLE_CONVERTER.is(input)) {
-      ab = await READABLE_CONVERTER.toArrayBuffer(input, chunkSize);
-    } else if (READABLE_STREAM_CONVERTER.is(input)) {
-      ab = await READABLE_STREAM_CONVERTER.toArrayBuffer(input, chunkSize);
-    }
+    const ab = await ARRAY_BUFFER_CONVERTER.convert(input, options);
     if (ab) {
       return Buffer.from(ab);
     }

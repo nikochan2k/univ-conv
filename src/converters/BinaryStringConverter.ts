@@ -1,11 +1,8 @@
 import {
   ARRAY_BUFFER_CONVERTER,
-  BASE64_CONVERTER,
   BLOB_CONVERTER,
   hasBuffer,
   hasReadAsBinaryStringOnBlob,
-  READABLE_CONVERTER,
-  READABLE_STREAM_CONVERTER,
   UINT8_ARRAY_CONVERTER,
 } from ".";
 import {
@@ -21,19 +18,9 @@ class BinaryStringConverter extends AbstractConverter<string> {
     input: unknown,
     options: ConvertOptions
   ): Promise<string | undefined> {
-    const chunkSize = options.chunkSize;
-
-    let u8: Uint8Array | undefined;
-    if (UINT8_ARRAY_CONVERTER.is(input)) {
-      u8 = input;
-    } else if (typeof input === "string") {
-      const inputEncoding = options.inputEncoding;
-      if (inputEncoding === "base64") {
-        u8 = await BASE64_CONVERTER.toUint8Array(input, chunkSize);
-      } else if (inputEncoding === "binary") {
+    if (typeof input === "string") {
+      if (options.inputEncoding === "binary") {
         return input;
-      } else {
-        u8 = await ENCODER.toUint8Array(input, inputEncoding);
       }
     } else if (BLOB_CONVERTER.is(input)) {
       if (hasReadAsBinaryStringOnBlob) {
@@ -49,12 +36,8 @@ class BinaryStringConverter extends AbstractConverter<string> {
         }
         return chunks.join("");
       }
-      u8 = await BLOB_CONVERTER.toUint8Array(input, chunkSize);
-    } else if (READABLE_STREAM_CONVERTER.is(input)) {
-      u8 = await READABLE_STREAM_CONVERTER.toUint8Array(input, chunkSize);
-    } else if (READABLE_CONVERTER.is(input)) {
-      u8 = await READABLE_CONVERTER.toUint8Array(input, chunkSize);
     }
+    const u8 = await UINT8_ARRAY_CONVERTER.convert(input, options);
     if (u8) {
       return Array.from(u8, (e) => String.fromCharCode(e)).join("");
     }

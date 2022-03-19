@@ -8,6 +8,7 @@ import { BASE64_CONVERTER } from "./Base64Converter";
 import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
 import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
 import { ENCODER } from "./Encoder";
+import { HEX_CONVERTER } from "./HexConverter";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
 class TextConverter extends AbstractConverter<string> {
@@ -25,10 +26,12 @@ class TextConverter extends AbstractConverter<string> {
     if (typeof input === "string") {
       if (inputEnoding === "utf16le") {
         return input;
-      } else if (inputEnoding === "binary") {
-        return BINARY_STRING_CONVERTER.toText(input, inputEnoding, chunkSize);
       } else if (inputEnoding === "base64") {
         return BASE64_CONVERTER.toText(input, inputEnoding, chunkSize);
+      } else if (inputEnoding === "binary") {
+        return BINARY_STRING_CONVERTER.toText(input, inputEnoding, chunkSize);
+      } else if (inputEnoding === "hex") {
+        return HEX_CONVERTER.toText(input, inputEnoding, chunkSize);
       }
       input = ENCODER.toUint8Array(input, inputEnoding);
     }

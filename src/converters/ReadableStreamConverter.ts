@@ -55,9 +55,6 @@ class ReadableStreamConverter extends AbstractConverter<
     }
     if (READABLE_CONVERTER.is(input)) {
       const readable = input;
-      if (readable.destroyed) {
-        return EMPTY_READABLE_STREAM;
-      }
       return new ReadableStream({
         start: (converter) => {
           readable.once("error", (err) => {

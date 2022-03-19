@@ -15,6 +15,7 @@ import {
   Options,
 } from "./Converter";
 import { ENCODER } from "./Encoder";
+import { HEX_CONVERTER } from "./HexConverter";
 
 export const EMPTY_UINT8_ARRAY = new Uint8Array(0);
 
@@ -39,6 +40,8 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
         return BASE64_CONVERTER.toUint8Array(input, chunkSize);
       } else if (inputEncoding === "binary") {
         return BINARY_STRING_CONVERTER.toUint8Array(input, chunkSize);
+      } else if (inputEncoding === "hex") {
+        return HEX_CONVERTER.toUint8Array(input, chunkSize);
       } else {
         return ENCODER.toUint8Array(input, inputEncoding);
       }

@@ -14,6 +14,7 @@ import {
   Options,
 } from "./Converter";
 import { ENCODER } from "./Encoder";
+import { HEX_CONVERTER } from "./HexConverter";
 
 class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
   public async _convert(
@@ -28,6 +29,8 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
         return BASE64_CONVERTER.toArrayBuffer(input, chunkSize);
       } else if (inputEncoding === "binary") {
         return BINARY_STRING_CONVERTER.toArrayBuffer(input, chunkSize);
+      } else if (inputEncoding === "hex") {
+        return HEX_CONVERTER.toArrayBuffer(input, chunkSize);
       }
       input = ENCODER.toUint8Array(input, inputEncoding);
     }

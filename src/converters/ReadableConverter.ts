@@ -4,6 +4,7 @@ import {
   BLOB_CONVERTER,
   BUFFER_CONVERTER,
   EMPTY_READABLE,
+  hasStreamOnBlob,
   READABLE_STREAM_CONVERTER,
   UINT8_ARRAY_CONVERTER,
 } from ".";
@@ -24,7 +25,9 @@ class ReadableConverter extends AbstractConverter<Readable> {
     options: ConvertOptions
   ): Promise<Readable | undefined> {
     if (BLOB_CONVERTER.is(input)) {
-      input = input.stream() as unknown as ReadableStream<unknown>;
+      if (hasStreamOnBlob) {
+        input = input.stream() as unknown as ReadableStream<unknown>;
+      }
     }
     if (READABLE_STREAM_CONVERTER.is(input)) {
       const stream = input;
