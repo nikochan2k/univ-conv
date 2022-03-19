@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Converter } from "./Converter";
+import { Converter, Encoding } from "./Converter";
 
 const NOT_IMPLEMENTED_ERROR = new Error("Method not implemented.");
 
@@ -29,7 +29,7 @@ class FalseConverter implements Converter<any> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public toText(_1: any, _2: number): Promise<string> {
+  public toText(_1: any, _2: Encoding, _3: number): Promise<string> {
     throw NOT_IMPLEMENTED_ERROR;
   }
 

@@ -11,9 +11,10 @@ import {
 import {
   AbstractConverter,
   ConvertOptions,
+  Encoding,
   handleFileReader,
 } from "./Converter";
-import { UTF8_CONVERTER } from "./UTF8Converter";
+import { ENCODER } from "./Encoder";
 
 class BinaryStringConverter extends AbstractConverter<string> {
   public async _convert(
@@ -26,17 +27,14 @@ class BinaryStringConverter extends AbstractConverter<string> {
     if (UINT8_ARRAY_CONVERTER.is(input)) {
       u8 = input;
     } else if (typeof input === "string") {
-      const encoding = options?.encoding;
-      if (!encoding || encoding === "UTF8") {
-        u8 = await UTF8_CONVERTER.toUint8Array(input, chunkSize);
-      } else if (encoding === "BinaryString") {
-        return input;
-      } else if (encoding === "Base64") {
+      const inputEncoding = options.inputEncoding;
+      if (inputEncoding === "base64") {
         u8 = await BASE64_CONVERTER.toUint8Array(input, chunkSize);
+      } else if (inputEncoding === "binary") {
+        return input;
+      } else {
+        u8 = await ENCODER.toUint8Array(input, inputEncoding);
       }
-
-      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-      throw new Error("Illegal encoding: " + encoding);
     } else if (BLOB_CONVERTER.is(input)) {
       if (hasReadAsBinaryStringOnBlob) {
         const chunkSize = options.chunkSize;
@@ -89,9 +87,13 @@ class BinaryStringConverter extends AbstractConverter<string> {
     return UINT8_ARRAY_CONVERTER.toBase64(u8, chunkSize);
   }
 
-  protected async _toText(input: string, chunkSize: number): Promise<string> {
-    const u8 = await this._toUint8Array(input, chunkSize);
-    return UINT8_ARRAY_CONVERTER.toText(u8, chunkSize);
+  protected async _toText(
+    input: string,
+    inputEncoding: Encoding,
+    chunkSize: number
+  ): Promise<string> {
+    const u8 = await this.toUint8Array(input, chunkSize);
+    return ENCODER.toText(u8, inputEncoding);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -5,14 +5,15 @@ import {
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
   UINT8_ARRAY_CONVERTER,
-  UTF8_CONVERTER,
 } from ".";
 import {
   AbstractConverter,
   ConvertOptions,
   EMPTY_ARRAY_BUFFER,
+  Encoding,
   Options,
 } from "./Converter";
+import { ENCODER } from "./Encoder";
 
 class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
   public async _convert(
@@ -22,17 +23,13 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     const chunkSize = options.chunkSize;
 
     if (typeof input === "string") {
-      const encoding = options?.encoding;
-      if (!encoding || encoding === "UTF8") {
-        return UTF8_CONVERTER.toArrayBuffer(input, chunkSize);
-      } else if (encoding === "BinaryString") {
-        return BINARY_STRING_CONVERTER.toArrayBuffer(input, chunkSize);
-      } else if (encoding === "Base64" || BASE64_CONVERTER.is(input)) {
+      const inputEncoding = options.inputEncoding;
+      if (inputEncoding === "base64") {
         return BASE64_CONVERTER.toArrayBuffer(input, chunkSize);
+      } else if (inputEncoding === "binary") {
+        return BINARY_STRING_CONVERTER.toArrayBuffer(input, chunkSize);
       }
-
-      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-      throw new Error("Illegal encoding: " + encoding);
+      input = ENCODER.toUint8Array(input, inputEncoding);
     }
     if (UINT8_ARRAY_CONVERTER.is(input)) {
       return UINT8_ARRAY_CONVERTER.toArrayBuffer(input, chunkSize);
@@ -93,10 +90,12 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
 
   protected async _toText(
     input: ArrayBuffer,
-    chunkSize: number
+    inputEncoding: Encoding,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: number
   ): Promise<string> {
-    const u8 = await this.toUint8Array(input, chunkSize);
-    return UINT8_ARRAY_CONVERTER.toText(u8, chunkSize);
+    const u8 = new Uint8Array(input);
+    return ENCODER.toText(u8, inputEncoding);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

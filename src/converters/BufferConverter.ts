@@ -5,7 +5,8 @@ import {
   READABLE_STREAM_CONVERTER,
   UINT8_ARRAY_CONVERTER,
 } from ".";
-import { AbstractConverter, ConvertOptions } from "./Converter";
+import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
+import { ENCODER } from "./Encoder";
 
 class BufferConverter extends AbstractConverter<Buffer> {
   public is(input: unknown): input is Buffer {
@@ -21,13 +22,13 @@ class BufferConverter extends AbstractConverter<Buffer> {
     const chunkSize = options.chunkSize;
 
     if (typeof input === "string") {
-      const encoding = options?.encoding;
-      if (encoding === "Base64") {
+      const inputEncoding = options.inputEncoding;
+      if (inputEncoding === "base64") {
         return Buffer.from(input, "base64");
-      } else if (encoding === "BinaryString") {
+      } else if (inputEncoding === "binary") {
         return Buffer.from(input, "binary");
       } else {
-        return Buffer.from(input, "utf8");
+        input = await ENCODER.toUint8Array(input, inputEncoding);
       }
     }
     if (UINT8_ARRAY_CONVERTER.is(input)) {
@@ -69,9 +70,13 @@ class BufferConverter extends AbstractConverter<Buffer> {
     return Promise.resolve(input.toString("base64"));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toText(input: Buffer, _: number): Promise<string> {
-    return Promise.resolve(input.toString("utf8"));
+  protected _toText(
+    input: Buffer,
+    inputEncoding: Encoding,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: number
+  ): Promise<string> {
+    return ENCODER.toText(input, inputEncoding);
   }
 
   protected _toUint8Array(input: Buffer): Promise<Uint8Array> {

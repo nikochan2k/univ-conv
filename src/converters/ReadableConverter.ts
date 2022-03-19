@@ -7,7 +7,8 @@ import {
   READABLE_STREAM_CONVERTER,
   UINT8_ARRAY_CONVERTER,
 } from ".";
-import { AbstractConverter, ConvertOptions } from "./Converter";
+import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
+import { ENCODER } from "./Encoder";
 
 class ReadableConverter extends AbstractConverter<Readable> {
   public is(input: unknown): input is Readable {
@@ -109,9 +110,13 @@ class ReadableConverter extends AbstractConverter<Readable> {
     return UINT8_ARRAY_CONVERTER.toBase64(u8, chunkSize);
   }
 
-  protected async _toText(input: Readable, chunkSize: number): Promise<string> {
-    const u8 = await this._toUint8Array(input, chunkSize);
-    return UINT8_ARRAY_CONVERTER.toText(u8, chunkSize);
+  protected async _toText(
+    input: Readable,
+    inputEncoding: Encoding,
+    chunkSize: number
+  ): Promise<string> {
+    const u8 = await this.toUint8Array(input, chunkSize);
+    return ENCODER.toText(u8, inputEncoding);
   }
 
   protected async _toUint8Array(

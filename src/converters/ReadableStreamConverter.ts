@@ -1,11 +1,12 @@
 import {
   BLOB_CONVERTER,
   EMPTY_READABLE_STREAM,
+  hasBlob,
   hasStreamOnBlob,
   isBrowser,
   READABLE_CONVERTER,
 } from ".";
-import { AbstractConverter, ConvertOptions } from "./Converter";
+import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
 export async function handleReadableStream(
@@ -192,14 +193,15 @@ class ReadableStreamConverter extends AbstractConverter<
 
   protected async _toText(
     input: ReadableStream<unknown>,
+    inputEncoding: Encoding,
     chunkSize: number
   ): Promise<string> {
-    if (isBrowser) {
+    if (hasBlob) {
       const blob = await BLOB_CONVERTER.convert(input, { chunkSize });
-      return BLOB_CONVERTER.toText(blob, chunkSize);
+      return BLOB_CONVERTER.toText(blob, inputEncoding, chunkSize);
     } else {
       const u8 = await UINT8_ARRAY_CONVERTER.convert(input, { chunkSize });
-      return UINT8_ARRAY_CONVERTER.toText(u8, chunkSize);
+      return UINT8_ARRAY_CONVERTER.toText(u8, inputEncoding, chunkSize);
     }
   }
 

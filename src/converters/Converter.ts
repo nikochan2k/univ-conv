@@ -1,8 +1,11 @@
 export const DEFAULT_BUFFER_SIZE = 96 * 1024;
 
+export type Encoding = BufferEncoding | "utf16be" | "jis" | "eucjp" | "sjis";
+
 export interface Options {
   chunkSize: number;
-  encoding?: "UTF8" | "BinaryString" | "Base64";
+  inputEncoding: Encoding;
+  outputEncoding: Encoding;
 }
 export interface ConvertOptions extends Options {
   length?: number;
@@ -15,7 +18,7 @@ export interface Converter<T> {
   merge(chunks: T[], options?: Partial<Options>): Promise<T>;
   toArrayBuffer(input: T, chunkSize: number): Promise<ArrayBuffer>;
   toBase64(input: T, chunkSize: number): Promise<string>;
-  toText(input: T, chunkSize: number): Promise<string>;
+  toText(input: T, inputEncoding: Encoding, chunkSize: number): Promise<string>;
   toUint8Array(input: T, chunkSize: number): Promise<Uint8Array>;
 }
 
@@ -66,11 +69,15 @@ export abstract class AbstractConverter<T> implements Converter<T> {
     return this._toBase64(input, chunkSize);
   }
 
-  public toText(input: T, chunkSize: number): Promise<string> {
+  public toText(
+    input: T,
+    inputEncoding: Encoding,
+    chunkSize: number
+  ): Promise<string> {
     if (!input || this._isEmpty(input)) {
       return Promise.resolve("");
     }
-    return this._toText(input, chunkSize);
+    return this._toText(input, inputEncoding, chunkSize);
   }
 
   public toUint8Array(input: T, chunkSize: number): Promise<Uint8Array> {
@@ -93,7 +100,11 @@ export abstract class AbstractConverter<T> implements Converter<T> {
     chunkSize: number
   ): Promise<ArrayBuffer>;
   protected abstract _toBase64(input: T, chunkSize: number): Promise<string>;
-  protected abstract _toText(input: T, chunkSize: number): Promise<string>;
+  protected abstract _toText(
+    input: T,
+    inputEncoding: Encoding,
+    chunkSize: number
+  ): Promise<string>;
   protected abstract _toUint8Array(
     input: T,
     chunkSize: number
@@ -110,6 +121,8 @@ export abstract class AbstractConverter<T> implements Converter<T> {
         `"bufferSize" was modified to ${options.chunkSize}. ("bufferSize" must be divisible by 6.)`
       );
     }
+    if (options.inputEncoding == null) options.inputEncoding = "utf16le";
+    if (options.outputEncoding == null) options.outputEncoding = "utf16le";
     return options as T;
   }
 }

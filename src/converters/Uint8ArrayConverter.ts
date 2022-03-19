@@ -7,13 +7,16 @@ import {
   BUFFER_CONVERTER,
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
-  UTF8_CONVERTER,
 } from ".";
-import { AbstractConverter, ConvertOptions, Options } from "./Converter";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  Encoding,
+  Options,
+} from "./Converter";
+import { ENCODER } from "./Encoder";
 
 export const EMPTY_UINT8_ARRAY = new Uint8Array(0);
-
-const textDecoder = new TextDecoder();
 
 class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
   public is(input: unknown): input is Uint8Array {
@@ -31,13 +34,13 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     const chunkSize = options.chunkSize;
 
     if (typeof input === "string") {
-      const encoding = options?.encoding;
-      if (encoding === "Base64") {
+      const inputEncoding = options?.inputEncoding;
+      if (inputEncoding === "base64") {
         return BASE64_CONVERTER.toUint8Array(input, chunkSize);
-      } else if (encoding === "BinaryString") {
+      } else if (inputEncoding === "binary") {
         return BINARY_STRING_CONVERTER.toUint8Array(input, chunkSize);
       } else {
-        return UTF8_CONVERTER.toUint8Array(input, chunkSize);
+        return ENCODER.toUint8Array(input, inputEncoding);
       }
     }
     if (ARRAY_BUFFER_CONVERTER.is(input)) {
@@ -90,9 +93,13 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     return Promise.resolve(encode(input));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toText(input: Uint8Array, _: number): Promise<string> {
-    return Promise.resolve(textDecoder.decode(input));
+  protected _toText(
+    input: Uint8Array,
+    inputEncoding: Encoding,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: number
+  ): Promise<string> {
+    return ENCODER.toText(input, inputEncoding);
   }
 
   protected _toUint8Array(

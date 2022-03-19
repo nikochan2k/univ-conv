@@ -55,11 +55,13 @@
     "preset": "ts-jest"
   },
   "devDependencies": {
+    "@types/encoding-japanese": "^1.0.18",
     "@types/fast-text-encoding": "^1.0.1",
     "@types/jest": "^27.4.0",
     "@types/node": "^17.0.7",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
+    "encoding-japanese": "^1.0.30",
     "eslint": "^8.6.0",
     "eslint-config-prettier": "^8.3.0",
     "expect": "^27.4.2",

@@ -6,12 +6,11 @@ import {
 } from ".";
 import { BASE64_CONVERTER } from "./Base64Converter";
 import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
-import { AbstractConverter, ConvertOptions } from "./Converter";
+import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
+import { ENCODER } from "./Encoder";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
-const textEncoder = new TextEncoder();
-
-class UTF8Converter extends AbstractConverter<string> {
+class TextConverter extends AbstractConverter<string> {
   public is(input: unknown): input is string {
     return typeof input === "string";
   }
@@ -22,33 +21,31 @@ class UTF8Converter extends AbstractConverter<string> {
   ): Promise<string | undefined> {
     const chunkSize = options.chunkSize;
 
+    const inputEnoding = options.inputEncoding;
     if (typeof input === "string") {
-      const encoding = options?.encoding;
-      if (!encoding || encoding === "UTF8") {
+      if (inputEnoding === "utf16le") {
         return input;
-      } else if (encoding === "BinaryString") {
-        return BINARY_STRING_CONVERTER.toText(input, chunkSize);
-      } else if (encoding === "Base64") {
-        return BASE64_CONVERTER.toText(input, chunkSize);
+      } else if (inputEnoding === "binary") {
+        return BINARY_STRING_CONVERTER.toText(input, inputEnoding, chunkSize);
+      } else if (inputEnoding === "base64") {
+        return BASE64_CONVERTER.toText(input, inputEnoding, chunkSize);
       }
-
-      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-      throw new Error("Illegal encoding: " + encoding);
+      input = ENCODER.toUint8Array(input, inputEnoding);
     }
     if (ARRAY_BUFFER_CONVERTER.is(input)) {
-      return ARRAY_BUFFER_CONVERTER.toText(input, chunkSize);
+      return ARRAY_BUFFER_CONVERTER.toText(input, inputEnoding, chunkSize);
     }
     if (UINT8_ARRAY_CONVERTER.is(input)) {
-      return UINT8_ARRAY_CONVERTER.toText(input, chunkSize);
+      return UINT8_ARRAY_CONVERTER.toText(input, inputEnoding, chunkSize);
     }
     if (BLOB_CONVERTER.is(input)) {
-      return BLOB_CONVERTER.toText(input, chunkSize);
+      return BLOB_CONVERTER.toText(input, inputEnoding, chunkSize);
     }
     if (BUFFER_CONVERTER.is(input)) {
-      return BUFFER_CONVERTER.toText(input, chunkSize);
+      return BUFFER_CONVERTER.toText(input, inputEnoding, chunkSize);
     }
     if (READABLE_CONVERTER.is(input)) {
-      return READABLE_CONVERTER.toText(input, chunkSize);
+      return READABLE_CONVERTER.toText(input, inputEnoding, chunkSize);
     }
 
     return undefined;
@@ -76,13 +73,22 @@ class UTF8Converter extends AbstractConverter<string> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toText(input: string, _: number): Promise<string> {
+  protected _toText(input: string, _1: Encoding, _2: number): Promise<string> {
     return Promise.resolve(input);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _toUint8Array(input: string, _: number): Promise<Uint8Array> {
-    return Promise.resolve(textEncoder.encode(input));
+    const u8 = new Uint8Array(input.length * 2);
+    for (let i = 0; i < u8.length; i += 2) {
+      let x = input.charCodeAt(i / 2);
+      const a = x % 256;
+      x -= a;
+      x /= 256;
+      u8[i] = x;
+      u8[i + 1] = a;
+    }
+    return Promise.resolve(u8);
   }
 
   protected empty(): string {
@@ -90,4 +96,4 @@ class UTF8Converter extends AbstractConverter<string> {
   }
 }
 
-export const UTF8_CONVERTER = new UTF8Converter();
+export const TEXT_CONVERTER = new TextConverter();

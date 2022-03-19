@@ -18,7 +18,9 @@ import {
   dataUrlToBase64,
   DEFAULT_BUFFER_SIZE,
   handleFileReader,
+  Encoding,
 } from "./Converter";
+import { ENCODER } from "./Encoder";
 import { handleReadableStream } from "./ReadableStreamConverter";
 
 class BlobConverter extends AbstractConverter<Blob> {
@@ -44,17 +46,14 @@ class BlobConverter extends AbstractConverter<Blob> {
       return this.merge(blobs);
     }
     if (typeof input === "string") {
-      const encoding = options?.encoding;
-      if (!encoding || encoding === "UTF8") {
-        return new Blob([input]);
-      } else if (encoding === "BinaryString") {
-        input = BINARY_STRING_CONVERTER.toUint8Array(input, chunkSize);
-      } else if (encoding === "Base64") {
+      const inputEncoding = options.inputEncoding;
+      if (inputEncoding === "base64") {
         input = BASE64_CONVERTER.toUint8Array(input, chunkSize);
+      } else if (inputEncoding === "binary") {
+        input = BINARY_STRING_CONVERTER.toUint8Array(input, chunkSize);
+      } else {
+        input = await ENCODER.toUint8Array(input, inputEncoding);
       }
-
-      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-      throw new Error("Illegal encoding: " + encoding);
     }
     if (READABLE_CONVERTER.is(input)) {
       input = await READABLE_CONVERTER.toUint8Array(input, chunkSize);
@@ -96,15 +95,23 @@ class BlobConverter extends AbstractConverter<Blob> {
     return chunks.join("");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toText(input: Blob, _: number): Promise<string> {
-    if (hasTextOnBlob) {
-      return input.text();
+  protected async _toText(
+    input: Blob,
+    inputEncoding: Encoding,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    chunkSize: number
+  ): Promise<string> {
+    if (inputEncoding === "utf8" || inputEncoding === "utf-8") {
+      if (hasTextOnBlob) {
+        return input.text();
+      }
+      return handleFileReader(
+        (reader) => reader.readAsText(input),
+        (data) => data as string
+      );
     }
-    return handleFileReader(
-      (reader) => reader.readAsText(input),
-      (data) => data as string
-    );
+    const u8 = await this.toUint8Array(input, chunkSize);
+    return ENCODER.toText(u8, inputEncoding);
   }
 
   protected async _toUint8Array(
