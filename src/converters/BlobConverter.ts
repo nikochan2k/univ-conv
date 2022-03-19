@@ -18,7 +18,6 @@ import {
   dataUrlToBase64,
   DEFAULT_BUFFER_SIZE,
   handleFileReader,
-  typeOf,
 } from "./Converter";
 import { handleReadableStream } from "./ReadableStreamConverter";
 
@@ -34,7 +33,7 @@ class BlobConverter extends AbstractConverter<Blob> {
   protected async _convert(
     input: unknown,
     options: ConvertOptions
-  ): Promise<Blob> {
+  ): Promise<Blob | undefined> {
     const chunkSize = options.chunkSize;
 
     if (READABLE_STREAM_CONVERTER.is(input)) {
@@ -64,8 +63,7 @@ class BlobConverter extends AbstractConverter<Blob> {
       return new Blob([input]);
     }
 
-    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-    throw new Error("Illegal input: " + typeOf(input));
+    return undefined;
   }
 
   protected _isEmpty(input: Blob): boolean {

@@ -19,7 +19,7 @@ class BinaryStringConverter extends AbstractConverter<string> {
   public async _convert(
     input: unknown,
     options: ConvertOptions
-  ): Promise<string> {
+  ): Promise<string | undefined> {
     const chunkSize = options.chunkSize;
 
     let u8: Uint8Array | undefined;
@@ -57,11 +57,11 @@ class BinaryStringConverter extends AbstractConverter<string> {
     } else if (READABLE_CONVERTER.is(input)) {
       u8 = await READABLE_CONVERTER.toUint8Array(input, chunkSize);
     }
-    if (!u8) {
-      return "";
+    if (u8) {
+      return Array.from(u8, (e) => String.fromCharCode(e)).join("");
     }
 
-    return Array.from(u8, (e) => String.fromCharCode(e)).join("");
+    return undefined;
   }
 
   public is(input: unknown): input is string {

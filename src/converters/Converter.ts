@@ -53,28 +53,28 @@ export abstract class AbstractConverter<T> implements Converter<T> {
   }
 
   public toArrayBuffer(input: T, chunkSize: number): Promise<ArrayBuffer> {
-    if (this._isEmpty(input)) {
+    if (!input || this._isEmpty(input)) {
       return Promise.resolve(EMPTY_ARRAY_BUFFER);
     }
     return this._toArrayBuffer(input, chunkSize);
   }
 
   public toBase64(input: T, chunkSize: number): Promise<string> {
-    if (this._isEmpty(input)) {
+    if (!input || this._isEmpty(input)) {
       return Promise.resolve("");
     }
     return this._toBase64(input, chunkSize);
   }
 
   public toText(input: T, chunkSize: number): Promise<string> {
-    if (this._isEmpty(input)) {
+    if (!input || this._isEmpty(input)) {
       return Promise.resolve("");
     }
     return this._toText(input, chunkSize);
   }
 
   public toUint8Array(input: T, chunkSize: number): Promise<Uint8Array> {
-    if (this._isEmpty(input)) {
+    if (!input || this._isEmpty(input)) {
       return Promise.resolve(EMPTY_UINT8_ARRAY);
     }
     return this._toUint8Array(input, chunkSize);
@@ -103,6 +103,13 @@ export abstract class AbstractConverter<T> implements Converter<T> {
   private initOptions<T extends Options>(options?: Partial<T>): T {
     if (!options) options = {};
     if (options.chunkSize == null) options.chunkSize = DEFAULT_BUFFER_SIZE;
+    const rem = options.chunkSize % 6;
+    if (rem !== 0) {
+      options.chunkSize -= rem;
+      console.info(
+        `"bufferSize" was modified to ${options.chunkSize}. ("bufferSize" must be divisible by 6.)`
+      );
+    }
     return options as T;
   }
 }

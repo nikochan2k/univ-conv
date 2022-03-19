@@ -21,7 +21,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
   protected async _convert(
     input: unknown,
     options: ConvertOptions
-  ): Promise<Readable> {
+  ): Promise<Readable | undefined> {
     if (BLOB_CONVERTER.is(input)) {
       input = input.stream() as unknown as ReadableStream<unknown>;
     }

@@ -47,7 +47,7 @@ class ReadableStreamConverter extends AbstractConverter<
   protected async _convert(
     input: unknown,
     options: ConvertOptions
-  ): Promise<ReadableStream<unknown>> {
+  ): Promise<ReadableStream<unknown> | undefined> {
     if (BLOB_CONVERTER.is(input)) {
       if (hasStreamOnBlob) {
         return input.stream() as unknown as ReadableStream<unknown>;

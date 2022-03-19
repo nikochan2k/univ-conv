@@ -1,60 +1,28 @@
 import { Readable } from "stream";
 import {
-  EMPTY_ARRAY_BUFFER,
-  EMPTY_BASE64,
-  EMPTY_BINARY_STRING,
-  EMPTY_BLOB,
-  EMPTY_BUFFER,
-  EMPTY_READABLE,
-  EMPTY_READABLE_STREAM,
-  EMPTY_U8,
-  hasArrayBufferOnBlob,
-  hasBlob,
-  hasBuffer,
-  hasReadable,
-  hasReadableStream,
-  hasReadAsArrayBuferOnBlob,
-  hasReadAsBinaryStringOnBlob,
-  hasStreamOnBlob,
-  hasTextOnBlob,
-  isArrayBuffer,
   isBlob,
-  isBrowser,
-  isBuffer,
-  isNode,
   isReadable,
   isReadableStream,
-  isReadableStreamData,
   isStringData,
   isUint8Array,
   isWritable,
 } from "./check";
 import {
-  arrayBufferToBase64,
-  base64ToArrayBuffer,
-  base64ToBuffer,
-  binaryStringToBuffer,
-  binaryStringToUint8Array,
-  blobToBase64,
-  blobToBinaryString,
-  blobToUint8Array,
-  bufferToBase64,
-  bufferToBinaryString,
-  closeStream,
-  DEFAULT_BUFFER_SIZE,
-  handleFileReader,
-  handleReadableStream,
-  handleReadableStreamData,
-  textToUint8Array,
-  uint8ArrayToBinaryString,
-  uint8ArrayToBuffer,
-  uint8ArrayToText,
-} from "./converters/common";
+  ARRAY_BUFFER_CONVERTER,
+  BLOB_CONVERTER,
+  BUFFER_CONVERTER,
+  READABLE_CONVERTER,
+  UINT8_ARRAY_CONVERTER,
+} from "./converters";
 import {
-  BinaryData,
+  closeStream,
+  handleReadableStream,
+  textToUint8Array,
+} from "./converters/common";
+import { ConvertOptions } from "./converters/Converter";
+import {
   Data,
   DataType,
-  ReadableStreamData,
   ReturnDataType,
   StringData,
   WritableStreamData,
@@ -85,42 +53,26 @@ export class Converter {
   }
 
   public async convert<T extends DataType>(
-    data: Data,
-    type: T
+    input: unknown,
+    options?: ConvertOptions
   ): Promise<ReturnDataType<T>> {
-    let converted: Promise<Data>;
-    switch (type) {
-      case "ArrayBuffer":
-        converted = converter.toArrayBuffer(data);
-        break;
-      case "Uint8Array":
-        converted = converter.toUint8Array(data);
-        break;
-      case "Buffer":
-        converted = converter.toBuffer(data);
-        break;
-      case "Blob":
-        converted = converter.toBlob(data);
-        break;
-      case "Readable":
-        converted = converter.toReadable(data);
-        break;
-      case "ReadableStream":
-        converted = converter.toReadableStream(data);
-        break;
-      case "Base64":
-        converted = converter.toBase64(data);
-        break;
-      case "BinaryString":
-        converted = converter.toBinaryString(data);
-        break;
-      case "UTF8":
-        converted = converter.toText(data);
-        break;
-      default:
-        throw new TypeError(`Illegal DataType: ${type}`);
+    if (ARRAY_BUFFER_CONVERTER.is(input)) {
+      return ARRAY_BUFFER_CONVERTER.convert(input, options);
     }
-    return converted as Promise<ReturnDataType<T>>;
+    if (UINT8_ARRAY_CONVERTER.is(input)) {
+      return UINT8_ARRAY_CONVERTER.convert(input, options);
+    }
+    if (BUFFER_CONVERTER.is(input)) {
+      return BUFFER_CONVERTER.convert(input, options);
+    }
+    if (BLOB_CONVERTER.is(input)) {
+      return BLOB_CONVERTER.convert(input, options);
+    }
+    if (READABLE_CONVERTER.is(input)) {
+      return READABLE_CONVERTER.convert(input, options);
+    }
+
+    throw new Error("Illegal input: " + typeOf(input));
   }
 
   public async convertAll<T extends DataType>(
@@ -250,397 +202,6 @@ export class Converter {
         closeStream(stream);
       }
     }
-  }
-
-  public async toBase64(data: Data): Promise<StringData> {
-    if (!data) {
-      return EMPTY_BASE64;
-    }
-
-    if (isReadableStreamData(data)) {
-      const binary = await this._streamToBinaryData(data);
-      return this.toBase64(binary);
-    }
-    if (isBuffer(data)) {
-      return { encoding: "Base64", value: bufferToBase64(data) };
-    }
-    if (isStringData(data) && data.encoding === "Base64") {
-      return data;
-    }
-
-    const buffer = await this.toArrayBuffer(data);
-    return { encoding: "Base64", value: arrayBufferToBase64(buffer) };
-  }
-
-  public toBinaryData(data: Data): Promise<BinaryData> {
-    if (isNode) {
-      return this.toBuffer(data);
-    } else if (isBrowser) {
-      return this.toBlob(data);
-    } else {
-      return this.toUint8Array(data);
-    }
-  }
-
-  public async toBinaryString(data: Data): Promise<StringData> {
-    if (!data) {
-      return EMPTY_BINARY_STRING;
-    }
-
-    if (isBlob(data)) {
-      if (hasReadAsBinaryStringOnBlob) {
-        const value = await blobToBinaryString(data);
-        return { encoding: "BinaryString", value };
-      } else if (hasStreamOnBlob) {
-        data = data.stream() as unknown as ReadableStream<unknown>;
-      } else if (hasArrayBufferOnBlob) {
-        data = await data.arrayBuffer();
-      }
-    }
-    if (isReadableStreamData(data)) {
-      const binary = await this._streamToBinaryData(data);
-      return this.toBinaryString(binary);
-    }
-    if (isBuffer(data)) {
-      const value = bufferToBinaryString(data);
-      return { encoding: "BinaryString", value };
-    }
-    if (isStringData(data) && data.encoding === "BinaryString") {
-      return data;
-    }
-
-    const u8 = await this.toUint8Array(data);
-    const value = uint8ArrayToBinaryString(u8);
-    return { encoding: "BinaryString", value };
-  }
-
-  public async toBlob(data: Data): Promise<Blob> {
-    if (!hasBlob) {
-      throw new Error("Blob is not supported");
-    }
-    if (!data) {
-      return EMPTY_BLOB;
-    }
-
-    if (isBlob(data)) {
-      return data;
-    }
-    if (typeof data === "string" || isUint8Array(data) || isArrayBuffer(data)) {
-      return new Blob([data]);
-    }
-    if (isReadableStreamData(data)) {
-      return this._streamToBlob(data);
-    }
-
-    const ab = await this.toUint8Array(data);
-    return new Blob([ab]);
-  }
-
-  public async toBuffer(input: Data): Promise<Buffer> {
-    if (!hasBuffer) {
-      throw new Error("Buffer is not suppoted.");
-    }
-    if (!input) {
-      return EMPTY_BUFFER;
-    }
-    if (isBuffer(input)) {
-      return input;
-    }
-    if (typeof input === "string") {
-      input = await this.toUint8Array(input);
-    }
-    if (isUint8Array(input)) {
-      return uint8ArrayToBuffer(input);
-    }
-    if (isBlob(input) && hasStreamOnBlob) {
-      input = input.stream() as unknown as ReadableStream<unknown>;
-    }
-    if (isReadableStreamData(input)) {
-      const chunks: Buffer[] = [];
-      await handleReadableStreamData(input, async (chunk) => {
-        chunks.push(await this.toBuffer(chunk as Data));
-      });
-      return mergeBuffer(chunks);
-    }
-    if (isStringData(input)) {
-      const value = input.value;
-      return input.encoding === "Base64"
-        ? base64ToBuffer(value)
-        : binaryStringToBuffer(value);
-    }
-
-    input = await this.toArrayBuffer(input);
-    return Buffer.from(input);
-  }
-
-  public async toReadable(data: Data): Promise<Readable> {
-    if (!hasReadable) {
-      throw new Error("Readable is not supported");
-    }
-    if (!data) {
-      return EMPTY_READABLE;
-    }
-
-    if (isReadable(data)) {
-      return data;
-    }
-    if (isBlob(data) && hasStreamOnBlob) {
-      data = data.stream() as unknown as ReadableStream<unknown>;
-    }
-    if (isReadableStream(data)) {
-      const stream = data;
-      const reader = data.getReader();
-      return new Readable({
-        read() {
-          reader
-            .read()
-            .then(({ value, done }) => {
-              if (value) {
-                this.push(value);
-              }
-              if (done) {
-                this.push(null);
-                reader.releaseLock();
-                reader.cancel().catch((e) => console.warn(e));
-              }
-            })
-            .catch((e) => {
-              reader.releaseLock();
-              reader.cancel(e).catch((e) => console.warn(e));
-            })
-            .finally(() => {
-              stream.cancel().catch((e) => console.warn(e));
-            });
-        },
-      });
-    }
-
-    const buffer = await this.toBuffer(data);
-    return Readable.from(buffer);
-  }
-
-  public async toReadableStream(data: Data): Promise<ReadableStream<unknown>> {
-    if (!hasReadableStream) {
-      throw new Error("ReadableStream is not supported");
-    }
-    if (!data) {
-      return EMPTY_READABLE_STREAM;
-    }
-
-    if (isBlob(data) && hasStreamOnBlob) {
-      data = data.stream() as unknown as ReadableStream<unknown>;
-    }
-    if (isReadableStream(data)) {
-      return data;
-    }
-    if (isReadable(data)) {
-      const readable = data;
-      if (readable.destroyed) {
-        return EMPTY_READABLE_STREAM;
-      }
-      return new ReadableStream({
-        start: (converter) => {
-          readable.once("error", (err) => {
-            converter.error(err);
-            readable.destroy();
-            readable.removeAllListeners();
-          });
-          readable.once("end", () => {
-            converter.close();
-            readable.removeAllListeners();
-          });
-          readable.on("data", (chunk) => converter.enqueue(chunk));
-        },
-        cancel: (err) => {
-          readable.destroy(err as Error);
-          readable.removeAllListeners();
-        },
-      });
-    }
-
-    const bufferSize = this.bufferSize;
-    if (isBrowser) {
-      const blob = await this.toBlob(data);
-      if (hasStreamOnBlob) {
-        return blob.stream() as unknown as ReadableStream<unknown>;
-      }
-      const size = blob.size;
-      let start = 0;
-      return new ReadableStream({
-        start: async (converter) => {
-          do {
-            const chunk = await new Promise<unknown>((resolve, reject) => {
-              try {
-                const end = start + bufferSize;
-                const sliced = blob.slice(start, end);
-                start += sliced.size;
-                resolve(sliced);
-              } catch (err) {
-                converter.close();
-                reject(err);
-              }
-            });
-            converter.enqueue(chunk);
-          } while (start < size);
-          converter.close();
-        },
-      });
-    }
-
-    const u8 = await this.toUint8Array(data);
-    const length = u8.byteLength;
-    let start = 0;
-    return new ReadableStream({
-      start: async (converter) => {
-        do {
-          const chunk = await new Promise<unknown>((resolve, reject) => {
-            try {
-              const end = start + bufferSize;
-              const sliced = u8.slice(start, end);
-              start += sliced.byteLength;
-              resolve(sliced);
-            } catch (err) {
-              converter.close();
-              reject(err);
-            }
-          });
-          converter.enqueue(chunk);
-        } while (start < length);
-        converter.close();
-      },
-    });
-  }
-
-  public toReadableStreamData(data: Data): Promise<ReadableStreamData> {
-    return isNode ? this.toReadable(data) : this.toReadableStream(data);
-  }
-
-  public async toText(data: Data): Promise<string> {
-    if (!data) {
-      return "";
-    }
-    if (typeof data === "string") {
-      return data;
-    }
-
-    if (isReadableStreamData(data)) {
-      const binary = await this._streamToBinaryData(data);
-      return this.toText(binary);
-    }
-    if (isBuffer(data)) {
-      return data.toString("utf8");
-    }
-    if (isBlob(data)) {
-      if (hasTextOnBlob) {
-        return data.text();
-      }
-      return handleFileReader(
-        (reader) => reader.readAsText(data),
-        (data) => data as string
-      );
-    }
-
-    const u8 = await this.toUint8Array(data);
-    return uint8ArrayToText(u8);
-  }
-
-  public async toUint8Array(data: Data): Promise<Uint8Array> {
-    if (!data) {
-      return EMPTY_U8;
-    }
-
-    if (isUint8Array(data)) {
-      return data;
-    }
-    if (isBlob(data)) {
-      if (data.size === 0) {
-        return EMPTY_U8;
-      }
-      if (hasArrayBufferOnBlob) {
-        const ab = await data.arrayBuffer();
-        return new Uint8Array(ab);
-      }
-      if (hasReadAsArrayBuferOnBlob) {
-        return blobToUint8Array(data);
-      }
-      if (hasStreamOnBlob) {
-        data = data.stream() as unknown as ReadableStream<unknown>;
-      } else {
-        data = {
-          value: await blobToBase64(data),
-          encoding: "Base64",
-        };
-      }
-    }
-    if (isReadableStreamData(data)) {
-      return this._streamToUint8Array(data);
-    }
-    if (typeof data === "string") {
-      return textToUint8Array(data);
-    }
-    if (isStringData(data)) {
-      const value = data.value;
-      if (!value) {
-        return EMPTY_U8;
-      }
-      const encoding = data.encoding;
-      if (encoding === "Base64") {
-        if (isNode) {
-          return base64ToBuffer(value);
-        } else {
-          data = base64ToArrayBuffer(value);
-        }
-      } else {
-        if (isNode) {
-          return binaryStringToBuffer(value);
-        } else {
-          return binaryStringToUint8Array(value);
-        }
-      }
-    }
-    if (isNode) {
-      return this.toBuffer(data);
-    }
-    return new Uint8Array(data);
-  }
-
-  private async _streamToBinaryData(readable: ReadableStreamData) {
-    if (isBrowser) {
-      return this._streamToBlob(readable);
-    } else {
-      return this._streamToUint8Array(readable);
-    }
-  }
-
-  private async _streamToBlob(readable: ReadableStreamData) {
-    const blobs: Blob[] = [];
-    await handleReadableStreamData(readable, async (chunk) => {
-      blobs.push(await this.toBlob(chunk as Data));
-    });
-    return mergeBlob(blobs);
-  }
-
-  private async _streamToUint8Array(readable: ReadableStreamData) {
-    const chunks: Uint8Array[] = [];
-    await handleReadableStreamData(readable, async (chunk) => {
-      const u8 = await this.toUint8Array(chunk as Data);
-      chunks.push(u8);
-    });
-    return mergeUint8Array(chunks);
-  }
-
-  private _validateBufferSize(options: { bufferSize?: number }) {
-    if (!options.bufferSize) {
-      options.bufferSize = DEFAULT_BUFFER_SIZE;
-    }
-    const rem = options.bufferSize % 6;
-    if (rem !== 0) {
-      options.bufferSize -= rem;
-      console.info(
-        `"bufferSize" was modified to ${options.bufferSize}. ("bufferSize" must be divisible by 6.)`
-      );
-    }
-    return options.bufferSize;
   }
 }
 

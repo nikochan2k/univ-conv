@@ -5,7 +5,7 @@ import {
   READABLE_STREAM_CONVERTER,
   UINT8_ARRAY_CONVERTER,
 } from ".";
-import { AbstractConverter, ConvertOptions, typeOf } from "./Converter";
+import { AbstractConverter, ConvertOptions } from "./Converter";
 
 class BufferConverter extends AbstractConverter<Buffer> {
   public is(input: unknown): input is Buffer {
@@ -17,7 +17,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
   protected async _convert(
     input: unknown,
     options: ConvertOptions
-  ): Promise<Buffer> {
+  ): Promise<Buffer | undefined> {
     const chunkSize = options.chunkSize;
 
     if (typeof input === "string") {
@@ -46,8 +46,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
       return Buffer.from(ab);
     }
 
-    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-    throw new Error("Illegal input: " + typeOf(input));
+    return undefined;
   }
 
   protected _isEmpty(input: Buffer): boolean {

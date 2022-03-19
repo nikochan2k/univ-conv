@@ -8,13 +8,13 @@ import {
   UINT8_ARRAY_CONVERTER,
   UTF8_CONVERTER,
 } from ".";
-import { AbstractConverter, ConvertOptions, typeOf } from "./Converter";
+import { AbstractConverter, ConvertOptions } from "./Converter";
 
 class Base64Converter extends AbstractConverter<string> {
   public async _convert(
     input: unknown,
     options: ConvertOptions
-  ): Promise<string> {
+  ): Promise<string | undefined> {
     const chunkSize = options.chunkSize;
 
     let u8: Uint8Array | undefined;
@@ -43,8 +43,7 @@ class Base64Converter extends AbstractConverter<string> {
       return encode(u8);
     }
 
-    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-    throw new Error("Illegal input: " + typeOf(input));
+    return undefined;
   }
 
   public is(input: unknown): input is string {
