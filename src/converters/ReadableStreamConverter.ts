@@ -48,6 +48,10 @@ class ReadableStreamConverter extends AbstractConverter<
     input: unknown,
     options: ConvertOptions
   ): Promise<ReadableStream<unknown> | undefined> {
+    if (this.is(input)) {
+      return input;
+    }
+
     if (BLOB_CONVERTER.is(input)) {
       if (hasStreamOnBlob) {
         return input.stream() as unknown as ReadableStream<unknown>;
@@ -105,27 +109,31 @@ class ReadableStreamConverter extends AbstractConverter<
     }
 
     const u8 = await UINT8_ARRAY_CONVERTER.convert(input, options);
-    const length = u8.byteLength;
-    let start = 0;
-    return new ReadableStream({
-      start: async (converter) => {
-        do {
-          const chunk = await new Promise<unknown>((resolve, reject) => {
-            try {
-              const end = start + chunkSize;
-              const sliced = u8.slice(start, end);
-              start += sliced.byteLength;
-              resolve(sliced);
-            } catch (err) {
-              converter.close();
-              reject(err);
-            }
-          });
-          converter.enqueue(chunk);
-        } while (start < length);
-        converter.close();
-      },
-    });
+    if (u8) {
+      const length = u8.byteLength;
+      let start = 0;
+      return new ReadableStream({
+        start: async (converter) => {
+          do {
+            const chunk = await new Promise<unknown>((resolve, reject) => {
+              try {
+                const end = start + chunkSize;
+                const sliced = u8.slice(start, end);
+                start += sliced.byteLength;
+                resolve(sliced);
+              } catch (err) {
+                converter.close();
+                reject(err);
+              }
+            });
+            converter.enqueue(chunk);
+          } while (start < length);
+          converter.close();
+        },
+      });
+    }
+
+    return undefined;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

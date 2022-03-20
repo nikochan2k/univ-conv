@@ -1,14 +1,12 @@
 import {
   ARRAY_BUFFER_CONVERTER,
   BASE64_CONVERTER,
-  BINARY_STRING_CONVERTER,
   EMPTY_BLOB,
   EMPTY_UINT8_ARRAY,
   hasArrayBufferOnBlob,
   hasReadAsArrayBuferOnBlob as hasReadAsArrayBufferOnBlob,
   hasStreamOnBlob,
   hasTextOnBlob,
-  READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
   UINT8_ARRAY_CONVERTER,
 } from ".";
@@ -20,7 +18,6 @@ import {
   handleFileReader,
 } from "./Converter";
 import { ENCODER } from "./Encoder";
-import { HEX_CONVERTER } from "./HexConverter";
 import { handleReadableStream } from "./ReadableStreamConverter";
 
 class BlobConverter extends AbstractConverter<Blob> {
@@ -36,7 +33,9 @@ class BlobConverter extends AbstractConverter<Blob> {
     input: unknown,
     options: ConvertOptions
   ): Promise<Blob | undefined> {
-    const chunkSize = options.chunkSize;
+    if (this.is(input)) {
+      return input;
+    }
 
     if (READABLE_STREAM_CONVERTER.is(input)) {
       const blobs: Blob[] = [];
@@ -45,23 +44,9 @@ class BlobConverter extends AbstractConverter<Blob> {
       });
       return this.merge(blobs);
     }
-    if (typeof input === "string") {
-      const inputEncoding = options.inputEncoding;
-      if (inputEncoding === "base64") {
-        input = BASE64_CONVERTER.toUint8Array(input, chunkSize);
-      } else if (inputEncoding === "binary") {
-        input = BINARY_STRING_CONVERTER.toUint8Array(input, chunkSize);
-      } else if (inputEncoding === "hex") {
-        input = HEX_CONVERTER.toUint8Array(input, chunkSize);
-      } else {
-        input = await ENCODER.toUint8Array(input, inputEncoding);
-      }
-    }
-    if (READABLE_CONVERTER.is(input)) {
-      input = await READABLE_CONVERTER.toUint8Array(input, chunkSize);
-    }
-    if (UINT8_ARRAY_CONVERTER.is(input)) {
-      return new Blob([input]);
+    const u8 = await UINT8_ARRAY_CONVERTER.convert(input, options);
+    if (u8) {
+      return new Blob([u8]);
     }
 
     return undefined;

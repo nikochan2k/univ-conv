@@ -24,6 +24,10 @@ class ReadableConverter extends AbstractConverter<Readable> {
     input: unknown,
     options: ConvertOptions
   ): Promise<Readable | undefined> {
+    if (this.is(input)) {
+      return input;
+    }
+
     if (BLOB_CONVERTER.is(input)) {
       if (hasStreamOnBlob) {
         input = input.stream() as unknown as ReadableStream<unknown>;
@@ -58,7 +62,11 @@ class ReadableConverter extends AbstractConverter<Readable> {
     }
 
     const buffer = await BUFFER_CONVERTER.convert(input, options);
-    return Readable.from(buffer);
+    if (buffer) {
+      return Readable.from(buffer);
+    }
+
+    return undefined;
   }
 
   protected _isEmpty(input: Readable): boolean {

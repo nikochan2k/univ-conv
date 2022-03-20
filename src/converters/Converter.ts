@@ -32,9 +32,6 @@ export abstract class AbstractConverter<T> implements Converter<T> {
     if (!input) {
       return this.empty();
     }
-    if (this.is(input)) {
-      return input;
-    }
 
     const converted = await this._convert(input, this.initOptions(options));
     if (converted) {

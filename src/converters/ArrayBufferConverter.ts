@@ -21,8 +21,11 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     input: unknown,
     options: ConvertOptions
   ): Promise<ArrayBuffer | undefined> {
-    const chunkSize = options.chunkSize;
+    if (this.is(input)) {
+      return input;
+    }
 
+    const chunkSize = options.chunkSize;
     if (typeof input === "string") {
       const inputEncoding = options.inputEncoding;
       if (inputEncoding === "base64") {

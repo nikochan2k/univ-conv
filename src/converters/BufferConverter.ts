@@ -14,6 +14,10 @@ class BufferConverter extends AbstractConverter<Buffer> {
     input: unknown,
     options: ConvertOptions
   ): Promise<Buffer | undefined> {
+    if (this.is(input)) {
+      return input;
+    }
+
     if (typeof input === "string") {
       const inputEncoding = options.inputEncoding;
       if (inputEncoding === "base64") {

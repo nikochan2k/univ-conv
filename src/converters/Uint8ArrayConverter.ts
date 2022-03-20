@@ -32,8 +32,11 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     input: unknown,
     options: ConvertOptions
   ): Promise<Uint8Array | undefined> {
-    const chunkSize = options.chunkSize;
+    if (this.is(input)) {
+      return input;
+    }
 
+    const chunkSize = options.chunkSize;
     if (typeof input === "string") {
       const inputEncoding = options?.inputEncoding;
       if (inputEncoding === "base64") {
