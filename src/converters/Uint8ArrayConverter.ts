@@ -5,14 +5,17 @@ import {
   BINARY_STRING_CONVERTER,
   BLOB_CONVERTER,
   BUFFER_CONVERTER,
+  HEX_CONVERTER,
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
 } from ".";
-import { AbstractConverter, ConvertOptions, Options } from "./Converter";
-import { HEX_CONVERTER } from "./HexConverter";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  EMPTY_UINT8_ARRAY,
+  Options,
+} from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
-
-export const EMPTY_UINT8_ARRAY = new Uint8Array(0);
 
 class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
   public typeEquals(input: unknown): input is Uint8Array {

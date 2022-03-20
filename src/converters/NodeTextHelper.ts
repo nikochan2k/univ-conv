@@ -1,5 +1,5 @@
 import { BUFFER_CONVERTER } from ".";
-import { CharsetType } from "../def";
+import { CharsetType } from "./Converter";
 import { TextHelper } from "./TextHelper";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,6 +1,33 @@
-import { CharsetType, StringType } from "../def";
+import type { Readable } from "stream";
+import { FALSE_CONVERTER } from "./FalseConverter";
 
-export const DEFAULT_BUFFER_SIZE = 96 * 1024;
+export type CharsetType =
+  | "utf8"
+  | "utf16le"
+  | "utf16be"
+  | "jis"
+  | "eucjp"
+  | "sjis";
+export type StringType = "text" | "base64" | "binary" | "hex";
+export type BinaryType = "arraybuffer" | "uint8array" | "buffer" | "blob";
+export type BlockType = StringType | BinaryType;
+export type StreamType = "readable" | "readablestream";
+export type Type = BlockType | StreamType;
+
+export type ReturnType<T extends Type> = T extends "arraybuffer"
+  ? ArrayBuffer
+  : T extends "uint8array"
+  ? Uint8Array
+  : T extends "buffer"
+  ? Buffer
+  : T extends "blob"
+  ? Blob
+  : T extends "readable"
+  ? Readable
+  : T extends "readblestream"
+  ? ReadableStream<unknown>
+  : string;
+
 export interface Options {
   chunkSize: number;
   encoding: StringType;
@@ -20,6 +47,106 @@ export interface Converter<T> {
   toText(input: T, options: ConvertOptions): Promise<string>;
   toUint8Array(input: T, options: ConvertOptions): Promise<Uint8Array>;
   typeEquals(input: unknown): input is T;
+}
+
+export const DEFAULT_BUFFER_SIZE = 96 * 1024;
+
+export let hasBlob = false;
+export let hasTextOnBlob = false;
+export let hasStreamOnBlob = false;
+export let hasArrayBufferOnBlob = false;
+export let hasReadAsArrayBuferOnBlob = false;
+export let hasReadAsBinaryStringOnBlob = false;
+export let BLOB_CONVERTER: Converter<Blob>;
+export let EMPTY_BLOB: Blob;
+if (typeof Blob === "function") {
+  hasBlob = true;
+  /* eslint-disable */
+  const bc = require("./BlobConverter");
+  BLOB_CONVERTER = bc.BLOB_CONVERTER;
+  EMPTY_BLOB = bc.EMPTY_BLOB;
+  if (Blob.prototype.text != null) {
+    hasTextOnBlob = true;
+  }
+  if (Blob.prototype.stream != null) {
+    hasStreamOnBlob = true;
+  }
+  if (Blob.prototype.arrayBuffer != null) {
+    hasArrayBufferOnBlob = true;
+  }
+  if (navigator?.product !== "ReactNative") {
+    hasReadAsArrayBuferOnBlob = FileReader.prototype.readAsArrayBuffer != null;
+    hasReadAsBinaryStringOnBlob =
+      FileReader.prototype.readAsBinaryString != null;
+  }
+  /* eslint-enablet */
+} else {
+  BLOB_CONVERTER = FALSE_CONVERTER;
+}
+
+export let hasReadableStream = false;
+export let hasWritableStream = false;
+export let READABLE_STREAM_CONVERTER: Converter<ReadableStream<unknown>>;
+export let EMPTY_READABLE_STREAM: ReadableStream<unknown>;
+if (typeof ReadableStream === "function") {
+  hasReadableStream = true;
+  hasWritableStream = true;
+  READABLE_STREAM_CONVERTER =
+    require("./ReadableStreamConverter").READABLE_STREAM_CONVERTER;
+  EMPTY_READABLE_STREAM = new ReadableStream({
+    start: (converter) => {
+      if (hasBlob) {
+        converter.enqueue(EMPTY_BLOB);
+      } else {
+        converter.enqueue(EMPTY_UINT8_ARRAY);
+      }
+      converter.close();
+    },
+  });
+} else {
+  READABLE_STREAM_CONVERTER = FALSE_CONVERTER;
+}
+
+export let hasBuffer = false;
+export let BUFFER_CONVERTER: Converter<Buffer>;
+export let EMPTY_BUFFER: Buffer;
+if (typeof Buffer === "function") {
+  hasBuffer = true;
+  /* eslint-disable */
+  const bc = require("./BufferConverter");
+  BUFFER_CONVERTER = bc.BUFFER_CONVERTER;
+  EMPTY_BUFFER = bc.EMPTY_BUFFER;
+  /* eslint-enable */
+} else {
+  BUFFER_CONVERTER = FALSE_CONVERTER;
+}
+
+/* eslint-disable */
+let stream: any;
+try {
+  stream = require("stream");
+} catch {}
+/* eslint-enable */
+
+export let hasReadable = false;
+export let hasWritable = false;
+export let READABLE_CONVERTER: Converter<Readable>;
+export let EMPTY_READABLE: Readable;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+if (typeof stream?.Readable === "function") {
+  hasReadable = true;
+  hasWritable = true;
+  /* eslint-disable */
+  READABLE_CONVERTER = require("./ReadableConverter").READABLE_CONVERTER;
+  EMPTY_READABLE = new stream.Readable({
+    read() {
+      this.push(EMPTY_BUFFER);
+      this.push(null);
+    },
+  });
+  /* eslint-enable */
+} else {
+  READABLE_CONVERTER = FALSE_CONVERTER;
 }
 
 export const EMPTY_ARRAY_BUFFER = new ArrayBuffer(0);

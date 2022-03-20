@@ -1,4 +1,4 @@
-import { CharsetType } from "../def";
+import { CharsetType } from "./Converter";
 import { TextHelper } from "./TextHelper";
 
 const textEncoder = new TextEncoder();

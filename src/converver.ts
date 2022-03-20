@@ -11,12 +11,14 @@ import {
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
   UINT8_ARRAY_CONVERTER,
+  TEXT_CONVERTER,
+  ReturnType,
+  Type,
+  ConvertOptions,
+  Options,
+  HEX_CONVERTER,
 } from "./converters";
-import { ConvertOptions, Options } from "./converters/Converter";
-import { HEX_CONVERTER } from "./converters/HexConverter";
 import { handleReadableStream } from "./converters/ReadableStreamConverter";
-import { TEXT_CONVERTER } from "./converters/TextConverter";
-import { ReturnType, Type } from "./def";
 
 export function convert<T extends Type>(
   input: unknown,
