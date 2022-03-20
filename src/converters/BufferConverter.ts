@@ -18,6 +18,8 @@ class BufferConverter extends AbstractConverter<Buffer> {
       return input;
     }
 
+    if (!options.outputEncoding) options.outputEncoding = "utf8";
+
     if (typeof input === "string") {
       const inputEncoding = options.inputEncoding;
       if (inputEncoding === "base64") {
@@ -62,11 +64,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _toText(input: Buffer, options: ConvertOptions): Promise<string> {
-    return TEXT_HELPER.bufferToText(
-      input,
-      options.inputEncoding,
-      options.outputEncoding
-    );
+    return TEXT_HELPER.bufferToText(input, options.inputEncoding, "utf16le");
   }
 
   protected _toUint8Array(input: Buffer): Promise<Uint8Array> {

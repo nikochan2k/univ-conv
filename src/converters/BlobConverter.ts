@@ -36,6 +36,8 @@ class BlobConverter extends AbstractConverter<Blob> {
       return input;
     }
 
+    if (!options.outputEncoding) options.outputEncoding = "utf8";
+
     if (READABLE_STREAM_CONVERTER.typeEquals(input)) {
       const blobs: Blob[] = [];
       await handleReadableStream(input, async (chunk) => {
@@ -98,11 +100,7 @@ class BlobConverter extends AbstractConverter<Blob> {
       );
     }
     const u8 = await this.toUint8Array(input, options);
-    return TEXT_HELPER.bufferToText(
-      u8,
-      options.inputEncoding,
-      options.outputEncoding
-    );
+    return TEXT_HELPER.bufferToText(u8, options.inputEncoding, "utf16le");
   }
 
   protected async _toUint8Array(

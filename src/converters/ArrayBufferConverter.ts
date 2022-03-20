@@ -31,6 +31,8 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
       return input;
     }
 
+    if (!options.outputEncoding) options.outputEncoding = "utf8";
+
     if (typeof input === "string") {
       const inputEncoding = options.inputEncoding;
       if (inputEncoding === "base64") {
@@ -101,11 +103,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = new Uint8Array(input);
-    return TEXT_HELPER.bufferToText(
-      u8,
-      options.inputEncoding ?? "utf-8",
-      options.outputEncoding ?? "utf16le"
-    );
+    return TEXT_HELPER.bufferToText(u8, options.inputEncoding, "utf16le");
   }
 
   protected _toUint8Array(

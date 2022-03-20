@@ -5,7 +5,7 @@ export type Encoding = BufferEncoding | "utf16be" | "jis" | "eucjp" | "sjis";
 export interface Options {
   chunkSize: number;
   inputEncoding: Encoding;
-  outputEncoding: Encoding;
+  outputEncoding?: Encoding;
 }
 export interface ConvertOptions extends Options {
   length?: number;
@@ -122,12 +122,13 @@ export abstract class AbstractConverter<T> implements Converter<T> {
         `"bufferSize" was modified to ${options.chunkSize}. ("bufferSize" must be divisible by 6.)`
       );
     }
-    if (typeof input === "string") {
-      options.inputEncoding = "utf16le";
-    } else {
-      options.inputEncoding = "utf8";
+    if (!options.inputEncoding) {
+      if (typeof input === "string") {
+        options.inputEncoding = "utf16le";
+      } else {
+        options.inputEncoding = "utf8";
+      }
     }
-    options.outputEncoding = "utf8";
     return options as T;
   }
 }

@@ -17,8 +17,8 @@ class Base64Converter extends AbstractConverter<string> {
     input: unknown,
     options: ConvertOptions
   ): Promise<string | undefined> {
-    if (!options.inputEncoding) options.inputEncoding = "utf16le";
-    if (!options.outputEncoding) options.outputEncoding = "utf8";
+    if (!options.outputEncoding) options.outputEncoding = "utf16le";
+
     let u8: Uint8Array | undefined;
     if (typeof input === "string") {
       const inputEncoding = options.inputEncoding;
@@ -31,8 +31,8 @@ class Base64Converter extends AbstractConverter<string> {
       }
       u8 = await TEXT_HELPER.textToBuffer(
         input,
-        options.inputEncoding || "utf16le",
-        options.outputEncoding || "utf-8"
+        options.inputEncoding,
+        options.outputEncoding
       );
     } else if (BLOB_CONVERTER.typeEquals(input)) {
       return BLOB_CONVERTER.toBase64(input, options);
@@ -80,11 +80,7 @@ class Base64Converter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return TEXT_HELPER.bufferToText(
-      u8,
-      options.inputEncoding,
-      options.outputEncoding
-    );
+    return TEXT_HELPER.bufferToText(u8, options.inputEncoding, "utf16le");
   }
 
   protected _toUint8Array(

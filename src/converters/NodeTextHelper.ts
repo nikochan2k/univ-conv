@@ -26,22 +26,31 @@ try {
 }
 
 class NodeTextHelper implements TextHelper {
-  async bufferToText(u8: Uint8Array, bufEnc: BufferEncoding): Promise<string> {
-    let buf: Buffer;
-    if (BUFFER_CONVERTER.typeEquals(u8)) {
-      buf = u8;
+  async bufferToText(
+    buf: Uint8Array,
+    bufEnc: Encoding,
+    textEnc: Encoding
+  ): Promise<string> {
+    let buffer: Buffer;
+    if (BUFFER_CONVERTER.typeEquals(buf)) {
+      buffer = buf;
     } else {
-      buf = await BUFFER_CONVERTER.convert(u8);
+      buffer = await BUFFER_CONVERTER.convert(buf);
     }
-    if (ENCODINGS.indexOf(bufEnc)) {
-      return buf.toString(bufEnc);
+    if (ENCODINGS.indexOf(textEnc)) {
+      if (bufEnc === textEnc) {
+        return buffer.toString(textEnc as BufferEncoding);
+      }
+      const text = buffer.toString(bufEnc as BufferEncoding);
+      buffer = Buffer.from(text);
+      return buffer.toString(textEnc as BufferEncoding);
     }
     if (convert) {
       try {
         // eslint-disable-next-line
-        return convert(u8, {
-          to: "UNICODE",
-          from: bufEnc,
+        return convert(buf, {
+          to: textEnc.toUpperCase(),
+          from: bufEnc.toUpperCase(),
           type: "string",
         });
       } catch {
@@ -53,16 +62,24 @@ class NodeTextHelper implements TextHelper {
     throw new Error("Illegal encoding: " + bufEnc);
   }
 
-  textToBuffer(text: string, bufEnc: Encoding): Promise<Uint8Array> {
+  async textToBuffer(
+    text: string,
+    textEnc: Encoding,
+    bufEnc: Encoding
+  ): Promise<Uint8Array> {
     if (ENCODINGS.indexOf(bufEnc)) {
-      return Promise.resolve(Buffer.from(text, bufEnc as BufferEncoding));
+      if (textEnc !== "utf16le") {
+        const buffer = Buffer.from(text, textEnc as BufferEncoding);
+        text = buffer.toString("utf16le");
+      }
+      return Buffer.from(text, bufEnc as BufferEncoding);
     }
     if (convert) {
       try {
         // eslint-disable-next-line
         const ab: ArrayBuffer = convert(text, {
           to: bufEnc.toUpperCase(),
-          from: "UNICODE",
+          from: textEnc.toUpperCase(),
           type: "arraybuffer",
         });
         return Promise.resolve(new Uint8Array(ab));

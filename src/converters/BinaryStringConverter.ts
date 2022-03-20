@@ -21,6 +21,8 @@ class BinaryStringConverter extends AbstractConverter<string> {
     input: unknown,
     options: ConvertOptions
   ): Promise<string | undefined> {
+    if (!options.outputEncoding) options.outputEncoding = "utf16le";
+
     if (typeof input === "string") {
       if (options.inputEncoding === "binary") {
         return input;
@@ -77,11 +79,7 @@ class BinaryStringConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return TEXT_HELPER.bufferToText(
-      u8,
-      options.inputEncoding,
-      options.outputEncoding
-    );
+    return TEXT_HELPER.bufferToText(u8, options.inputEncoding, "utf16le");
   }
 
   protected _toUint8Array(

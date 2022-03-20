@@ -20,8 +20,10 @@ class TextConverter extends AbstractConverter<string> {
     input: unknown,
     options: ConvertOptions
   ): Promise<string | undefined> {
-    const inputEnoding = options.inputEncoding;
+    if (!options.outputEncoding) options.outputEncoding = "utf16le";
+
     if (typeof input === "string") {
+      const inputEnoding = options.inputEncoding;
       if (inputEnoding === "utf16le") {
         return input;
       } else if (inputEnoding === "base64") {
