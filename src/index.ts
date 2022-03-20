@@ -3,4 +3,3 @@ if (!globalThis.TextDecoder || !globalThis.TextEncoder) {
 }
 
 export * from "./converver";
-export * from "./def";

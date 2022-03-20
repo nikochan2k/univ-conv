@@ -1,12 +1,10 @@
 import { decode, encode } from "base64-arraybuffer";
-import {
-  BINARY_STRING_CONVERTER,
-  BLOB_CONVERTER,
-  HEX_CONVERTER,
-  UINT8_ARRAY_CONVERTER,
-} from ".";
+import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
 import { AbstractConverter, ConvertOptions } from "./Converter";
+import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
+import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
+import { BLOB_CONVERTER } from "./z";
 
 class Base64Converter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {

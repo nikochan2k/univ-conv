@@ -1,15 +1,18 @@
 import { PassThrough, Readable } from "stream";
+import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
 import {
-  ARRAY_BUFFER_CONVERTER,
-  BLOB_CONVERTER,
-  BUFFER_CONVERTER,
+  AbstractConverter,
+  ConvertOptions,
   EMPTY_READABLE,
   hasStreamOnBlob,
-  READABLE_STREAM_CONVERTER,
-  UINT8_ARRAY_CONVERTER,
-} from ".";
-import { AbstractConverter, ConvertOptions } from "./Converter";
+} from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
+import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
+import {
+  BLOB_CONVERTER,
+  BUFFER_CONVERTER,
+  READABLE_STREAM_CONVERTER,
+} from "./z";
 
 class ReadableConverter extends AbstractConverter<Readable> {
   public typeEquals(input: unknown): input is Readable {

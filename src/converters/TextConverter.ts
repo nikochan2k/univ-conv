@@ -1,15 +1,11 @@
-import {
-  ARRAY_BUFFER_CONVERTER,
-  BASE64_CONVERTER,
-  BINARY_STRING_CONVERTER,
-  BLOB_CONVERTER,
-  BUFFER_CONVERTER,
-  HEX_CONVERTER,
-  READABLE_CONVERTER,
-  UINT8_ARRAY_CONVERTER,
-} from ".";
+import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
+import { BASE64_CONVERTER } from "./Base64Converter";
+import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
 import { AbstractConverter, ConvertOptions } from "./Converter";
+import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
+import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
+import { BLOB_CONVERTER, BUFFER_CONVERTER, READABLE_CONVERTER } from "./z";
 
 class TextConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {

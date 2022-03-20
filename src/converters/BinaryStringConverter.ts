@@ -1,16 +1,14 @@
-import {
-  ARRAY_BUFFER_CONVERTER,
-  BLOB_CONVERTER,
-  hasBuffer,
-  hasReadAsBinaryStringOnBlob,
-  UINT8_ARRAY_CONVERTER,
-} from ".";
+import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
 import {
   AbstractConverter,
   ConvertOptions,
   handleFileReader,
+  hasBuffer,
+  hasReadAsBinaryStringOnBlob,
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
+import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
+import { BLOB_CONVERTER } from "./z";
 
 class BinaryStringConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {

@@ -5,20 +5,21 @@ import {
   BINARY_STRING_CONVERTER,
   BLOB_CONVERTER,
   BUFFER_CONVERTER,
+  ConvertOptions,
+  handleReadableStream,
   hasReadable,
   hasReadableStream,
   hasWritable,
+  hasWritableStream,
+  HEX_CONVERTER,
+  Options,
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
-  UINT8_ARRAY_CONVERTER,
-  TEXT_CONVERTER,
   ReturnType,
+  TEXT_CONVERTER,
   Type,
-  ConvertOptions,
-  Options,
-  HEX_CONVERTER,
+  UINT8_ARRAY_CONVERTER,
 } from "./converters";
-import { handleReadableStream } from "./converters/ReadableStreamConverter";
 
 export function convert<T extends Type>(
   input: unknown,
@@ -177,7 +178,6 @@ function isReadableStream(stream: unknown): stream is ReadableStream<unknown> {
   );
 }
 
-/*
 function isWritableStream(stream: unknown): stream is WritableStream<unknown> {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return (
@@ -187,7 +187,6 @@ function isWritableStream(stream: unknown): stream is WritableStream<unknown> {
     typeof (stream as WritableStream<unknown>).close === "function"
   );
 }
-*/
 
 function isReadable(stream: unknown): stream is Readable {
   return (
@@ -231,7 +230,7 @@ function closeStream(
       .finally(() => {
         stream.cancel(reason).catch((e) => console.warn(e));
       });
-  } else {
+  } else if (isWritableStream(stream)) {
     const writer = stream.getWriter();
     writer.releaseLock();
     writer

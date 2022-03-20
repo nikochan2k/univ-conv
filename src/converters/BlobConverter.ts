@@ -1,23 +1,21 @@
-import {
-  ARRAY_BUFFER_CONVERTER,
-  BASE64_CONVERTER,
-  EMPTY_BLOB,
-  EMPTY_UINT8_ARRAY,
-  hasArrayBufferOnBlob,
-  hasReadAsArrayBuferOnBlob as hasReadAsArrayBufferOnBlob,
-  hasStreamOnBlob,
-  hasTextOnBlob,
-  READABLE_STREAM_CONVERTER,
-  UINT8_ARRAY_CONVERTER,
-} from ".";
+import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
+import { BASE64_CONVERTER } from "./Base64Converter";
 import {
   AbstractConverter,
   ConvertOptions,
   dataUrlToBase64,
+  EMPTY_BLOB,
+  EMPTY_UINT8_ARRAY,
   handleFileReader,
+  handleReadableStream,
+  hasArrayBufferOnBlob,
+  hasReadAsArrayBufferOnBlob,
+  hasStreamOnBlob,
+  hasTextOnBlob,
 } from "./Converter";
-import { handleReadableStream } from "./ReadableStreamConverter";
 import { TEXT_HELPER } from "./TextHelper";
+import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
+import { READABLE_STREAM_CONVERTER } from "./z";
 
 class BlobConverter extends AbstractConverter<Blob> {
   public typeEquals(input: unknown): input is Blob {

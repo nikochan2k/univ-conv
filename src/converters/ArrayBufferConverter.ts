@@ -1,19 +1,19 @@
-import {
-  BASE64_CONVERTER,
-  BINARY_STRING_CONVERTER,
-  BLOB_CONVERTER,
-  HEX_CONVERTER,
-  READABLE_CONVERTER,
-  READABLE_STREAM_CONVERTER,
-  UINT8_ARRAY_CONVERTER,
-} from ".";
+import { BASE64_CONVERTER } from "./Base64Converter";
+import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
 import {
   AbstractConverter,
   ConvertOptions,
   EMPTY_ARRAY_BUFFER,
   Options,
 } from "./Converter";
+import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
+import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
+import {
+  BLOB_CONVERTER,
+  READABLE_CONVERTER,
+  READABLE_STREAM_CONVERTER,
+} from "./z";
 
 class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
   public typeEquals(input: unknown): input is ArrayBuffer {

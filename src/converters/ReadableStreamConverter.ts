@@ -1,37 +1,13 @@
 import {
-  BLOB_CONVERTER,
+  AbstractConverter,
+  ConvertOptions,
   EMPTY_READABLE_STREAM,
+  handleReadableStream,
   hasBlob,
   hasStreamOnBlob,
-  READABLE_CONVERTER,
-} from ".";
-import { AbstractConverter, ConvertOptions } from "./Converter";
+} from "./Converter";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
-
-export async function handleReadableStream(
-  stream: ReadableStream,
-  onData: (chunk: unknown) => Promise<void> | void
-): Promise<void> {
-  const reader = stream.getReader();
-  try {
-    let res = await reader.read();
-    while (!res.done) {
-      const chunk = res.value as unknown;
-      if (chunk != null) {
-        await onData(chunk);
-      }
-      res = await reader.read();
-    }
-    reader.releaseLock();
-    reader.cancel().catch((e) => console.warn(e));
-  } catch (err) {
-    reader.releaseLock();
-    reader.cancel(err).catch((e) => console.warn(e));
-    throw err;
-  } finally {
-    stream.cancel().catch((e) => console.warn(e));
-  }
-}
+import { BLOB_CONVERTER, READABLE_CONVERTER } from "./z";
 
 class ReadableStreamConverter extends AbstractConverter<
   ReadableStream<unknown>

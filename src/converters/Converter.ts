@@ -1,5 +1,4 @@
 import type { Readable } from "stream";
-import { FALSE_CONVERTER } from "./FalseConverter";
 
 export type CharsetType =
   | "utf8"
@@ -55,16 +54,12 @@ export let hasBlob = false;
 export let hasTextOnBlob = false;
 export let hasStreamOnBlob = false;
 export let hasArrayBufferOnBlob = false;
-export let hasReadAsArrayBuferOnBlob = false;
+export let hasReadAsArrayBufferOnBlob = false;
 export let hasReadAsBinaryStringOnBlob = false;
-export let BLOB_CONVERTER: Converter<Blob>;
 export let EMPTY_BLOB: Blob;
 if (typeof Blob === "function") {
   hasBlob = true;
-  /* eslint-disable */
-  const bc = require("./BlobConverter");
-  BLOB_CONVERTER = bc.BLOB_CONVERTER;
-  EMPTY_BLOB = bc.EMPTY_BLOB;
+  EMPTY_BLOB = new Blob([]);
   if (Blob.prototype.text != null) {
     hasTextOnBlob = true;
   }
@@ -75,25 +70,19 @@ if (typeof Blob === "function") {
     hasArrayBufferOnBlob = true;
   }
   if (navigator?.product !== "ReactNative") {
-    hasReadAsArrayBuferOnBlob = FileReader.prototype.readAsArrayBuffer != null;
+    hasReadAsArrayBufferOnBlob = FileReader.prototype.readAsArrayBuffer != null;
     hasReadAsBinaryStringOnBlob =
       FileReader.prototype.readAsBinaryString != null;
   }
-  /* eslint-enablet */
-} else {
-  BLOB_CONVERTER = FALSE_CONVERTER;
 }
 
 export let hasReadableStream = false;
 export let hasWritableStream = false;
-export let READABLE_STREAM_CONVERTER: Converter<ReadableStream<unknown>>;
 export let EMPTY_READABLE_STREAM: ReadableStream<unknown>;
 if (typeof ReadableStream === "function") {
   hasReadableStream = true;
   hasWritableStream = true;
-  READABLE_STREAM_CONVERTER =
-    require("./ReadableStreamConverter").READABLE_STREAM_CONVERTER;
-  EMPTY_READABLE_STREAM = new ReadableStream({
+  EMPTY_READABLE_STREAM = EMPTY_READABLE_STREAM = new ReadableStream({
     start: (converter) => {
       if (hasBlob) {
         converter.enqueue(EMPTY_BLOB);
@@ -103,22 +92,13 @@ if (typeof ReadableStream === "function") {
       converter.close();
     },
   });
-} else {
-  READABLE_STREAM_CONVERTER = FALSE_CONVERTER;
 }
 
 export let hasBuffer = false;
-export let BUFFER_CONVERTER: Converter<Buffer>;
 export let EMPTY_BUFFER: Buffer;
 if (typeof Buffer === "function") {
   hasBuffer = true;
-  /* eslint-disable */
-  const bc = require("./BufferConverter");
-  BUFFER_CONVERTER = bc.BUFFER_CONVERTER;
-  EMPTY_BUFFER = bc.EMPTY_BUFFER;
-  /* eslint-enable */
-} else {
-  BUFFER_CONVERTER = FALSE_CONVERTER;
+  EMPTY_BUFFER = Buffer.alloc(0);
 }
 
 /* eslint-disable */
@@ -130,23 +110,19 @@ try {
 
 export let hasReadable = false;
 export let hasWritable = false;
-export let READABLE_CONVERTER: Converter<Readable>;
 export let EMPTY_READABLE: Readable;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 if (typeof stream?.Readable === "function") {
   hasReadable = true;
   hasWritable = true;
   /* eslint-disable */
-  READABLE_CONVERTER = require("./ReadableConverter").READABLE_CONVERTER;
-  EMPTY_READABLE = new stream.Readable({
+  EMPTY_READABLE = EMPTY_READABLE = new stream.Readable({
     read() {
       this.push(EMPTY_BUFFER);
       this.push(null);
     },
   });
   /* eslint-enable */
-} else {
-  READABLE_CONVERTER = FALSE_CONVERTER;
 }
 
 export const EMPTY_ARRAY_BUFFER = new ArrayBuffer(0);
@@ -281,6 +257,31 @@ export function handleFileReader<T extends string | ArrayBuffer>(
     };
     trigger(reader);
   });
+}
+
+export async function handleReadableStream(
+  stream: ReadableStream,
+  onData: (chunk: unknown) => Promise<void> | void
+): Promise<void> {
+  const reader = stream.getReader();
+  try {
+    let res = await reader.read();
+    while (!res.done) {
+      const chunk = res.value as unknown;
+      if (chunk != null) {
+        await onData(chunk);
+      }
+      res = await reader.read();
+    }
+    reader.releaseLock();
+    reader.cancel().catch((e) => console.warn(e));
+  } catch (err) {
+    reader.releaseLock();
+    reader.cancel(err).catch((e) => console.warn(e));
+    throw err;
+  } finally {
+    stream.cancel().catch((e) => console.warn(e));
+  }
 }
 
 export function dataUrlToBase64(dataUrl: string) {

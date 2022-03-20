@@ -1,21 +1,21 @@
 import { encode } from "base64-arraybuffer";
-import {
-  ARRAY_BUFFER_CONVERTER,
-  BASE64_CONVERTER,
-  BINARY_STRING_CONVERTER,
-  BLOB_CONVERTER,
-  BUFFER_CONVERTER,
-  HEX_CONVERTER,
-  READABLE_CONVERTER,
-  READABLE_STREAM_CONVERTER,
-} from ".";
+import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
+import { BASE64_CONVERTER } from "./Base64Converter";
+import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
 import {
   AbstractConverter,
   ConvertOptions,
   EMPTY_UINT8_ARRAY,
   Options,
 } from "./Converter";
+import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
+import {
+  BLOB_CONVERTER,
+  BUFFER_CONVERTER,
+  READABLE_CONVERTER,
+  READABLE_STREAM_CONVERTER,
+} from "./z";
 
 class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
   public typeEquals(input: unknown): input is Uint8Array {
