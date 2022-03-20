@@ -8,7 +8,7 @@ import {
   READABLE_STREAM_CONVERTER,
   UINT8_ARRAY_CONVERTER,
 } from ".";
-import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
+import { AbstractConverter, ConvertOptions } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 
 class ReadableConverter extends AbstractConverter<Readable> {
@@ -107,36 +107,41 @@ class ReadableConverter extends AbstractConverter<Readable> {
 
   protected async _toArrayBuffer(
     input: Readable,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    const u8 = await this._toUint8Array(input, chunkSize);
+    const u8 = await this._toUint8Array(input, options);
     return ARRAY_BUFFER_CONVERTER.convert(u8);
   }
 
   protected async _toBase64(
     input: Readable,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<string> {
-    const u8 = await this._toUint8Array(input, chunkSize);
-    return UINT8_ARRAY_CONVERTER.toBase64(u8, chunkSize);
+    const u8 = await this._toUint8Array(input, options);
+    return UINT8_ARRAY_CONVERTER.toBase64(u8, options);
   }
 
   protected async _toText(
     input: Readable,
-    inputEncoding: Encoding,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<string> {
-    const u8 = await this.toUint8Array(input, chunkSize);
-    return TEXT_HELPER.toText(u8, inputEncoding);
+    const u8 = await this.toUint8Array(input, options);
+    return TEXT_HELPER.bufferToText(
+      u8,
+      options.inputEncoding,
+      options.outputEncoding
+    );
   }
 
   protected async _toUint8Array(
     input: Readable,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<Uint8Array> {
     const chunks: Uint8Array[] = [];
     await this.handleReadable(input, async (chunk) => {
-      const u8 = await UINT8_ARRAY_CONVERTER.convert(chunk, { chunkSize });
+      const u8 = await UINT8_ARRAY_CONVERTER.convert(chunk, {
+        chunkSize: options.chunkSize,
+      });
       chunks.push(u8);
     });
     return UINT8_ARRAY_CONVERTER.merge(chunks);

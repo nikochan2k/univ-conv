@@ -14,7 +14,7 @@ try {
 }
 
 class DefaultTextHelper implements TextHelper {
-  toText(u8: Uint8Array, bufEnc: Encoding): Promise<string> {
+  bufferToText(u8: Uint8Array, bufEnc: Encoding): Promise<string> {
     if (bufEnc === "utf8" || bufEnc === "utf-8") {
       return Promise.resolve(textDecoder.decode(u8));
     }
@@ -41,7 +41,7 @@ class DefaultTextHelper implements TextHelper {
     throw new Error("Illegal encoding: " + bufEnc);
   }
 
-  toUint8Array(text: string, bufEnc: Encoding): Promise<Uint8Array> {
+  textToBuffer(text: string, bufEnc: Encoding): Promise<Uint8Array> {
     if (bufEnc === "utf8" || bufEnc === "utf-8") {
       return Promise.resolve(textEncoder.encode(text));
     }

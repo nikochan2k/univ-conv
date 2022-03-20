@@ -8,7 +8,6 @@ import {
 import {
   AbstractConverter,
   ConvertOptions,
-  Encoding,
   handleFileReader,
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
@@ -59,28 +58,37 @@ class BinaryStringConverter extends AbstractConverter<string> {
 
   protected async _toArrayBuffer(
     input: string,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    const u8 = await this._toUint8Array(input, chunkSize);
-    return ARRAY_BUFFER_CONVERTER.toArrayBuffer(u8, chunkSize);
+    const u8 = await this._toUint8Array(input, options);
+    return ARRAY_BUFFER_CONVERTER.toArrayBuffer(u8, options);
   }
 
-  protected async _toBase64(input: string, chunkSize: number): Promise<string> {
-    const u8 = await this._toUint8Array(input, chunkSize);
-    return UINT8_ARRAY_CONVERTER.toBase64(u8, chunkSize);
+  protected async _toBase64(
+    input: string,
+    options: ConvertOptions
+  ): Promise<string> {
+    const u8 = await this._toUint8Array(input, options);
+    return UINT8_ARRAY_CONVERTER.toBase64(u8, options);
   }
 
   protected async _toText(
     input: string,
-    inputEncoding: Encoding,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<string> {
-    const u8 = await this.toUint8Array(input, chunkSize);
-    return TEXT_HELPER.toText(u8, inputEncoding);
+    const u8 = await this.toUint8Array(input, options);
+    return TEXT_HELPER.bufferToText(
+      u8,
+      options.inputEncoding,
+      options.outputEncoding
+    );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toUint8Array(input: string, _: number): Promise<Uint8Array> {
+  protected _toUint8Array(
+    input: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: ConvertOptions
+  ): Promise<Uint8Array> {
     if (hasBuffer) {
       return Promise.resolve(Buffer.from(input, "binary"));
     } else {

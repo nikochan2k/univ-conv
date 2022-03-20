@@ -9,6 +9,8 @@ import {
 } from "./check";
 import {
   ARRAY_BUFFER_CONVERTER,
+  BASE64_CONVERTER,
+  BINARY_STRING_CONVERTER,
   BLOB_CONVERTER,
   BUFFER_CONVERTER,
   READABLE_CONVERTER,
@@ -19,7 +21,9 @@ import {
   handleReadableStream,
   textToUint8Array,
 } from "./converters/common";
-import { ConvertOptions } from "./converters/Converter";
+import { ConvertOptions, typeOf } from "./converters/Converter";
+import { HEX_CONVERTER } from "./converters/HexConverter";
+import { TEXT_CONVERTER } from "./converters/TextConverter";
 import {
   Data,
   DataType,
@@ -38,24 +42,25 @@ import {
   mergeUint8Array,
 } from "./merge";
 
-export interface ConverterOptions {
-  bufferSize?: number;
-}
-
 export class Converter {
-  public bufferSize: number;
-
-  constructor(options?: ConverterOptions) {
-    if (!options) {
-      options = {};
-    }
-    this.bufferSize = this._validateBufferSize(options);
-  }
-
   public async convert<T extends DataType>(
     input: unknown,
     options?: ConvertOptions
   ): Promise<ReturnDataType<T>> {
+    if (typeof input === "string") {
+      const inputEncoding = options?.inputEncoding;
+      if (!inputEncoding) {
+        return TEXT_CONVERTER.convert(input, options);
+      } else if (inputEncoding === "base64") {
+        return BASE64_CONVERTER.convert(input, options);
+      } else if (inputEncoding === "binary") {
+        return BINARY_STRING_CONVERTER.convert(input, options);
+      } else if (inputEncoding === "hex") {
+        return HEX_CONVERTER.convert(input, options);
+      } else {
+        return TEXT_CONVERTER.convert(input, options);
+      }
+    }
     if (ARRAY_BUFFER_CONVERTER.typeEquals(input)) {
       return ARRAY_BUFFER_CONVERTER.convert(input, options);
     }
@@ -73,18 +78,6 @@ export class Converter {
     }
 
     throw new Error("Illegal input: " + typeOf(input));
-  }
-
-  public async convertAll<T extends DataType>(
-    chunks: Data[],
-    type: T
-  ): Promise<ReturnDataType<T>[]> {
-    const results: ReturnDataType<T>[] = [];
-    for (const chunk of chunks) {
-      const converted = await this.convert(chunk, type);
-      results.push(converted);
-    }
-    return results;
   }
 
   public async getSize(data: Data): Promise<number> {

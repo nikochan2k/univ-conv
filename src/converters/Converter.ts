@@ -15,10 +15,10 @@ export interface ConvertOptions extends Options {
 export interface Converter<T> {
   convert(input: unknown, options?: Partial<ConvertOptions>): Promise<T>;
   merge(chunks: T[], options?: Partial<Options>): Promise<T>;
-  toArrayBuffer(input: T, chunkSize: number): Promise<ArrayBuffer>;
-  toBase64(input: T, chunkSize: number): Promise<string>;
-  toText(input: T, inputEncoding: Encoding, chunkSize: number): Promise<string>;
-  toUint8Array(input: T, chunkSize: number): Promise<Uint8Array>;
+  toArrayBuffer(input: T, options: ConvertOptions): Promise<ArrayBuffer>;
+  toBase64(input: T, options: ConvertOptions): Promise<string>;
+  toText(input: T, options: ConvertOptions): Promise<string>;
+  toUint8Array(input: T, options: ConvertOptions): Promise<Uint8Array>;
   typeEquals(input: unknown): input is T;
 }
 
@@ -33,7 +33,7 @@ export abstract class AbstractConverter<T> implements Converter<T> {
       return this.empty();
     }
 
-    const converted = await this._convert(input, this.initOptions(options));
+    const converted = await this._convert(input, this._initOptions(options));
     if (converted) {
       return converted;
     }
@@ -49,39 +49,38 @@ export abstract class AbstractConverter<T> implements Converter<T> {
       return Promise.resolve(chunks[0] as T);
     }
 
-    return this._merge(chunks, this.initOptions(options));
+    return this._merge(chunks, this._initOptions(options));
   }
 
-  public toArrayBuffer(input: T, chunkSize: number): Promise<ArrayBuffer> {
+  public toArrayBuffer(
+    input: T,
+    options: ConvertOptions
+  ): Promise<ArrayBuffer> {
     if (!input || this._isEmpty(input)) {
       return Promise.resolve(EMPTY_ARRAY_BUFFER);
     }
-    return this._toArrayBuffer(input, chunkSize);
+    return this._toArrayBuffer(input, options);
   }
 
-  public toBase64(input: T, chunkSize: number): Promise<string> {
+  public toBase64(input: T, options: ConvertOptions): Promise<string> {
     if (!input || this._isEmpty(input)) {
       return Promise.resolve("");
     }
-    return this._toBase64(input, chunkSize);
+    return this._toBase64(input, options);
   }
 
-  public toText(
-    input: T,
-    inputEncoding: Encoding,
-    chunkSize: number
-  ): Promise<string> {
+  public toText(input: T, options: ConvertOptions): Promise<string> {
     if (!input || this._isEmpty(input)) {
       return Promise.resolve("");
     }
-    return this._toText(input, inputEncoding, chunkSize);
+    return this._toText(input, options);
   }
 
-  public toUint8Array(input: T, chunkSize: number): Promise<Uint8Array> {
+  public toUint8Array(input: T, options: ConvertOptions): Promise<Uint8Array> {
     if (!input || this._isEmpty(input)) {
       return Promise.resolve(EMPTY_UINT8_ARRAY);
     }
-    return this._toUint8Array(input, chunkSize);
+    return this._toUint8Array(input, options);
   }
 
   public abstract typeEquals(input: unknown): input is T;
@@ -94,21 +93,26 @@ export abstract class AbstractConverter<T> implements Converter<T> {
   protected abstract _merge(chunks: T[], options: Options): Promise<T>;
   protected abstract _toArrayBuffer(
     input: T,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<ArrayBuffer>;
-  protected abstract _toBase64(input: T, chunkSize: number): Promise<string>;
+  protected abstract _toBase64(
+    input: T,
+    options: ConvertOptions
+  ): Promise<string>;
   protected abstract _toText(
     input: T,
-    inputEncoding: Encoding,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<string>;
   protected abstract _toUint8Array(
     input: T,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<Uint8Array>;
   protected abstract empty(): T;
 
-  private initOptions<T extends Options>(options?: Partial<T>): T {
+  private _initOptions<T extends Options>(
+    input: unknown,
+    options?: Partial<T>
+  ): T {
     if (!options) options = {};
     if (options.chunkSize == null) options.chunkSize = DEFAULT_BUFFER_SIZE;
     const rem = options.chunkSize % 6;
@@ -118,8 +122,12 @@ export abstract class AbstractConverter<T> implements Converter<T> {
         `"bufferSize" was modified to ${options.chunkSize}. ("bufferSize" must be divisible by 6.)`
       );
     }
-    if (options.inputEncoding == null) options.inputEncoding = "utf16le";
-    if (options.outputEncoding == null) options.outputEncoding = "utf16le";
+    if (typeof input === "string") {
+      options.inputEncoding = "utf16le";
+    } else {
+      options.inputEncoding = "utf8";
+    }
+    options.outputEncoding = "utf8";
     return options as T;
   }
 }

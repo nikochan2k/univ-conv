@@ -5,7 +5,7 @@ import {
   hasStreamOnBlob,
   READABLE_CONVERTER,
 } from ".";
-import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
+import { AbstractConverter, ConvertOptions } from "./Converter";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
 export async function handleReadableStream(
@@ -176,46 +176,55 @@ class ReadableStreamConverter extends AbstractConverter<
 
   protected async _toArrayBuffer(
     input: ReadableStream<unknown>,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    const u8 = await this.toUint8Array(input, chunkSize);
-    return UINT8_ARRAY_CONVERTER.toArrayBuffer(u8, chunkSize);
+    const u8 = await this.toUint8Array(input, options);
+    return UINT8_ARRAY_CONVERTER.toArrayBuffer(u8, options);
   }
 
   protected async _toBase64(
     input: ReadableStream<unknown>,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<string> {
     if (hasBlob) {
-      const blob = await BLOB_CONVERTER.convert(input, { chunkSize });
-      return BLOB_CONVERTER.toBase64(blob, chunkSize);
+      const blob = await BLOB_CONVERTER.convert(input, {
+        chunkSize: options.chunkSize,
+      });
+      return BLOB_CONVERTER.toBase64(blob, options);
     } else {
-      const u8 = await UINT8_ARRAY_CONVERTER.convert(input, { chunkSize });
-      return UINT8_ARRAY_CONVERTER.toBase64(u8, chunkSize);
+      const u8 = await UINT8_ARRAY_CONVERTER.convert(input, {
+        chunkSize: options.chunkSize,
+      });
+      return UINT8_ARRAY_CONVERTER.toBase64(u8, options);
     }
   }
 
   protected async _toText(
     input: ReadableStream<unknown>,
-    inputEncoding: Encoding,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<string> {
     if (hasBlob) {
-      const blob = await BLOB_CONVERTER.convert(input, { chunkSize });
-      return BLOB_CONVERTER.toText(blob, inputEncoding, chunkSize);
+      const blob = await BLOB_CONVERTER.convert(input, {
+        chunkSize: options.chunkSize,
+      });
+      return BLOB_CONVERTER.toText(blob, options);
     } else {
-      const u8 = await UINT8_ARRAY_CONVERTER.convert(input, { chunkSize });
-      return UINT8_ARRAY_CONVERTER.toText(u8, inputEncoding, chunkSize);
+      const u8 = await UINT8_ARRAY_CONVERTER.convert(input, {
+        chunkSize: options.chunkSize,
+      });
+      return UINT8_ARRAY_CONVERTER.toText(u8, options);
     }
   }
 
   protected async _toUint8Array(
     input: ReadableStream<unknown>,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<Uint8Array> {
     const chunks: Uint8Array[] = [];
     await handleReadableStream(input, async (chunk) => {
-      const u8 = await UINT8_ARRAY_CONVERTER.convert(chunk, { chunkSize });
+      const u8 = await UINT8_ARRAY_CONVERTER.convert(chunk, {
+        chunkSize: options.chunkSize,
+      });
       chunks.push(u8);
     });
     return UINT8_ARRAY_CONVERTER.merge(chunks);

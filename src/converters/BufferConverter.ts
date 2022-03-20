@@ -1,6 +1,6 @@
 import { EMPTY_BUFFER, UINT8_ARRAY_CONVERTER } from ".";
 import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
-import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
+import { AbstractConverter, ConvertOptions } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 
 class BufferConverter extends AbstractConverter<Buffer> {
@@ -50,23 +50,23 @@ class BufferConverter extends AbstractConverter<Buffer> {
 
   protected async _toArrayBuffer(
     input: Buffer,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    return UINT8_ARRAY_CONVERTER.toArrayBuffer(input, chunkSize);
+    return UINT8_ARRAY_CONVERTER.toArrayBuffer(input, options);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toBase64(input: Buffer, _: number): Promise<string> {
+  protected _toBase64(input: Buffer, _: ConvertOptions): Promise<string> {
     return Promise.resolve(input.toString("base64"));
   }
 
-  protected _toText(
-    input: Buffer,
-    inputEncoding: Encoding,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: number
-  ): Promise<string> {
-    return TEXT_HELPER.toText(input, inputEncoding);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected _toText(input: Buffer, options: ConvertOptions): Promise<string> {
+    return TEXT_HELPER.bufferToText(
+      input,
+      options.inputEncoding,
+      options.outputEncoding
+    );
   }
 
   protected _toUint8Array(input: Buffer): Promise<Uint8Array> {

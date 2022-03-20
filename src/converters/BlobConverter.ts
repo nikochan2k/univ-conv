@@ -14,11 +14,10 @@ import {
   AbstractConverter,
   ConvertOptions,
   dataUrlToBase64,
-  Encoding,
   handleFileReader,
 } from "./Converter";
-import { TEXT_HELPER } from "./TextHelper";
 import { handleReadableStream } from "./ReadableStreamConverter";
+import { TEXT_HELPER } from "./TextHelper";
 
 class BlobConverter extends AbstractConverter<Blob> {
   public typeEquals(input: unknown): input is Blob {
@@ -62,13 +61,17 @@ class BlobConverter extends AbstractConverter<Blob> {
 
   protected async _toArrayBuffer(
     input: Blob,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    const u8 = await this._toUint8Array(input, chunkSize);
-    return ARRAY_BUFFER_CONVERTER.toArrayBuffer(u8, chunkSize);
+    const u8 = await this._toUint8Array(input, options);
+    return ARRAY_BUFFER_CONVERTER.toArrayBuffer(u8, options);
   }
 
-  protected async _toBase64(input: Blob, chunkSize: number): Promise<string> {
+  protected async _toBase64(
+    input: Blob,
+    options: ConvertOptions
+  ): Promise<string> {
+    const chunkSize = options.chunkSize;
     const chunks: string[] = [];
     for (let start = 0, end = input.size; start < end; start += chunkSize) {
       const blobChunk = input.slice(start, start + chunkSize);
@@ -83,11 +86,9 @@ class BlobConverter extends AbstractConverter<Blob> {
 
   protected async _toText(
     input: Blob,
-    inputEncoding: Encoding,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<string> {
-    if (inputEncoding === "utf8" || inputEncoding === "utf-8") {
+    if (options.inputEncoding === "utf8" || options.inputEncoding === "utf-8") {
       if (hasTextOnBlob) {
         return input.text();
       }
@@ -96,13 +97,17 @@ class BlobConverter extends AbstractConverter<Blob> {
         (data) => data as string
       );
     }
-    const u8 = await this.toUint8Array(input, chunkSize);
-    return TEXT_HELPER.toText(u8, inputEncoding);
+    const u8 = await this.toUint8Array(input, options);
+    return TEXT_HELPER.bufferToText(
+      u8,
+      options.inputEncoding,
+      options.outputEncoding
+    );
   }
 
   protected async _toUint8Array(
     input: Blob,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<Uint8Array> {
     if (input.size === 0) {
       return EMPTY_UINT8_ARRAY;
@@ -112,6 +117,8 @@ class BlobConverter extends AbstractConverter<Blob> {
       const ab = await input.arrayBuffer();
       return new Uint8Array(ab);
     }
+
+    const chunkSize = options.chunkSize;
     if (hasReadAsArrayBufferOnBlob) {
       let byteLength = 0;
       const chunks: ArrayBuffer[] = [];
@@ -155,7 +162,7 @@ class BlobConverter extends AbstractConverter<Blob> {
         chunks.push(chunk);
       }
       const base64 = chunks.join("");
-      return BASE64_CONVERTER.toUint8Array(base64, chunkSize);
+      return BASE64_CONVERTER.toUint8Array(base64, options);
     }
   }
 

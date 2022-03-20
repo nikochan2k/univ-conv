@@ -1,5 +1,5 @@
 import { UINT8_ARRAY_CONVERTER } from ".";
-import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
+import { AbstractConverter, ConvertOptions } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 
 const BYTE_TO_HEX: string[] = [];
@@ -72,28 +72,34 @@ class HexConverter extends AbstractConverter<string> {
 
   protected async _toArrayBuffer(
     input: string,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    const u8 = await this._toUint8Array(input, chunkSize);
-    return UINT8_ARRAY_CONVERTER.toArrayBuffer(u8, chunkSize);
+    const u8 = await this._toUint8Array(input, options);
+    return UINT8_ARRAY_CONVERTER.toArrayBuffer(u8, options);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toBase64(input: string, _: number): Promise<string> {
+  protected _toBase64(input: string, _: ConvertOptions): Promise<string> {
     return Promise.resolve(input);
   }
 
   protected async _toText(
     input: string,
-    inputEncoding: Encoding,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<string> {
-    const u8 = await this.toUint8Array(input, chunkSize);
-    return TEXT_HELPER.toText(u8, inputEncoding);
+    const u8 = await this.toUint8Array(input, options);
+    return TEXT_HELPER.bufferToText(
+      u8,
+      options.inputEncoding,
+      options.outputEncoding
+    );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toUint8Array(input: string, _: number): Promise<Uint8Array> {
+  protected _toUint8Array(
+    input: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: ConvertOptions
+  ): Promise<Uint8Array> {
     const bytes = new Uint8Array(Math.floor(input.length / 2));
     let i;
     for (i = 0; i < bytes.length; i++) {

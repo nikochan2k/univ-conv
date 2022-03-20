@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Converter, Encoding } from "./Converter";
+import { Converter, ConvertOptions } from "./Converter";
 
 const NOT_IMPLEMENTED_ERROR = new Error("Method not implemented.");
 
@@ -15,22 +15,22 @@ class FalseConverter implements Converter<any> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public toArrayBuffer(_1: any, _2: number): Promise<ArrayBuffer> {
+  public toArrayBuffer(_1: any, _2: ConvertOptions): Promise<ArrayBuffer> {
     throw NOT_IMPLEMENTED_ERROR;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public toBase64(_1: any, _2: number): Promise<string> {
+  public toBase64(_1: any, _2: ConvertOptions): Promise<string> {
     throw NOT_IMPLEMENTED_ERROR;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public toText(_1: any, _2: Encoding, _3: number): Promise<string> {
+  public toText(_1: any, _2: ConvertOptions): Promise<string> {
     throw NOT_IMPLEMENTED_ERROR;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public toUint8Array(_1: any, _2: number): Promise<Uint8Array> {
+  public toUint8Array(_1: any, _2: ConvertOptions): Promise<Uint8Array> {
     throw NOT_IMPLEMENTED_ERROR;
   }
 

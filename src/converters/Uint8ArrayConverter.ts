@@ -8,14 +8,9 @@ import {
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
 } from ".";
-import {
-  AbstractConverter,
-  ConvertOptions,
-  Encoding,
-  Options,
-} from "./Converter";
-import { TEXT_HELPER } from "./TextHelper";
+import { AbstractConverter, ConvertOptions, Options } from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
+import { TEXT_HELPER } from "./TextHelper";
 
 export const EMPTY_UINT8_ARRAY = new Uint8Array(0);
 
@@ -36,30 +31,33 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
       return input;
     }
 
-    const chunkSize = options.chunkSize;
     if (typeof input === "string") {
       const inputEncoding = options?.inputEncoding;
       if (inputEncoding === "base64") {
-        return BASE64_CONVERTER.toUint8Array(input, chunkSize);
+        return BASE64_CONVERTER.toUint8Array(input, options);
       } else if (inputEncoding === "binary") {
-        return BINARY_STRING_CONVERTER.toUint8Array(input, chunkSize);
+        return BINARY_STRING_CONVERTER.toUint8Array(input, options);
       } else if (inputEncoding === "hex") {
-        return HEX_CONVERTER.toUint8Array(input, chunkSize);
+        return HEX_CONVERTER.toUint8Array(input, options);
       } else {
-        return TEXT_HELPER.toUint8Array(input, inputEncoding);
+        return TEXT_HELPER.textToBuffer(
+          input,
+          options.inputEncoding,
+          options.outputEncoding
+        );
       }
     }
     if (ARRAY_BUFFER_CONVERTER.typeEquals(input)) {
-      return ARRAY_BUFFER_CONVERTER.toUint8Array(input, chunkSize);
+      return ARRAY_BUFFER_CONVERTER.toUint8Array(input, options);
     }
     if (BLOB_CONVERTER.typeEquals(input)) {
-      return BLOB_CONVERTER.toUint8Array(input, chunkSize);
+      return BLOB_CONVERTER.toUint8Array(input, options);
     }
     if (READABLE_STREAM_CONVERTER.typeEquals(input)) {
-      return READABLE_STREAM_CONVERTER.toUint8Array(input, chunkSize);
+      return READABLE_STREAM_CONVERTER.toUint8Array(input, options);
     }
     if (READABLE_CONVERTER.typeEquals(input)) {
-      return READABLE_CONVERTER.toUint8Array(input, chunkSize);
+      return READABLE_CONVERTER.toUint8Array(input, options);
     }
 
     return undefined;
@@ -87,31 +85,36 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     return Promise.resolve(u8);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toArrayBuffer(input: Uint8Array, _: number): Promise<ArrayBuffer> {
+  protected _toArrayBuffer(
+    input: Uint8Array,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: ConvertOptions
+  ): Promise<ArrayBuffer> {
     return Promise.resolve(
       input.buffer.slice(input.byteOffset, input.byteOffset + input.byteLength)
     );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toBase64(input: Uint8Array, _: number): Promise<string> {
+  protected _toBase64(input: Uint8Array, _: ConvertOptions): Promise<string> {
     return Promise.resolve(encode(input));
   }
 
   protected _toText(
     input: Uint8Array,
-    inputEncoding: Encoding,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: number
+    options: ConvertOptions
   ): Promise<string> {
-    return TEXT_HELPER.toText(input, inputEncoding);
+    return TEXT_HELPER.bufferToText(
+      input,
+      options.inputEncoding,
+      options.outputEncoding
+    );
   }
 
   protected _toUint8Array(
     input: Uint8Array,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: number
+    _: ConvertOptions
   ): Promise<Uint8Array> {
     return Promise.resolve(input);
   }

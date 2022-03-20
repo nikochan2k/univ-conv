@@ -26,7 +26,7 @@ try {
 }
 
 class NodeTextHelper implements TextHelper {
-  async toText(u8: Uint8Array, bufEnc: BufferEncoding): Promise<string> {
+  async bufferToText(u8: Uint8Array, bufEnc: BufferEncoding): Promise<string> {
     let buf: Buffer;
     if (BUFFER_CONVERTER.typeEquals(u8)) {
       buf = u8;
@@ -53,7 +53,7 @@ class NodeTextHelper implements TextHelper {
     throw new Error("Illegal encoding: " + bufEnc);
   }
 
-  toUint8Array(text: string, bufEnc: Encoding): Promise<Uint8Array> {
+  textToBuffer(text: string, bufEnc: Encoding): Promise<Uint8Array> {
     if (ENCODINGS.indexOf(bufEnc)) {
       return Promise.resolve(Buffer.from(text, bufEnc as BufferEncoding));
     }

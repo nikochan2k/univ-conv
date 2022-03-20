@@ -2,8 +2,16 @@ import { hasBuffer } from ".";
 import { Encoding } from "./Converter";
 
 export interface TextHelper {
-  toText(u8: Uint8Array, bufEnc: Encoding): Promise<string>;
-  toUint8Array(text: string, bufEnc: Encoding): Promise<Uint8Array>;
+  bufferToText(
+    buf: Uint8Array,
+    bufEnc: Encoding,
+    textEnc: Encoding
+  ): Promise<string>;
+  textToBuffer(
+    text: string,
+    textEnc: Encoding,
+    bufEnc: Encoding
+  ): Promise<Uint8Array>;
 }
 
 export let TEXT_HELPER: TextHelper;

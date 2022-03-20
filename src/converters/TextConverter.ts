@@ -6,9 +6,9 @@ import {
 } from ".";
 import { BASE64_CONVERTER } from "./Base64Converter";
 import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
-import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
-import { TEXT_HELPER } from "./TextHelper";
+import { AbstractConverter, ConvertOptions } from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
+import { TEXT_HELPER } from "./TextHelper";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
 class TextConverter extends AbstractConverter<string> {
@@ -20,35 +20,37 @@ class TextConverter extends AbstractConverter<string> {
     input: unknown,
     options: ConvertOptions
   ): Promise<string | undefined> {
-    const chunkSize = options.chunkSize;
-
     const inputEnoding = options.inputEncoding;
     if (typeof input === "string") {
       if (inputEnoding === "utf16le") {
         return input;
       } else if (inputEnoding === "base64") {
-        return BASE64_CONVERTER.toText(input, inputEnoding, chunkSize);
+        return BASE64_CONVERTER.toText(input, options);
       } else if (inputEnoding === "binary") {
-        return BINARY_STRING_CONVERTER.toText(input, inputEnoding, chunkSize);
+        return BINARY_STRING_CONVERTER.toText(input, options);
       } else if (inputEnoding === "hex") {
-        return HEX_CONVERTER.toText(input, inputEnoding, chunkSize);
+        return HEX_CONVERTER.toText(input, options);
       }
-      input = TEXT_HELPER.toUint8Array(input, inputEnoding);
+      input = TEXT_HELPER.textToBuffer(
+        input,
+        options.inputEncoding,
+        options.outputEncoding
+      );
     }
     if (ARRAY_BUFFER_CONVERTER.typeEquals(input)) {
-      return ARRAY_BUFFER_CONVERTER.toText(input, inputEnoding, chunkSize);
+      return ARRAY_BUFFER_CONVERTER.toText(input, options);
     }
     if (UINT8_ARRAY_CONVERTER.typeEquals(input)) {
-      return UINT8_ARRAY_CONVERTER.toText(input, inputEnoding, chunkSize);
+      return UINT8_ARRAY_CONVERTER.toText(input, options);
     }
     if (BLOB_CONVERTER.typeEquals(input)) {
-      return BLOB_CONVERTER.toText(input, inputEnoding, chunkSize);
+      return BLOB_CONVERTER.toText(input, options);
     }
     if (BUFFER_CONVERTER.typeEquals(input)) {
-      return BUFFER_CONVERTER.toText(input, inputEnoding, chunkSize);
+      return BUFFER_CONVERTER.toText(input, options);
     }
     if (READABLE_CONVERTER.typeEquals(input)) {
-      return READABLE_CONVERTER.toText(input, inputEnoding, chunkSize);
+      return READABLE_CONVERTER.toText(input, options);
     }
 
     return undefined;
@@ -64,24 +66,30 @@ class TextConverter extends AbstractConverter<string> {
 
   protected async _toArrayBuffer(
     input: string,
-    chunkSize: number
+    options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    const u8 = await this._toUint8Array(input, chunkSize);
-    return UINT8_ARRAY_CONVERTER.toArrayBuffer(u8, chunkSize);
+    const u8 = await this._toUint8Array(input, options);
+    return UINT8_ARRAY_CONVERTER.toArrayBuffer(u8, options);
   }
 
-  protected async _toBase64(input: string, chunkSize: number): Promise<string> {
-    const u8 = await this._toUint8Array(input, chunkSize);
-    return UINT8_ARRAY_CONVERTER.toBase64(u8, chunkSize);
+  protected async _toBase64(
+    input: string,
+    options: ConvertOptions
+  ): Promise<string> {
+    const u8 = await this._toUint8Array(input, options);
+    return UINT8_ARRAY_CONVERTER.toBase64(u8, options);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toText(input: string, _1: Encoding, _2: number): Promise<string> {
+  protected _toText(input: string, _: ConvertOptions): Promise<string> {
     return Promise.resolve(input);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toUint8Array(input: string, _: number): Promise<Uint8Array> {
+  protected _toUint8Array(
+    input: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: ConvertOptions
+  ): Promise<Uint8Array> {
     const u8 = new Uint8Array(input.length * 2);
     for (let i = 0; i < u8.length; i += 2) {
       let x = input.charCodeAt(i / 2);
