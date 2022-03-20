@@ -58,7 +58,7 @@ class HexConverter extends AbstractConverter<string> {
     return undefined;
   }
 
-  public is(input: unknown): input is string {
+  public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }
 

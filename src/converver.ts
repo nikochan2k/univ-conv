@@ -56,19 +56,19 @@ export class Converter {
     input: unknown,
     options?: ConvertOptions
   ): Promise<ReturnDataType<T>> {
-    if (ARRAY_BUFFER_CONVERTER.is(input)) {
+    if (ARRAY_BUFFER_CONVERTER.typeEquals(input)) {
       return ARRAY_BUFFER_CONVERTER.convert(input, options);
     }
-    if (UINT8_ARRAY_CONVERTER.is(input)) {
+    if (UINT8_ARRAY_CONVERTER.typeEquals(input)) {
       return UINT8_ARRAY_CONVERTER.convert(input, options);
     }
-    if (BUFFER_CONVERTER.is(input)) {
+    if (BUFFER_CONVERTER.typeEquals(input)) {
       return BUFFER_CONVERTER.convert(input, options);
     }
-    if (BLOB_CONVERTER.is(input)) {
+    if (BLOB_CONVERTER.typeEquals(input)) {
       return BLOB_CONVERTER.convert(input, options);
     }
-    if (READABLE_CONVERTER.is(input)) {
+    if (READABLE_CONVERTER.typeEquals(input)) {
       return READABLE_CONVERTER.convert(input, options);
     }
 

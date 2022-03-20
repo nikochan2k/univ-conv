@@ -22,7 +22,7 @@ class BinaryStringConverter extends AbstractConverter<string> {
       if (options.inputEncoding === "binary") {
         return input;
       }
-    } else if (BLOB_CONVERTER.is(input)) {
+    } else if (BLOB_CONVERTER.typeEquals(input)) {
       if (hasReadAsBinaryStringOnBlob) {
         const chunkSize = options.chunkSize;
         const chunks: string[] = [];
@@ -45,7 +45,7 @@ class BinaryStringConverter extends AbstractConverter<string> {
     return undefined;
   }
 
-  public is(input: unknown): input is string {
+  public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }
 

@@ -28,7 +28,7 @@ try {
 class NodeEncoder implements Encoder {
   async toText(u8: Uint8Array, bufEnc: BufferEncoding): Promise<string> {
     let buf: Buffer;
-    if (BUFFER_CONVERTER.is(u8)) {
+    if (BUFFER_CONVERTER.typeEquals(u8)) {
       buf = u8;
     } else {
       buf = await BUFFER_CONVERTER.convert(u8);

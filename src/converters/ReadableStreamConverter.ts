@@ -36,7 +36,7 @@ export async function handleReadableStream(
 class ReadableStreamConverter extends AbstractConverter<
   ReadableStream<unknown>
 > {
-  public is(input: unknown): input is ReadableStream {
+  public typeEquals(input: unknown): input is ReadableStream {
     return (
       input != null &&
       typeof (input as ReadableStream<unknown>).getReader === "function" &&
@@ -48,16 +48,16 @@ class ReadableStreamConverter extends AbstractConverter<
     input: unknown,
     options: ConvertOptions
   ): Promise<ReadableStream<unknown> | undefined> {
-    if (this.is(input)) {
+    if (this.typeEquals(input)) {
       return input;
     }
 
-    if (BLOB_CONVERTER.is(input)) {
+    if (BLOB_CONVERTER.typeEquals(input)) {
       if (hasStreamOnBlob) {
         return input.stream() as unknown as ReadableStream<unknown>;
       }
     }
-    if (READABLE_CONVERTER.is(input)) {
+    if (READABLE_CONVERTER.typeEquals(input)) {
       const readable = input;
       return new ReadableStream({
         start: (converter) => {

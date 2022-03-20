@@ -20,9 +20,9 @@ import { HEX_CONVERTER } from "./HexConverter";
 export const EMPTY_UINT8_ARRAY = new Uint8Array(0);
 
 class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
-  public is(input: unknown): input is Uint8Array {
+  public typeEquals(input: unknown): input is Uint8Array {
     return (
-      BUFFER_CONVERTER.is(input) ||
+      BUFFER_CONVERTER.typeEquals(input) ||
       input instanceof Uint8Array ||
       toString.call(input) === "[object Uint8Array]"
     );
@@ -32,7 +32,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     input: unknown,
     options: ConvertOptions
   ): Promise<Uint8Array | undefined> {
-    if (this.is(input)) {
+    if (this.typeEquals(input)) {
       return input;
     }
 
@@ -49,16 +49,16 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
         return ENCODER.toUint8Array(input, inputEncoding);
       }
     }
-    if (ARRAY_BUFFER_CONVERTER.is(input)) {
+    if (ARRAY_BUFFER_CONVERTER.typeEquals(input)) {
       return ARRAY_BUFFER_CONVERTER.toUint8Array(input, chunkSize);
     }
-    if (BLOB_CONVERTER.is(input)) {
+    if (BLOB_CONVERTER.typeEquals(input)) {
       return BLOB_CONVERTER.toUint8Array(input, chunkSize);
     }
-    if (READABLE_STREAM_CONVERTER.is(input)) {
+    if (READABLE_STREAM_CONVERTER.typeEquals(input)) {
       return READABLE_STREAM_CONVERTER.toUint8Array(input, chunkSize);
     }
-    if (READABLE_CONVERTER.is(input)) {
+    if (READABLE_CONVERTER.typeEquals(input)) {
       return READABLE_CONVERTER.toUint8Array(input, chunkSize);
     }
 

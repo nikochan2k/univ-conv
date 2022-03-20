@@ -14,12 +14,12 @@ export interface ConvertOptions extends Options {
 
 export interface Converter<T> {
   convert(input: unknown, options?: Partial<ConvertOptions>): Promise<T>;
-  is(input: unknown): input is T;
   merge(chunks: T[], options?: Partial<Options>): Promise<T>;
   toArrayBuffer(input: T, chunkSize: number): Promise<ArrayBuffer>;
   toBase64(input: T, chunkSize: number): Promise<string>;
   toText(input: T, inputEncoding: Encoding, chunkSize: number): Promise<string>;
   toUint8Array(input: T, chunkSize: number): Promise<Uint8Array>;
+  typeEquals(input: unknown): input is T;
 }
 
 export const EMPTY_ARRAY_BUFFER = new ArrayBuffer(0);
@@ -84,7 +84,7 @@ export abstract class AbstractConverter<T> implements Converter<T> {
     return this._toUint8Array(input, chunkSize);
   }
 
-  public abstract is(input: unknown): input is T;
+  public abstract typeEquals(input: unknown): input is T;
 
   protected abstract _convert(
     input: unknown,

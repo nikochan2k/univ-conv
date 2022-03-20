@@ -9,10 +9,6 @@ class FalseConverter implements Converter<any> {
     throw NOT_IMPLEMENTED_ERROR;
   }
 
-  public is(input: unknown): input is any {
-    return false;
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public merge(_: any[]): Promise<any> {
     throw NOT_IMPLEMENTED_ERROR;
@@ -36,6 +32,10 @@ class FalseConverter implements Converter<any> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public toUint8Array(_1: any, _2: number): Promise<Uint8Array> {
     throw NOT_IMPLEMENTED_ERROR;
+  }
+
+  public typeEquals(input: unknown): input is any {
+    return false;
   }
 }
 

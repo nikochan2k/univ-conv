@@ -12,7 +12,7 @@ import { HEX_CONVERTER } from "./HexConverter";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
 class TextConverter extends AbstractConverter<string> {
-  public is(input: unknown): input is string {
+  public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }
 
@@ -35,19 +35,19 @@ class TextConverter extends AbstractConverter<string> {
       }
       input = ENCODER.toUint8Array(input, inputEnoding);
     }
-    if (ARRAY_BUFFER_CONVERTER.is(input)) {
+    if (ARRAY_BUFFER_CONVERTER.typeEquals(input)) {
       return ARRAY_BUFFER_CONVERTER.toText(input, inputEnoding, chunkSize);
     }
-    if (UINT8_ARRAY_CONVERTER.is(input)) {
+    if (UINT8_ARRAY_CONVERTER.typeEquals(input)) {
       return UINT8_ARRAY_CONVERTER.toText(input, inputEnoding, chunkSize);
     }
-    if (BLOB_CONVERTER.is(input)) {
+    if (BLOB_CONVERTER.typeEquals(input)) {
       return BLOB_CONVERTER.toText(input, inputEnoding, chunkSize);
     }
-    if (BUFFER_CONVERTER.is(input)) {
+    if (BUFFER_CONVERTER.typeEquals(input)) {
       return BUFFER_CONVERTER.toText(input, inputEnoding, chunkSize);
     }
-    if (READABLE_CONVERTER.is(input)) {
+    if (READABLE_CONVERTER.typeEquals(input)) {
       return READABLE_CONVERTER.toText(input, inputEnoding, chunkSize);
     }
 

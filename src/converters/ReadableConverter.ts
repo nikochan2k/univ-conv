@@ -12,7 +12,7 @@ import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
 import { ENCODER } from "./Encoder";
 
 class ReadableConverter extends AbstractConverter<Readable> {
-  public is(input: unknown): input is Readable {
+  public typeEquals(input: unknown): input is Readable {
     return (
       input != null &&
       typeof (input as Readable).pipe === "function" &&
@@ -24,16 +24,16 @@ class ReadableConverter extends AbstractConverter<Readable> {
     input: unknown,
     options: ConvertOptions
   ): Promise<Readable | undefined> {
-    if (this.is(input)) {
+    if (this.typeEquals(input)) {
       return input;
     }
 
-    if (BLOB_CONVERTER.is(input)) {
+    if (BLOB_CONVERTER.typeEquals(input)) {
       if (hasStreamOnBlob) {
         input = input.stream() as unknown as ReadableStream<unknown>;
       }
     }
-    if (READABLE_STREAM_CONVERTER.is(input)) {
+    if (READABLE_STREAM_CONVERTER.typeEquals(input)) {
       const stream = input;
       const reader = input.getReader();
       return new Readable({

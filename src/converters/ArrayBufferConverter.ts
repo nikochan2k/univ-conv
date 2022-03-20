@@ -21,7 +21,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     input: unknown,
     options: ConvertOptions
   ): Promise<ArrayBuffer | undefined> {
-    if (this.is(input)) {
+    if (this.typeEquals(input)) {
       return input;
     }
 
@@ -37,23 +37,23 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
       }
       input = ENCODER.toUint8Array(input, inputEncoding);
     }
-    if (UINT8_ARRAY_CONVERTER.is(input)) {
+    if (UINT8_ARRAY_CONVERTER.typeEquals(input)) {
       return UINT8_ARRAY_CONVERTER.toArrayBuffer(input, chunkSize);
     }
-    if (BLOB_CONVERTER.is(input)) {
+    if (BLOB_CONVERTER.typeEquals(input)) {
       return BLOB_CONVERTER.toArrayBuffer(input, chunkSize);
     }
-    if (READABLE_STREAM_CONVERTER.is(input)) {
+    if (READABLE_STREAM_CONVERTER.typeEquals(input)) {
       return READABLE_STREAM_CONVERTER.toArrayBuffer(input, chunkSize);
     }
-    if (READABLE_CONVERTER.is(input)) {
+    if (READABLE_CONVERTER.typeEquals(input)) {
       return READABLE_CONVERTER.toArrayBuffer(input, chunkSize);
     }
 
     return undefined;
   }
 
-  public is(input: unknown): input is ArrayBuffer {
+  public typeEquals(input: unknown): input is ArrayBuffer {
     return (
       input instanceof ArrayBuffer ||
       toString.call(input) === "[object ArrayBuffer]"

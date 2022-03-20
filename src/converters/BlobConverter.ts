@@ -21,7 +21,7 @@ import { ENCODER } from "./Encoder";
 import { handleReadableStream } from "./ReadableStreamConverter";
 
 class BlobConverter extends AbstractConverter<Blob> {
-  public is(input: unknown): input is Blob {
+  public typeEquals(input: unknown): input is Blob {
     return (
       input instanceof Blob ||
       toString.call(input) === "[object Blob]" ||
@@ -33,11 +33,11 @@ class BlobConverter extends AbstractConverter<Blob> {
     input: unknown,
     options: ConvertOptions
   ): Promise<Blob | undefined> {
-    if (this.is(input)) {
+    if (this.typeEquals(input)) {
       return input;
     }
 
-    if (READABLE_STREAM_CONVERTER.is(input)) {
+    if (READABLE_STREAM_CONVERTER.typeEquals(input)) {
       const blobs: Blob[] = [];
       await handleReadableStream(input, async (chunk) => {
         blobs.push(await this.convert(chunk));

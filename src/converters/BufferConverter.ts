@@ -4,7 +4,7 @@ import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
 import { ENCODER } from "./Encoder";
 
 class BufferConverter extends AbstractConverter<Buffer> {
-  public is(input: unknown): input is Buffer {
+  public typeEquals(input: unknown): input is Buffer {
     return (
       input instanceof Buffer || toString.call(input) === "[object Buffer]"
     );
@@ -14,7 +14,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
     input: unknown,
     options: ConvertOptions
   ): Promise<Buffer | undefined> {
-    if (this.is(input)) {
+    if (this.typeEquals(input)) {
       return input;
     }
 
@@ -28,7 +28,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
         return Buffer.from(input, "hex");
       }
     }
-    if (UINT8_ARRAY_CONVERTER.is(input)) {
+    if (UINT8_ARRAY_CONVERTER.typeEquals(input)) {
       return Buffer.from(input.buffer, input.byteOffset, input.byteLength);
     }
 

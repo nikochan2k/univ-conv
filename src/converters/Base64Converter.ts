@@ -25,7 +25,7 @@ class Base64Converter extends AbstractConverter<string> {
         return HEX_CONVERTER.toBase64(input, chunkSize);
       }
       u8 = await ENCODER.toUint8Array(input, inputEncoding);
-    } else if (BLOB_CONVERTER.is(input)) {
+    } else if (BLOB_CONVERTER.typeEquals(input)) {
       return BLOB_CONVERTER.toBase64(input, chunkSize);
     } else {
       u8 = await UINT8_ARRAY_CONVERTER.convert(input, options);
@@ -37,7 +37,7 @@ class Base64Converter extends AbstractConverter<string> {
     return undefined;
   }
 
-  public is(input: unknown): input is string {
+  public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }
 
