@@ -1,6 +1,6 @@
 import { BUFFER_CONVERTER } from ".";
 import { Encoding } from "./Converter";
-import { Encoder } from "./Encoder";
+import { TextHelper } from "./TextHelper";
 
 const ENCODINGS = [
   "ascii",
@@ -25,7 +25,7 @@ try {
   // Do nothing
 }
 
-class NodeEncoder implements Encoder {
+class NodeTextHelper implements TextHelper {
   async toText(u8: Uint8Array, bufEnc: BufferEncoding): Promise<string> {
     let buf: Buffer;
     if (BUFFER_CONVERTER.typeEquals(u8)) {
@@ -76,4 +76,4 @@ class NodeEncoder implements Encoder {
   }
 }
 
-export const NODE_ENCODER = new NodeEncoder();
+export const NODE_TEXT_HELPER = new NodeTextHelper();

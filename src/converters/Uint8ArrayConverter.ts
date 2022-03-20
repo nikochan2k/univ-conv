@@ -14,7 +14,7 @@ import {
   Encoding,
   Options,
 } from "./Converter";
-import { ENCODER } from "./Encoder";
+import { TEXT_HELPER } from "./TextHelper";
 import { HEX_CONVERTER } from "./HexConverter";
 
 export const EMPTY_UINT8_ARRAY = new Uint8Array(0);
@@ -46,7 +46,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
       } else if (inputEncoding === "hex") {
         return HEX_CONVERTER.toUint8Array(input, chunkSize);
       } else {
-        return ENCODER.toUint8Array(input, inputEncoding);
+        return TEXT_HELPER.toUint8Array(input, inputEncoding);
       }
     }
     if (ARRAY_BUFFER_CONVERTER.typeEquals(input)) {
@@ -105,7 +105,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _: number
   ): Promise<string> {
-    return ENCODER.toText(input, inputEncoding);
+    return TEXT_HELPER.toText(input, inputEncoding);
   }
 
   protected _toUint8Array(

@@ -7,7 +7,7 @@ import {
 import { BASE64_CONVERTER } from "./Base64Converter";
 import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
 import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
-import { ENCODER } from "./Encoder";
+import { TEXT_HELPER } from "./TextHelper";
 import { HEX_CONVERTER } from "./HexConverter";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
@@ -33,7 +33,7 @@ class TextConverter extends AbstractConverter<string> {
       } else if (inputEnoding === "hex") {
         return HEX_CONVERTER.toText(input, inputEnoding, chunkSize);
       }
-      input = ENCODER.toUint8Array(input, inputEnoding);
+      input = TEXT_HELPER.toUint8Array(input, inputEnoding);
     }
     if (ARRAY_BUFFER_CONVERTER.typeEquals(input)) {
       return ARRAY_BUFFER_CONVERTER.toText(input, inputEnoding, chunkSize);

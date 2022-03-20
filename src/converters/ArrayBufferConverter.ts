@@ -13,11 +13,18 @@ import {
   Encoding,
   Options,
 } from "./Converter";
-import { ENCODER } from "./Encoder";
+import { TEXT_HELPER } from "./TextHelper";
 import { HEX_CONVERTER } from "./HexConverter";
 
 class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
-  public async _convert(
+  public typeEquals(input: unknown): input is ArrayBuffer {
+    return (
+      input instanceof ArrayBuffer ||
+      toString.call(input) === "[object ArrayBuffer]"
+    );
+  }
+
+  protected async _convert(
     input: unknown,
     options: ConvertOptions
   ): Promise<ArrayBuffer | undefined> {
@@ -35,7 +42,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
       } else if (inputEncoding === "hex") {
         return HEX_CONVERTER.toArrayBuffer(input, chunkSize);
       }
-      input = ENCODER.toUint8Array(input, inputEncoding);
+      input = TEXT_HELPER.toUint8Array(input, inputEncoding);
     }
     if (UINT8_ARRAY_CONVERTER.typeEquals(input)) {
       return UINT8_ARRAY_CONVERTER.toArrayBuffer(input, chunkSize);
@@ -51,13 +58,6 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     }
 
     return undefined;
-  }
-
-  public typeEquals(input: unknown): input is ArrayBuffer {
-    return (
-      input instanceof ArrayBuffer ||
-      toString.call(input) === "[object ArrayBuffer]"
-    );
   }
 
   protected _isEmpty(input: ArrayBuffer): boolean {
@@ -101,7 +101,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     _: number
   ): Promise<string> {
     const u8 = new Uint8Array(input);
-    return ENCODER.toText(u8, inputEncoding);
+    return TEXT_HELPER.toText(u8, inputEncoding);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

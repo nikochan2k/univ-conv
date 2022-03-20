@@ -9,7 +9,7 @@ import {
   UINT8_ARRAY_CONVERTER,
 } from ".";
 import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
-import { ENCODER } from "./Encoder";
+import { TEXT_HELPER } from "./TextHelper";
 
 class ReadableConverter extends AbstractConverter<Readable> {
   public typeEquals(input: unknown): input is Readable {
@@ -127,7 +127,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     chunkSize: number
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, chunkSize);
-    return ENCODER.toText(u8, inputEncoding);
+    return TEXT_HELPER.toText(u8, inputEncoding);
   }
 
   protected async _toUint8Array(

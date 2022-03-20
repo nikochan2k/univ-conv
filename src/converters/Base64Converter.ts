@@ -5,11 +5,15 @@ import {
   UINT8_ARRAY_CONVERTER,
 } from ".";
 import { AbstractConverter, ConvertOptions, Encoding } from "./Converter";
-import { ENCODER } from "./Encoder";
+import { TEXT_HELPER } from "./TextHelper";
 import { HEX_CONVERTER } from "./HexConverter";
 
 class Base64Converter extends AbstractConverter<string> {
-  public async _convert(
+  public typeEquals(input: unknown): input is string {
+    return typeof input === "string";
+  }
+
+  protected async _convert(
     input: unknown,
     options: ConvertOptions
   ): Promise<string | undefined> {
@@ -24,7 +28,7 @@ class Base64Converter extends AbstractConverter<string> {
       } else if (inputEncoding === "hex") {
         return HEX_CONVERTER.toBase64(input, chunkSize);
       }
-      u8 = await ENCODER.toUint8Array(input, inputEncoding);
+      u8 = await TEXT_HELPER.toUint8Array(input, inputEncoding);
     } else if (BLOB_CONVERTER.typeEquals(input)) {
       return BLOB_CONVERTER.toBase64(input, chunkSize);
     } else {
@@ -35,10 +39,6 @@ class Base64Converter extends AbstractConverter<string> {
     }
 
     return undefined;
-  }
-
-  public typeEquals(input: unknown): input is string {
-    return typeof input === "string";
   }
 
   protected _isEmpty(input: string): boolean {
@@ -72,7 +72,7 @@ class Base64Converter extends AbstractConverter<string> {
     chunkSize: number
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, chunkSize);
-    return ENCODER.toText(u8, inputEncoding);
+    return TEXT_HELPER.toText(u8, inputEncoding);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

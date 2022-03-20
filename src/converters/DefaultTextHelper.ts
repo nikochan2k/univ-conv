@@ -1,5 +1,5 @@
 import { Encoding } from "./Converter";
-import { Encoder } from "./Encoder";
+import { TextHelper } from "./TextHelper";
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -13,7 +13,7 @@ try {
   // Do nothing
 }
 
-class DefaultEncoder implements Encoder {
+class DefaultTextHelper implements TextHelper {
   toText(u8: Uint8Array, bufEnc: Encoding): Promise<string> {
     if (bufEnc === "utf8" || bufEnc === "utf-8") {
       return Promise.resolve(textDecoder.decode(u8));
@@ -72,4 +72,4 @@ class DefaultEncoder implements Encoder {
   }
 }
 
-export const DEFAULT_ENCODER = new DefaultEncoder();
+export const DEFAULT_TEXT_HELPER = new DefaultTextHelper();

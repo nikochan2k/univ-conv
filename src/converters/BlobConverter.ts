@@ -17,7 +17,7 @@ import {
   Encoding,
   handleFileReader,
 } from "./Converter";
-import { ENCODER } from "./Encoder";
+import { TEXT_HELPER } from "./TextHelper";
 import { handleReadableStream } from "./ReadableStreamConverter";
 
 class BlobConverter extends AbstractConverter<Blob> {
@@ -97,7 +97,7 @@ class BlobConverter extends AbstractConverter<Blob> {
       );
     }
     const u8 = await this.toUint8Array(input, chunkSize);
-    return ENCODER.toText(u8, inputEncoding);
+    return TEXT_HELPER.toText(u8, inputEncoding);
   }
 
   protected async _toUint8Array(

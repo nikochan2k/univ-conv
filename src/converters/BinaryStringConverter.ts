@@ -11,10 +11,14 @@ import {
   Encoding,
   handleFileReader,
 } from "./Converter";
-import { ENCODER } from "./Encoder";
+import { TEXT_HELPER } from "./TextHelper";
 
 class BinaryStringConverter extends AbstractConverter<string> {
-  public async _convert(
+  public typeEquals(input: unknown): input is string {
+    return typeof input === "string";
+  }
+
+  protected async _convert(
     input: unknown,
     options: ConvertOptions
   ): Promise<string | undefined> {
@@ -45,10 +49,6 @@ class BinaryStringConverter extends AbstractConverter<string> {
     return undefined;
   }
 
-  public typeEquals(input: unknown): input is string {
-    return typeof input === "string";
-  }
-
   protected _isEmpty(input: string): boolean {
     return !input;
   }
@@ -76,7 +76,7 @@ class BinaryStringConverter extends AbstractConverter<string> {
     chunkSize: number
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, chunkSize);
-    return ENCODER.toText(u8, inputEncoding);
+    return TEXT_HELPER.toText(u8, inputEncoding);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
