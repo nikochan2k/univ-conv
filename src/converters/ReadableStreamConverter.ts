@@ -52,8 +52,6 @@ class ReadableStreamConverter extends AbstractConverter<
       return input;
     }
 
-    if (!options.outputEncoding) options.outputEncoding = "utf8";
-
     if (BLOB_CONVERTER.typeEquals(input)) {
       if (hasStreamOnBlob) {
         return input.stream() as unknown as ReadableStream<unknown>;

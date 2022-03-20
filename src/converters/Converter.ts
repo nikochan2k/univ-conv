@@ -1,11 +1,11 @@
+import { CharsetType, StringType } from "../def";
+
 export const DEFAULT_BUFFER_SIZE = 96 * 1024;
-
-export type Encoding = BufferEncoding | "utf16be" | "jis" | "eucjp" | "sjis";
-
 export interface Options {
   chunkSize: number;
-  inputEncoding: Encoding;
-  outputEncoding?: Encoding;
+  encoding: StringType;
+  inputCharset: CharsetType;
+  outputCharset: CharsetType;
 }
 export interface ConvertOptions extends Options {
   length?: number;
@@ -122,13 +122,11 @@ export abstract class AbstractConverter<T> implements Converter<T> {
         `"bufferSize" was modified to ${options.chunkSize}. ("bufferSize" must be divisible by 6.)`
       );
     }
-    if (!options.inputEncoding) {
-      if (typeof input === "string") {
-        options.inputEncoding = "utf16le";
-      } else {
-        options.inputEncoding = "utf8";
-      }
+    if (typeof input === "string") {
+      if (!options.encoding) options.encoding = "text";
     }
+    if (!options.inputCharset) options.inputCharset = "utf8";
+    if (!options.outputCharset) options.outputCharset = "utf8";
     return options as T;
   }
 }

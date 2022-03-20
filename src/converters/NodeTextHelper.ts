@@ -1,20 +1,6 @@
 import { BUFFER_CONVERTER } from ".";
-import { Encoding } from "./Converter";
+import { CharsetType } from "../def";
 import { TextHelper } from "./TextHelper";
-
-const ENCODINGS = [
-  "ascii",
-  "utf8",
-  "utf-8",
-  "utf16le",
-  "ucs2",
-  "ucs-2",
-  "base64",
-  "base64url",
-  "latin1",
-  "binary",
-  "hex",
-];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let convert: any;
@@ -28,8 +14,7 @@ try {
 class NodeTextHelper implements TextHelper {
   async bufferToText(
     buf: Uint8Array,
-    bufEnc: Encoding,
-    textEnc: Encoding
+    bufCharset: CharsetType
   ): Promise<string> {
     let buffer: Buffer;
     if (BUFFER_CONVERTER.typeEquals(buf)) {
@@ -37,20 +22,15 @@ class NodeTextHelper implements TextHelper {
     } else {
       buffer = await BUFFER_CONVERTER.convert(buf);
     }
-    if (ENCODINGS.indexOf(textEnc)) {
-      if (bufEnc === textEnc) {
-        return buffer.toString(textEnc as BufferEncoding);
-      }
-      const text = buffer.toString(bufEnc as BufferEncoding);
-      buffer = Buffer.from(text);
-      return buffer.toString(textEnc as BufferEncoding);
+    if (bufCharset === "utf8" || bufCharset === "utf16le") {
+      return buffer.toString(bufCharset as BufferEncoding);
     }
     if (convert) {
       try {
         // eslint-disable-next-line
         return convert(buf, {
-          to: textEnc.toUpperCase(),
-          from: bufEnc.toUpperCase(),
+          to: "UTF16LE",
+          from: bufCharset.toUpperCase(),
           type: "string",
         });
       } catch {
@@ -59,27 +39,22 @@ class NodeTextHelper implements TextHelper {
     }
 
     // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-    throw new Error("Illegal encoding: " + bufEnc);
+    throw new Error("Illegal encoding: " + bufCharset);
   }
 
   async textToBuffer(
     text: string,
-    textEnc: Encoding,
-    bufEnc: Encoding
+    bufCharset: CharsetType
   ): Promise<Uint8Array> {
-    if (ENCODINGS.indexOf(bufEnc)) {
-      if (textEnc !== "utf16le") {
-        const buffer = Buffer.from(text, textEnc as BufferEncoding);
-        text = buffer.toString("utf16le");
-      }
-      return Buffer.from(text, bufEnc as BufferEncoding);
+    if (bufCharset === "utf8" || bufCharset === "utf16le") {
+      return Buffer.from(text, bufCharset as BufferEncoding);
     }
     if (convert) {
       try {
         // eslint-disable-next-line
         const ab: ArrayBuffer = convert(text, {
-          to: bufEnc.toUpperCase(),
-          from: textEnc.toUpperCase(),
+          to: bufCharset.toUpperCase(),
+          from: "UTF16LE",
           type: "arraybuffer",
         });
         return Promise.resolve(new Uint8Array(ab));
@@ -89,7 +64,7 @@ class NodeTextHelper implements TextHelper {
     }
 
     // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-    throw new Error("Illegal encoding: " + bufEnc);
+    throw new Error("Illegal encoding: " + bufCharset);
   }
 }
 

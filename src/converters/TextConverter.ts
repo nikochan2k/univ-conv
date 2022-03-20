@@ -1,15 +1,15 @@
 import {
   ARRAY_BUFFER_CONVERTER,
+  BASE64_CONVERTER,
+  BINARY_STRING_CONVERTER,
   BLOB_CONVERTER,
   BUFFER_CONVERTER,
+  HEX_CONVERTER,
   READABLE_CONVERTER,
+  UINT8_ARRAY_CONVERTER,
 } from ".";
-import { BASE64_CONVERTER } from "./Base64Converter";
-import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
 import { AbstractConverter, ConvertOptions } from "./Converter";
-import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
-import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
 class TextConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {
@@ -20,24 +20,18 @@ class TextConverter extends AbstractConverter<string> {
     input: unknown,
     options: ConvertOptions
   ): Promise<string | undefined> {
-    if (!options.outputEncoding) options.outputEncoding = "utf16le";
+    if (!options.outputCharset) options.outputCharset = "utf16le";
 
     if (typeof input === "string") {
-      const inputEnoding = options.inputEncoding;
-      if (inputEnoding === "utf16le") {
-        return input;
-      } else if (inputEnoding === "base64") {
+      const encoding = options.encoding;
+      if (encoding === "base64") {
         return BASE64_CONVERTER.toText(input, options);
-      } else if (inputEnoding === "binary") {
+      } else if (encoding === "binary") {
         return BINARY_STRING_CONVERTER.toText(input, options);
-      } else if (inputEnoding === "hex") {
+      } else if (encoding === "hex") {
         return HEX_CONVERTER.toText(input, options);
       }
-      input = TEXT_HELPER.textToBuffer(
-        input,
-        options.inputEncoding,
-        options.outputEncoding
-      );
+      input = TEXT_HELPER.textToBuffer(input, options.outputCharset);
     }
     if (ARRAY_BUFFER_CONVERTER.typeEquals(input)) {
       return ARRAY_BUFFER_CONVERTER.toText(input, options);

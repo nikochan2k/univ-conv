@@ -28,8 +28,6 @@ class ReadableConverter extends AbstractConverter<Readable> {
       return input;
     }
 
-    if (!options.outputEncoding) options.outputEncoding = "utf8";
-
     if (BLOB_CONVERTER.typeEquals(input)) {
       if (hasStreamOnBlob) {
         input = input.stream() as unknown as ReadableStream<unknown>;
@@ -128,7 +126,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return TEXT_HELPER.bufferToText(u8, options.inputEncoding, "utf16le");
+    return TEXT_HELPER.bufferToText(u8, options.inputCharset);
   }
 
   protected async _toUint8Array(

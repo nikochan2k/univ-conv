@@ -2,10 +2,10 @@ import { decode, encode } from "base64-arraybuffer";
 import {
   BINARY_STRING_CONVERTER,
   BLOB_CONVERTER,
+  HEX_CONVERTER,
   UINT8_ARRAY_CONVERTER,
 } from ".";
 import { AbstractConverter, ConvertOptions } from "./Converter";
-import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
 
 class Base64Converter extends AbstractConverter<string> {
@@ -17,23 +17,17 @@ class Base64Converter extends AbstractConverter<string> {
     input: unknown,
     options: ConvertOptions
   ): Promise<string | undefined> {
-    if (!options.outputEncoding) options.outputEncoding = "utf16le";
-
     let u8: Uint8Array | undefined;
     if (typeof input === "string") {
-      const inputEncoding = options.inputEncoding;
-      if (inputEncoding === "base64") {
+      const encoding = options.encoding;
+      if (encoding === "base64") {
         return input;
-      } else if (inputEncoding === "binary") {
+      } else if (encoding === "binary") {
         return BINARY_STRING_CONVERTER.toBase64(input, options);
-      } else if (inputEncoding === "hex") {
+      } else if (encoding === "hex") {
         return HEX_CONVERTER.toBase64(input, options);
       }
-      u8 = await TEXT_HELPER.textToBuffer(
-        input,
-        options.inputEncoding,
-        options.outputEncoding
-      );
+      u8 = await TEXT_HELPER.textToBuffer(input, options.outputCharset);
     } else if (BLOB_CONVERTER.typeEquals(input)) {
       return BLOB_CONVERTER.toBase64(input, options);
     } else {
@@ -54,7 +48,7 @@ class Base64Converter extends AbstractConverter<string> {
     const bufs: Uint8Array[] = [];
     for (const chunk of chunks) {
       bufs.push(
-        await UINT8_ARRAY_CONVERTER.convert(chunk, { inputEncoding: "base64" })
+        await UINT8_ARRAY_CONVERTER.convert(chunk, { encoding: "base64" })
       );
     }
     const u8 = await UINT8_ARRAY_CONVERTER.merge(bufs);
@@ -80,7 +74,7 @@ class Base64Converter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return TEXT_HELPER.bufferToText(u8, options.inputEncoding, "utf16le");
+    return TEXT_HELPER.bufferToText(u8, options.inputCharset);
   }
 
   protected _toUint8Array(

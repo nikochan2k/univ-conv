@@ -3,11 +3,6 @@ import { Converter } from "./Converter";
 import { FALSE_CONVERTER } from "./FalseConverter";
 import { EMPTY_UINT8_ARRAY } from "./Uint8ArrayConverter";
 
-export * from "./ArrayBufferConverter";
-export * from "./Base64Converter";
-export * from "./BinaryStringConverter";
-export * from "./Uint8ArrayConverter";
-
 export let hasBlob = false;
 export let hasTextOnBlob = false;
 export let hasStreamOnBlob = false;
@@ -42,10 +37,12 @@ if (typeof Blob === "function") {
 }
 
 export let hasReadableStream = false;
+export let hasWritableStream = false;
 export let READABLE_STREAM_CONVERTER: Converter<ReadableStream<unknown>>;
 export let EMPTY_READABLE_STREAM: ReadableStream<unknown>;
 if (typeof ReadableStream === "function") {
   hasReadableStream = true;
+  hasWritableStream = true;
   READABLE_STREAM_CONVERTER =
     require("./ReadableStreamConverter").READABLE_STREAM_CONVERTER;
   EMPTY_READABLE_STREAM = new ReadableStream({
@@ -83,10 +80,14 @@ try {
 } catch {}
 /* eslint-enable */
 
+export let hasReadable = false;
+export let hasWritable = false;
 export let READABLE_CONVERTER: Converter<Readable>;
 export let EMPTY_READABLE: Readable;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 if (typeof stream?.Readable === "function") {
+  hasReadable = true;
+  hasWritable = true;
   /* eslint-disable */
   READABLE_CONVERTER = require("./ReadableConverter").READABLE_CONVERTER;
   EMPTY_READABLE = new stream.Readable({
@@ -99,3 +100,9 @@ if (typeof stream?.Readable === "function") {
 } else {
   READABLE_CONVERTER = FALSE_CONVERTER;
 }
+
+export * from "./ArrayBufferConverter";
+export * from "./Base64Converter";
+export * from "./BinaryStringConverter";
+export * from "./Uint8ArrayConverter";
+export * from "./HexConverter";

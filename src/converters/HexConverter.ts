@@ -43,10 +43,8 @@ class HexConverter extends AbstractConverter<string> {
     input: unknown,
     options: ConvertOptions
   ): Promise<string | undefined> {
-    if (!options.outputEncoding) options.outputEncoding = "utf16le";
-
     if (typeof input === "string") {
-      if (options.inputEncoding === "hex") {
+      if (options.encoding === "hex") {
         return input;
       }
     }
@@ -90,7 +88,7 @@ class HexConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return TEXT_HELPER.bufferToText(u8, options.inputEncoding, "utf16le");
+    return TEXT_HELPER.bufferToText(u8, options.inputCharset);
   }
 
   protected _toUint8Array(

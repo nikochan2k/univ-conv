@@ -1,5 +1,4 @@
-import { EMPTY_BUFFER, UINT8_ARRAY_CONVERTER } from ".";
-import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
+import { EMPTY_BUFFER, UINT8_ARRAY_CONVERTER, ARRAY_BUFFER_CONVERTER } from ".";
 import { AbstractConverter, ConvertOptions } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 
@@ -18,15 +17,13 @@ class BufferConverter extends AbstractConverter<Buffer> {
       return input;
     }
 
-    if (!options.outputEncoding) options.outputEncoding = "utf8";
-
     if (typeof input === "string") {
-      const inputEncoding = options.inputEncoding;
-      if (inputEncoding === "base64") {
+      const encoding = options.encoding;
+      if (encoding === "base64") {
         return Buffer.from(input, "base64");
-      } else if (inputEncoding === "binary") {
+      } else if (encoding === "binary") {
         return Buffer.from(input, "binary");
-      } else if (inputEncoding === "hex") {
+      } else if (encoding === "hex") {
         return Buffer.from(input, "hex");
       }
     }
@@ -64,7 +61,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _toText(input: Buffer, options: ConvertOptions): Promise<string> {
-    return TEXT_HELPER.bufferToText(input, options.inputEncoding, "utf16le");
+    return TEXT_HELPER.bufferToText(input, options.inputCharset);
   }
 
   protected _toUint8Array(input: Buffer): Promise<Uint8Array> {

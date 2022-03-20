@@ -5,6 +5,7 @@ import {
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
   UINT8_ARRAY_CONVERTER,
+  HEX_CONVERTER,
 } from ".";
 import {
   AbstractConverter,
@@ -12,7 +13,6 @@ import {
   EMPTY_ARRAY_BUFFER,
   Options,
 } from "./Converter";
-import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
 
 class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
@@ -31,22 +31,16 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
       return input;
     }
 
-    if (!options.outputEncoding) options.outputEncoding = "utf8";
-
     if (typeof input === "string") {
-      const inputEncoding = options.inputEncoding;
-      if (inputEncoding === "base64") {
+      const encoding = options.encoding;
+      if (encoding === "base64") {
         return BASE64_CONVERTER.toArrayBuffer(input, options);
-      } else if (inputEncoding === "binary") {
+      } else if (encoding === "binary") {
         return BINARY_STRING_CONVERTER.toArrayBuffer(input, options);
-      } else if (inputEncoding === "hex") {
+      } else if (encoding === "hex") {
         return HEX_CONVERTER.toArrayBuffer(input, options);
       }
-      input = TEXT_HELPER.textToBuffer(
-        input,
-        options.inputEncoding,
-        options.outputEncoding
-      );
+      input = TEXT_HELPER.textToBuffer(input, options.outputCharset);
     }
     if (UINT8_ARRAY_CONVERTER.typeEquals(input)) {
       return UINT8_ARRAY_CONVERTER.toArrayBuffer(input, options);
@@ -103,7 +97,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = new Uint8Array(input);
-    return TEXT_HELPER.bufferToText(u8, options.inputEncoding, "utf16le");
+    return TEXT_HELPER.bufferToText(u8, options.inputCharset);
   }
 
   protected _toUint8Array(
