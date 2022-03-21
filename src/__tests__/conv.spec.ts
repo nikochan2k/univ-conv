@@ -1,5 +1,10 @@
-import { converter as c } from "../converver";
-import { hasBlob, hasBuffer, hasReadable, hasReadableStream } from "../check";
+import { conv as c } from "../converver";
+import {
+  hasBlob,
+  hasBuffer,
+  hasReadable,
+  hasReadableStream,
+} from "../converters";
 
 it("ArrayBuffer", async () => {
   const expected = "大谷翔平ホームラン";
@@ -35,7 +40,7 @@ it("ArrayBuffer", async () => {
   }
 
   {
-    const binaryString = await c.toBinaryString(ab);
+    const binaryString = await c.toBinary(ab);
     const actual = await c.toText(binaryString);
     expect(actual).toBe(expected);
   }
@@ -75,7 +80,7 @@ it("Uint8Array", async () => {
   }
 
   {
-    const binaryString = await c.toBinaryString(u8);
+    const binaryString = await c.toBinary(u8);
     const actual = await c.toText(binaryString);
     expect(actual).toBe(expected);
   }
@@ -119,7 +124,7 @@ it("Buffer", async () => {
   }
 
   {
-    const binaryString = await c.toBinaryString(buffer);
+    const binaryString = await c.toBinary(buffer);
     const actual = await c.toText(binaryString);
     expect(actual).toBe(expected);
   }
@@ -163,7 +168,7 @@ it("Blob", async () => {
   }
 
   {
-    const binaryString = await c.toBinaryString(blob);
+    const binaryString = await c.toBinary(blob);
     const actual = await c.toText(binaryString);
     expect(actual).toBe(expected);
   }
@@ -203,7 +208,7 @@ it("Base64", async () => {
   }
 
   {
-    const binaryString = await c.toBinaryString(base64);
+    const binaryString = await c.toBinary(base64);
     const actual = await c.toText(binaryString);
     expect(actual).toBe(expected);
   }
@@ -211,7 +216,7 @@ it("Base64", async () => {
 
 it("BinaryString", async () => {
   const expected = "大谷翔平ホームラン";
-  const binaryString = await c.toBinaryString(expected);
+  const binaryString = await c.toBinary(expected);
 
   {
     const actual = await c.toText(binaryString);
