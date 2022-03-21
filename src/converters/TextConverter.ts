@@ -1,7 +1,7 @@
 import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
 import { BASE64_CONVERTER } from "./Base64Converter";
 import { BINARY_CONVERTER } from "./BinaryConverter";
-import { AbstractConverter, ConvertOptions } from "./Converter";
+import { AbstractConverter, ConvertOptions, Options } from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
@@ -53,7 +53,7 @@ class TextConverter extends AbstractConverter<string> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _merge(chunks: string[], _: ConvertOptions): Promise<string> {
+  protected _merge(chunks: string[], _: Options): Promise<string> {
     return Promise.resolve(chunks.join(""));
   }
 

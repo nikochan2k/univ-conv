@@ -5,6 +5,7 @@ import {
   handleFileReader,
   hasBuffer,
   hasReadAsBinaryStringOnBlob,
+  Options,
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
@@ -51,7 +52,7 @@ class BinaryConverter extends AbstractConverter<string> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _merge(chunks: string[], _: ConvertOptions): Promise<string> {
+  protected _merge(chunks: string[], _: Options): Promise<string> {
     return Promise.resolve(chunks.join(""));
   }
 

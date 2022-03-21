@@ -1,4 +1,4 @@
-import { AbstractConverter, ConvertOptions } from "./Converter";
+import { AbstractConverter, ConvertOptions, Options } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
@@ -67,7 +67,7 @@ class HexConverter extends AbstractConverter<string> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected async _merge(chunks: string[], _: ConvertOptions): Promise<string> {
+  protected async _merge(chunks: string[], _: Options): Promise<string> {
     return Promise.resolve(chunks.join(""));
   }
 

@@ -1,6 +1,6 @@
 import { decode, encode } from "base64-arraybuffer";
 import { BINARY_CONVERTER } from "./BinaryConverter";
-import { AbstractConverter, ConvertOptions } from "./Converter";
+import { AbstractConverter, ConvertOptions, Options } from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
@@ -42,10 +42,7 @@ class Base64Converter extends AbstractConverter<string> {
     return !input;
   }
 
-  protected async _merge(
-    chunks: string[],
-    options: ConvertOptions
-  ): Promise<string> {
+  protected async _merge(chunks: string[], options: Options): Promise<string> {
     const bufs: Uint8Array[] = [];
     for (const chunk of chunks) {
       bufs.push(await UINT8_ARRAY_CONVERTER.convert(chunk, options));

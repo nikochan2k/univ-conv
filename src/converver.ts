@@ -20,7 +20,7 @@ import {
   UINT8_ARRAY_CONVERTER,
 } from "./converters";
 
-export type ReturnType<T extends Type> = T extends "arraybuffer"
+type ReturnType<T extends Type> = T extends "arraybuffer"
   ? ArrayBuffer
   : T extends "uint8array"
   ? Uint8Array
@@ -190,18 +190,14 @@ export class Conv {
         return READABLE_CONVERTER.convert(input, options);
       case "readablestream":
         return READABLE_STREAM_CONVERTER.convert(input, options);
-      case "text": {
-        const encoding = options?.encoding;
-        if (encoding === "base64") {
-          return BASE64_CONVERTER.convert(input, options);
-        } else if (encoding === "binary") {
-          return BINARY_CONVERTER.convert(input, options);
-        } else if (encoding === "hex") {
-          return HEX_CONVERTER.convert(input, options);
-        } else {
-          return TEXT_CONVERTER.convert(input, options);
-        }
-      }
+      case "text":
+        return TEXT_CONVERTER.convert(input, options);
+      case "base64":
+        return BASE64_CONVERTER.convert(input, options);
+      case "binary":
+        return BINARY_CONVERTER.convert(input, options);
+      case "hex":
+        return BINARY_CONVERTER.convert(input, options);
     }
 
     throw new Error("Illegal output type: " + to);
@@ -230,19 +226,14 @@ export class Conv {
           results as ReadableStream<unknown>[],
           options
         );
-      case "text": {
-        const strings = results as string[];
-        const encoding = options?.encoding;
-        if (encoding === "base64") {
-          return BASE64_CONVERTER.merge(strings, options);
-        } else if (encoding === "binary") {
-          return BINARY_CONVERTER.convert(strings, options);
-        } else if (encoding === "hex") {
-          return HEX_CONVERTER.convert(strings, options);
-        } else {
-          return TEXT_CONVERTER.convert(strings, options);
-        }
-      }
+      case "text":
+        return TEXT_CONVERTER.convert(results as string[], options);
+      case "base64":
+        return BASE64_CONVERTER.merge(results as string[], options);
+      case "binary":
+        return BINARY_CONVERTER.merge(results as string[], options);
+      case "hex":
+        return HEX_CONVERTER.merge(results as string[], options);
     }
 
     throw new Error("Illegal output type: " + to);

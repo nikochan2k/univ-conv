@@ -12,6 +12,7 @@ import {
   hasReadAsArrayBufferOnBlob,
   hasStreamOnBlob,
   hasTextOnBlob,
+  Options,
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
@@ -54,7 +55,7 @@ class BlobConverter extends AbstractConverter<Blob> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _merge(chunks: Blob[], _: ConvertOptions): Promise<Blob> {
+  protected _merge(chunks: Blob[], _: Options): Promise<Blob> {
     return Promise.resolve(new Blob(chunks));
   }
 

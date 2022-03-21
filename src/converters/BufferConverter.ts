@@ -1,5 +1,10 @@
 import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
-import { AbstractConverter, ConvertOptions, EMPTY_BUFFER } from "./Converter";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  EMPTY_BUFFER,
+  Options,
+} from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
@@ -45,7 +50,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _merge(chunks: Buffer[], _: ConvertOptions): Promise<Buffer> {
+  protected _merge(chunks: Buffer[], _: Options): Promise<Buffer> {
     return Promise.resolve(Buffer.concat(chunks));
   }
 

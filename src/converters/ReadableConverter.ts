@@ -5,6 +5,7 @@ import {
   ConvertOptions,
   EMPTY_READABLE,
   hasStreamOnBlob,
+  Options,
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
@@ -76,11 +77,8 @@ class ReadableConverter extends AbstractConverter<Readable> {
     return !input.readable;
   }
 
-  protected _merge(
-    readables: Readable[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: ConvertOptions
-  ): Promise<Readable> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected _merge(readables: Readable[], _: Options): Promise<Readable> {
     const end = readables.length;
     if (!readables || end === 0) {
       return Promise.resolve(this.createEmptyReadable());

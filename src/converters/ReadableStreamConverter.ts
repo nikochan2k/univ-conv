@@ -5,6 +5,7 @@ import {
   handleReadableStream,
   hasBlob,
   hasStreamOnBlob,
+  Options,
 } from "./Converter";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 import { BLOB_CONVERTER, READABLE_CONVERTER } from "./z";
@@ -120,7 +121,7 @@ class ReadableStreamConverter extends AbstractConverter<
   protected _merge(
     streams: ReadableStream<unknown>[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: ConvertOptions
+    _: Options
   ): Promise<ReadableStream<unknown>> {
     const end = streams.length;
     const process = (

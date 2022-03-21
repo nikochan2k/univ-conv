@@ -6,6 +6,7 @@ import {
   AbstractConverter,
   ConvertOptions,
   EMPTY_UINT8_ARRAY,
+  Options,
 } from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
@@ -70,7 +71,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
   protected async _merge(
     chunks: Uint8Array[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: ConvertOptions
+    _: Options
   ): Promise<Uint8Array> {
     const byteLength = chunks.reduce((sum, chunk) => {
       return sum + chunk.byteLength;

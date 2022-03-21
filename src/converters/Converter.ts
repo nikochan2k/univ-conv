@@ -15,11 +15,11 @@ export type Type = BlockType | StreamType;
 
 export interface Options {
   chunkSize: number;
+  encoding: StringType;
   inputCharset: CharsetType;
   outputCharset: CharsetType;
 }
 export interface ConvertOptions extends Options {
-  encoding: StringType;
   length?: number;
   start?: number;
 }
@@ -179,7 +179,7 @@ export abstract class AbstractConverter<T> implements Converter<T> {
     options: ConvertOptions
   ): Promise<T | undefined>;
   protected abstract _isEmpty(input: T): boolean;
-  protected abstract _merge(chunks: T[], options: ConvertOptions): Promise<T>;
+  protected abstract _merge(chunks: T[], options: Options): Promise<T>;
   protected abstract _toArrayBuffer(
     input: T,
     options: ConvertOptions
@@ -198,7 +198,7 @@ export abstract class AbstractConverter<T> implements Converter<T> {
   ): Promise<Uint8Array>;
   protected abstract empty(): T;
 
-  private _initOptions(
+  private _initOptions<T extends Options>(
     input: unknown,
     options?: Partial<ConvertOptions>
   ): ConvertOptions {
@@ -216,7 +216,7 @@ export abstract class AbstractConverter<T> implements Converter<T> {
     }
     if (!options.inputCharset) options.inputCharset = "utf8";
     if (!options.outputCharset) options.outputCharset = "utf8";
-    return options as ConvertOptions;
+    return options as T;
   }
 }
 
