@@ -44,7 +44,7 @@ class HexConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string") {
-      if (options.inputStringType === "hex") {
+      if (options.srcStringType === "hex") {
         return input;
       }
     }
@@ -94,7 +94,7 @@ class HexConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return textHelper().bufferToText(u8, options.inputCharset);
+    return textHelper().bufferToText(u8, options.srcCharset);
   }
 
   protected _toUint8Array(

@@ -19,12 +19,12 @@ class BufferConverter extends AbstractConverter<Buffer> {
     }
 
     if (typeof input === "string") {
-      const inputStringType = options.inputStringType;
-      if (inputStringType === "base64") {
+      const srcStringType = options.srcStringType;
+      if (srcStringType === "base64") {
         return Buffer.from(input, "base64");
-      } else if (inputStringType === "binary") {
+      } else if (srcStringType === "binary") {
         return Buffer.from(input, "binary");
-      } else if (inputStringType === "hex") {
+      } else if (srcStringType === "hex") {
         return Buffer.from(input, "hex");
       }
     }
@@ -68,7 +68,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _toText(input: Buffer, options: ConvertOptions): Promise<string> {
-    return textHelper().bufferToText(input, options.inputCharset);
+    return textHelper().bufferToText(input, options.srcCharset);
   }
 
   protected _toUint8Array(input: Buffer): Promise<Uint8Array> {

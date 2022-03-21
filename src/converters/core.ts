@@ -18,9 +18,9 @@ export type Data =
 
 export interface Options {
   bufferSize: number;
-  inputStringType: StringType;
-  inputCharset: Charset;
-  outputCharset: Charset;
+  srcStringType: StringType;
+  srcCharset: Charset;
+  dstCharset: Charset;
 }
 export interface ConvertOptions extends Options {
   length?: number;
@@ -161,10 +161,10 @@ export abstract class AbstractConverter<T extends Data>
       );
     }
     if (typeof input === "string") {
-      if (!options.inputStringType) options.inputStringType = "text";
+      if (!options.srcStringType) options.srcStringType = "text";
     }
-    if (!options.inputCharset) options.inputCharset = "utf8";
-    if (!options.outputCharset) options.outputCharset = "utf8";
+    if (!options.srcCharset) options.srcCharset = "utf8";
+    if (!options.dstCharset) options.dstCharset = "utf8";
     return options as T;
   }
 }

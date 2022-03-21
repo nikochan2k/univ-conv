@@ -22,15 +22,15 @@ class TextConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string") {
-      const inputStringType = options.inputStringType;
-      if (inputStringType === "base64") {
+      const srcStringType = options.srcStringType;
+      if (srcStringType === "base64") {
         return base64Converter().toText(input, options);
-      } else if (inputStringType === "binary") {
+      } else if (srcStringType === "binary") {
         return binaryConverter().toText(input, options);
-      } else if (inputStringType === "hex") {
+      } else if (srcStringType === "hex") {
         return hexConverter().toText(input, options);
       }
-      input = await textHelper().textToBuffer(input, options.outputCharset);
+      input = await textHelper().textToBuffer(input, options.dstCharset);
     }
     if (arrayBufferConverter().typeEquals(input)) {
       return arrayBufferConverter().toText(input, options);

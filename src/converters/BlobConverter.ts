@@ -98,7 +98,7 @@ class BlobConverter extends AbstractConverter<Blob> {
     input: Blob,
     options: ConvertOptions
   ): Promise<string> {
-    if (options.inputCharset === "utf8") {
+    if (options.srcCharset === "utf8") {
       if (hasTextOnBlob) {
         return input.text();
       }
@@ -108,7 +108,7 @@ class BlobConverter extends AbstractConverter<Blob> {
       );
     }
     const u8 = await this.toUint8Array(input, options);
-    return textHelper().bufferToText(u8, options.inputCharset);
+    return textHelper().bufferToText(u8, options.srcCharset);
   }
 
   protected async _toUint8Array(

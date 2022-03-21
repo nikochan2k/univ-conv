@@ -33,15 +33,15 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     }
 
     if (typeof input === "string") {
-      const inputStringType = options.inputStringType;
-      if (inputStringType === "base64") {
+      const srcStringType = options.srcStringType;
+      if (srcStringType === "base64") {
         return base64Converter().toArrayBuffer(input, options);
-      } else if (inputStringType === "binary") {
+      } else if (srcStringType === "binary") {
         return binaryConverter().toArrayBuffer(input, options);
-      } else if (inputStringType === "hex") {
+      } else if (srcStringType === "hex") {
         return hexConverter().toArrayBuffer(input, options);
       }
-      input = await textHelper().textToBuffer(input, options.outputCharset);
+      input = await textHelper().textToBuffer(input, options.dstCharset);
     }
     if (uint8ArrayConverter().typeEquals(input)) {
       return uint8ArrayConverter().toArrayBuffer(input, options);
@@ -103,7 +103,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = new Uint8Array(input);
-    return textHelper().bufferToText(u8, options.inputCharset);
+    return textHelper().bufferToText(u8, options.srcCharset);
   }
 
   protected _toUint8Array(

@@ -35,15 +35,15 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     }
 
     if (typeof input === "string") {
-      const inputStringType = options.inputStringType;
-      if (inputStringType === "base64") {
+      const srcStringType = options.srcStringType;
+      if (srcStringType === "base64") {
         return base64Converter().toUint8Array(input, options);
-      } else if (inputStringType === "binary") {
+      } else if (srcStringType === "binary") {
         return binaryConverter().toUint8Array(input, options);
-      } else if (inputStringType === "hex") {
+      } else if (srcStringType === "hex") {
         return hexConverter().toUint8Array(input, options);
       } else {
-        return textHelper().textToBuffer(input, options.outputCharset);
+        return textHelper().textToBuffer(input, options.dstCharset);
       }
     }
     if (arrayBufferConverter().typeEquals(input)) {
@@ -108,7 +108,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     input: Uint8Array,
     options: ConvertOptions
   ): Promise<string> {
-    return textHelper().bufferToText(input, options.inputCharset);
+    return textHelper().bufferToText(input, options.srcCharset);
   }
 
   protected _toUint8Array(

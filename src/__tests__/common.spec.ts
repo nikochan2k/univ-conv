@@ -54,7 +54,7 @@ it("base64", async () => {
   const chunk1 = await c.toBase64(head);
   const chunk2 = await c.toBase64(tail);
   const chunks = [chunk1, chunk2];
-  const merged = await c.merge(chunks, "text", { inputEncoding: "base64" });
+  const merged = await c.merge(chunks, "text", { srcStringType: "base64" });
   expect(expected).toBe(merged);
 });
 
@@ -62,7 +62,7 @@ it("binary", async () => {
   const chunk1 = await c.toBinary(head);
   const chunk2 = await c.toBinary(tail);
   const chunks = [chunk1, chunk2];
-  const merged = await c.merge(chunks, "text", { inputEncoding: "binary" });
+  const merged = await c.merge(chunks, "text", { srcStringType: "binary" });
   expect(expected).toBe(merged);
 });
 

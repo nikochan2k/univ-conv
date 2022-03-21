@@ -19,15 +19,15 @@ class Base64Converter extends AbstractConverter<string> {
   ): Promise<string | undefined> {
     let u8: Uint8Array | undefined;
     if (typeof input === "string") {
-      const inputStringType = options.inputStringType;
-      if (inputStringType === "base64") {
+      const srcStringType = options.srcStringType;
+      if (srcStringType === "base64") {
         return input;
-      } else if (inputStringType === "binary") {
+      } else if (srcStringType === "binary") {
         return binaryConverter().toBase64(input, options);
-      } else if (inputStringType === "hex") {
+      } else if (srcStringType === "hex") {
         return hexConverter().toBase64(input, options);
       }
-      u8 = await textHelper().textToBuffer(input, options.outputCharset);
+      u8 = await textHelper().textToBuffer(input, options.dstCharset);
     } else if (blobConverter().typeEquals(input)) {
       return blobConverter().toBase64(input, options);
     } else {
@@ -85,7 +85,7 @@ class Base64Converter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return textHelper().bufferToText(u8, options.inputCharset);
+    return textHelper().bufferToText(u8, options.srcCharset);
   }
 
   protected _toUint8Array(
