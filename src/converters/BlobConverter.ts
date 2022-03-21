@@ -53,7 +53,8 @@ class BlobConverter extends AbstractConverter<Blob> {
     return input.size === 0;
   }
 
-  protected _merge(chunks: Blob[]): Promise<Blob> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected _merge(chunks: Blob[], _: ConvertOptions): Promise<Blob> {
     return Promise.resolve(new Blob(chunks));
   }
 

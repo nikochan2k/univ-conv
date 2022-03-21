@@ -66,7 +66,8 @@ class HexConverter extends AbstractConverter<string> {
     return !input;
   }
 
-  protected async _merge(chunks: string[]): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected async _merge(chunks: string[], _: ConvertOptions): Promise<string> {
     return Promise.resolve(chunks.join(""));
   }
 

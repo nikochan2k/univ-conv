@@ -14,12 +14,25 @@ import {
   Options,
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
-  ReturnType,
   TEXT_CONVERTER,
   Type,
   typeOf,
   UINT8_ARRAY_CONVERTER,
 } from "./converters";
+
+export type ReturnType<T extends Type> = T extends "arraybuffer"
+  ? ArrayBuffer
+  : T extends "uint8array"
+  ? Uint8Array
+  : T extends "buffer"
+  ? Buffer
+  : T extends "blob"
+  ? Blob
+  : T extends "readable"
+  ? Readable
+  : T extends "readblestream"
+  ? ReadableStream<unknown>
+  : string;
 
 export class Conv {
   public convert<T extends Type>(

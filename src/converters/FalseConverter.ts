@@ -5,12 +5,12 @@ const NOT_IMPLEMENTED_ERROR = new Error("Method not implemented.");
 
 class FalseConverter implements Converter<any> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public convert(_: unknown): any {
+  public convert(_1: unknown, _2: ConvertOptions): any {
     throw NOT_IMPLEMENTED_ERROR;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public merge(_: any[]): Promise<any> {
+  public merge(_1: any[], _2: ConvertOptions): Promise<any> {
     throw NOT_IMPLEMENTED_ERROR;
   }
 

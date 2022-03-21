@@ -52,7 +52,8 @@ class TextConverter extends AbstractConverter<string> {
     return !input;
   }
 
-  protected _merge(chunks: string[]): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected _merge(chunks: string[], _: ConvertOptions): Promise<string> {
     return Promise.resolve(chunks.join(""));
   }
 

@@ -13,27 +13,13 @@ export type BlockType = StringType | BinaryType;
 export type StreamType = "readable" | "readablestream";
 export type Type = BlockType | StreamType;
 
-export type ReturnType<T extends Type> = T extends "arraybuffer"
-  ? ArrayBuffer
-  : T extends "uint8array"
-  ? Uint8Array
-  : T extends "buffer"
-  ? Buffer
-  : T extends "blob"
-  ? Blob
-  : T extends "readable"
-  ? Readable
-  : T extends "readblestream"
-  ? ReadableStream<unknown>
-  : string;
-
 export interface Options {
   chunkSize: number;
-  encoding: StringType;
   inputCharset: CharsetType;
   outputCharset: CharsetType;
 }
 export interface ConvertOptions extends Options {
+  encoding: StringType;
   length?: number;
   start?: number;
 }
@@ -193,7 +179,7 @@ export abstract class AbstractConverter<T> implements Converter<T> {
     options: ConvertOptions
   ): Promise<T | undefined>;
   protected abstract _isEmpty(input: T): boolean;
-  protected abstract _merge(chunks: T[], options: Options): Promise<T>;
+  protected abstract _merge(chunks: T[], options: ConvertOptions): Promise<T>;
   protected abstract _toArrayBuffer(
     input: T,
     options: ConvertOptions
@@ -212,10 +198,10 @@ export abstract class AbstractConverter<T> implements Converter<T> {
   ): Promise<Uint8Array>;
   protected abstract empty(): T;
 
-  private _initOptions<T extends Options>(
+  private _initOptions(
     input: unknown,
-    options?: Partial<T>
-  ): T {
+    options?: Partial<ConvertOptions>
+  ): ConvertOptions {
     if (!options) options = {};
     if (options.chunkSize == null) options.chunkSize = DEFAULT_BUFFER_SIZE;
     const rem = options.chunkSize % 6;
@@ -230,7 +216,7 @@ export abstract class AbstractConverter<T> implements Converter<T> {
     }
     if (!options.inputCharset) options.inputCharset = "utf8";
     if (!options.outputCharset) options.outputCharset = "utf8";
-    return options as T;
+    return options as ConvertOptions;
   }
 }
 

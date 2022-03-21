@@ -44,7 +44,8 @@ class BufferConverter extends AbstractConverter<Buffer> {
     return 0 === input.byteLength;
   }
 
-  protected _merge(chunks: Buffer[]): Promise<Buffer> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected _merge(chunks: Buffer[], _: ConvertOptions): Promise<Buffer> {
     return Promise.resolve(Buffer.concat(chunks));
   }
 

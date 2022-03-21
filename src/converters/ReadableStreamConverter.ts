@@ -118,7 +118,9 @@ class ReadableStreamConverter extends AbstractConverter<
   }
 
   protected _merge(
-    streams: ReadableStream<unknown>[]
+    streams: ReadableStream<unknown>[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: ConvertOptions
   ): Promise<ReadableStream<unknown>> {
     const end = streams.length;
     const process = (

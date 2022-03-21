@@ -42,14 +42,15 @@ class Base64Converter extends AbstractConverter<string> {
     return !input;
   }
 
-  protected async _merge(chunks: string[]): Promise<string> {
+  protected async _merge(
+    chunks: string[],
+    options: ConvertOptions
+  ): Promise<string> {
     const bufs: Uint8Array[] = [];
     for (const chunk of chunks) {
-      bufs.push(
-        await UINT8_ARRAY_CONVERTER.convert(chunk, { encoding: "base64" })
-      );
+      bufs.push(await UINT8_ARRAY_CONVERTER.convert(chunk, options));
     }
-    const u8 = await UINT8_ARRAY_CONVERTER.merge(bufs);
+    const u8 = await UINT8_ARRAY_CONVERTER.merge(bufs, options);
     return this.convert(u8);
   }
 

@@ -76,7 +76,11 @@ class ReadableConverter extends AbstractConverter<Readable> {
     return !input.readable;
   }
 
-  protected _merge(readables: Readable[]): Promise<Readable> {
+  protected _merge(
+    readables: Readable[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: ConvertOptions
+  ): Promise<Readable> {
     const end = readables.length;
     if (!readables || end === 0) {
       return Promise.resolve(this.createEmptyReadable());
