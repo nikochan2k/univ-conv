@@ -1,5 +1,6 @@
+import { ConvertOptions, Converter } from "./types";
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Converter, ConvertOptions } from "./Converter";
 
 export class FalseConverter implements Converter<any> {
   public constructor(public key: string) {}

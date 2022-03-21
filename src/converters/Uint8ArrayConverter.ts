@@ -2,15 +2,10 @@ import { encode } from "base64-arraybuffer";
 import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
 import { BASE64_CONVERTER } from "./Base64Converter";
 import { BINARY_CONVERTER } from "./BinaryConverter";
-import {
-  AbstractConverter,
-  ConvertOptions,
-  EMPTY_UINT8_ARRAY,
-  InputType,
-  Options,
-} from "./Converter";
+import { AbstractConverter, EMPTY_UINT8_ARRAY } from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
+import { ConvertOptions, InputType, Options } from "./types";
 import {
   BLOB_CONVERTER,
   BUFFER_CONVERTER,

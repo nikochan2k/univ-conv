@@ -1,5 +1,5 @@
-import { CharsetType } from "./Converter";
 import { TextHelper } from "./TextHelper";
+import { CharsetType } from "./types";
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();

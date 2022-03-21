@@ -2,13 +2,11 @@ import { PassThrough, Readable } from "stream";
 import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
 import {
   AbstractConverter,
-  ConvertOptions,
   EMPTY_READABLE,
   hasStreamOnBlob,
-  InputType,
-  Options,
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
+import { ConvertOptions, InputType, Options } from "./types";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 import {
   BLOB_CONVERTER,

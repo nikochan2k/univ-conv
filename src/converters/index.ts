@@ -5,4 +5,5 @@ export * from "./TextConverter";
 export * from "./Base64Converter";
 export * from "./BinaryConverter";
 export * from "./HexConverter";
+export * from "./types";
 export * from "./z";

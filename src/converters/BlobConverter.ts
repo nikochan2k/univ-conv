@@ -2,7 +2,6 @@ import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
 import { BASE64_CONVERTER } from "./Base64Converter";
 import {
   AbstractConverter,
-  ConvertOptions,
   dataUrlToBase64,
   EMPTY_BLOB,
   EMPTY_UINT8_ARRAY,
@@ -12,10 +11,9 @@ import {
   hasReadAsArrayBufferOnBlob,
   hasStreamOnBlob,
   hasTextOnBlob,
-  InputType,
-  Options,
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
+import { ConvertOptions, InputType, Options } from "./types";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 import { READABLE_STREAM_CONVERTER } from "./z";
 

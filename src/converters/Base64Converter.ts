@@ -1,13 +1,9 @@
 import { decode, encode } from "base64-arraybuffer";
 import { BINARY_CONVERTER } from "./BinaryConverter";
-import {
-  AbstractConverter,
-  ConvertOptions,
-  InputType,
-  Options,
-} from "./Converter";
+import { AbstractConverter } from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
+import { ConvertOptions, InputType, Options } from "./types";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 import { BLOB_CONVERTER } from "./z";
 

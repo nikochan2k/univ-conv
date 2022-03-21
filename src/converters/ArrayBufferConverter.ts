@@ -1,14 +1,9 @@
 import { BASE64_CONVERTER } from "./Base64Converter";
 import { BINARY_CONVERTER } from "./BinaryConverter";
-import {
-  AbstractConverter,
-  ConvertOptions,
-  EMPTY_ARRAY_BUFFER,
-  InputType,
-  Options,
-} from "./Converter";
+import { AbstractConverter, EMPTY_ARRAY_BUFFER } from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
+import { ConvertOptions, InputType, Options } from "./types";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 import {
   BLOB_CONVERTER,

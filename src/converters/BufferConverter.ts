@@ -1,12 +1,7 @@
 import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
-import {
-  AbstractConverter,
-  ConvertOptions,
-  EMPTY_BUFFER,
-  InputType,
-  Options,
-} from "./Converter";
+import { AbstractConverter, EMPTY_BUFFER } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
+import { ConvertOptions, InputType, Options } from "./types";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
 class BufferConverter extends AbstractConverter<Buffer> {

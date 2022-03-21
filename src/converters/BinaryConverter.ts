@@ -1,14 +1,12 @@
 import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
 import {
   AbstractConverter,
-  ConvertOptions,
   handleFileReader,
   hasBuffer,
   hasReadAsBinaryStringOnBlob,
-  InputType,
-  Options,
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
+import { ConvertOptions, InputType, Options } from "./types";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 import { BLOB_CONVERTER } from "./z";
 

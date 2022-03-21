@@ -1,13 +1,11 @@
 import {
   AbstractConverter,
-  ConvertOptions,
   EMPTY_READABLE_STREAM,
   handleReadableStream,
   hasBlob,
   hasStreamOnBlob,
-  InputType,
-  Options,
 } from "./Converter";
+import { ConvertOptions, InputType, Options } from "./types";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 import { BLOB_CONVERTER, READABLE_CONVERTER } from "./z";
 

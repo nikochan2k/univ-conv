@@ -1,10 +1,6 @@
-import {
-  AbstractConverter,
-  ConvertOptions,
-  InputType,
-  Options,
-} from "./Converter";
+import { AbstractConverter } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
+import { ConvertOptions, InputType, Options } from "./types";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
 const BYTE_TO_HEX: string[] = [];
