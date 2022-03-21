@@ -1,7 +1,7 @@
+import { uint8ArrayConverter } from "./converters";
 import { AbstractConverter } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 import { ConvertOptions, InputType, Options } from "./types";
-import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
 const BYTE_TO_HEX: string[] = [];
 for (let n = 0; n <= 0xff; ++n) {
@@ -50,7 +50,7 @@ class HexConverter extends AbstractConverter<string> {
       }
     }
 
-    const u8 = await UINT8_ARRAY_CONVERTER.convert(input, options);
+    const u8 = await uint8ArrayConverter().convert(input, options);
     if (u8) {
       return (
         Array.from(u8)
@@ -77,7 +77,7 @@ class HexConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const u8 = await this._toUint8Array(input, options);
-    return UINT8_ARRAY_CONVERTER.toArrayBuffer(u8, options);
+    return uint8ArrayConverter().toArrayBuffer(u8, options);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -118,4 +118,4 @@ class HexConverter extends AbstractConverter<string> {
   }
 }
 
-export const HEX_CONVERTER = new HexConverter();
+export const INSTANCE = new HexConverter();

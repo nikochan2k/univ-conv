@@ -1,4 +1,8 @@
-import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
+import {
+  arrayBufferConverter,
+  blobConverter,
+  uint8ArrayConverter,
+} from "./converters";
 import {
   AbstractConverter,
   handleFileReader,
@@ -7,8 +11,6 @@ import {
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 import { ConvertOptions, InputType, Options } from "./types";
-import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
-import { BLOB_CONVERTER } from "./compatibility";
 
 class BinaryConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {
@@ -23,7 +25,7 @@ class BinaryConverter extends AbstractConverter<string> {
       if (options.inputEncoding === "binary") {
         return input;
       }
-    } else if (BLOB_CONVERTER.typeEquals(input)) {
+    } else if (blobConverter().typeEquals(input)) {
       if (hasReadAsBinaryStringOnBlob) {
         const chunkSize = options.chunkSize;
         const chunks: string[] = [];
@@ -38,7 +40,7 @@ class BinaryConverter extends AbstractConverter<string> {
         return chunks.join("");
       }
     }
-    const u8 = await UINT8_ARRAY_CONVERTER.convert(input, options);
+    const u8 = await uint8ArrayConverter().convert(input, options);
     if (u8) {
       return Array.from(u8, (e) => String.fromCharCode(e)).join("");
     }
@@ -60,7 +62,7 @@ class BinaryConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const u8 = await this._toUint8Array(input, options);
-    return ARRAY_BUFFER_CONVERTER.toArrayBuffer(u8, options);
+    return arrayBufferConverter().toArrayBuffer(u8, options);
   }
 
   protected async _toBase64(
@@ -68,7 +70,7 @@ class BinaryConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this._toUint8Array(input, options);
-    return UINT8_ARRAY_CONVERTER.toBase64(u8, options);
+    return uint8ArrayConverter().toBase64(u8, options);
   }
 
   protected async _toText(
@@ -98,4 +100,4 @@ class BinaryConverter extends AbstractConverter<string> {
   }
 }
 
-export const BINARY_CONVERTER = new BinaryConverter();
+export const INSTANCE = new BinaryConverter();

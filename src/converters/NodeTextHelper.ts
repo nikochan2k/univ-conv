@@ -1,6 +1,6 @@
+import { bufferConverter } from "./converters";
 import { TextHelper } from "./TextHelper";
 import { CharsetType } from "./types";
-import { BUFFER_CONVERTER } from "./compatibility";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let convert: any;
@@ -17,10 +17,10 @@ class NodeTextHelper implements TextHelper {
     bufCharset: CharsetType
   ): Promise<string> {
     let buffer: Buffer;
-    if (BUFFER_CONVERTER.typeEquals(buf)) {
+    if (bufferConverter().typeEquals(buf)) {
       buffer = buf;
     } else {
-      buffer = await BUFFER_CONVERTER.convert(buf);
+      buffer = await bufferConverter().convert(buf);
     }
     if (bufCharset === "utf8" || bufCharset === "utf16le") {
       return buffer.toString(bufCharset as BufferEncoding);

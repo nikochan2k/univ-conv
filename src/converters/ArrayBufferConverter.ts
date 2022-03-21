@@ -1,15 +1,15 @@
-import { BASE64_CONVERTER } from "./Base64Converter";
-import { BINARY_CONVERTER } from "./BinaryConverter";
+import {
+  base64Converter,
+  binaryConverter,
+  blobConverter,
+  hexConverter,
+  readableConverter,
+  readableStreamConverter,
+  uint8ArrayConverter,
+} from "./converters";
 import { AbstractConverter, EMPTY_ARRAY_BUFFER } from "./Converter";
-import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
 import { ConvertOptions, InputType, Options } from "./types";
-import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
-import {
-  BLOB_CONVERTER,
-  READABLE_CONVERTER,
-  READABLE_STREAM_CONVERTER,
-} from "./compatibility";
 
 class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
   public typeEquals(input: unknown): input is ArrayBuffer {
@@ -30,25 +30,25 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     if (typeof input === "string") {
       const encoding = options.inputEncoding;
       if (encoding === "base64") {
-        return BASE64_CONVERTER.toArrayBuffer(input, options);
+        return base64Converter().toArrayBuffer(input, options);
       } else if (encoding === "binary") {
-        return BINARY_CONVERTER.toArrayBuffer(input, options);
+        return binaryConverter().toArrayBuffer(input, options);
       } else if (encoding === "hex") {
-        return HEX_CONVERTER.toArrayBuffer(input, options);
+        return hexConverter().toArrayBuffer(input, options);
       }
       input = await TEXT_HELPER.textToBuffer(input, options.outputCharset);
     }
-    if (UINT8_ARRAY_CONVERTER.typeEquals(input)) {
-      return UINT8_ARRAY_CONVERTER.toArrayBuffer(input, options);
+    if (uint8ArrayConverter().typeEquals(input)) {
+      return uint8ArrayConverter().toArrayBuffer(input, options);
     }
-    if (BLOB_CONVERTER.typeEquals(input)) {
-      return BLOB_CONVERTER.toArrayBuffer(input, options);
+    if (blobConverter().typeEquals(input)) {
+      return blobConverter().toArrayBuffer(input, options);
     }
-    if (READABLE_STREAM_CONVERTER.typeEquals(input)) {
-      return READABLE_STREAM_CONVERTER.toArrayBuffer(input, options);
+    if (readableStreamConverter().typeEquals(input)) {
+      return readableStreamConverter().toArrayBuffer(input, options);
     }
-    if (READABLE_CONVERTER.typeEquals(input)) {
-      return READABLE_CONVERTER.toArrayBuffer(input, options);
+    if (readableConverter().typeEquals(input)) {
+      return readableConverter().toArrayBuffer(input, options);
     }
 
     return undefined;
@@ -85,7 +85,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = new Uint8Array(input);
-    return UINT8_ARRAY_CONVERTER.toBase64(u8, options);
+    return uint8ArrayConverter().toBase64(u8, options);
   }
 
   protected async _toText(
@@ -109,4 +109,4 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
   }
 }
 
-export const ARRAY_BUFFER_CONVERTER = new ArrayBufferConverter();
+export const INSTANCE = new ArrayBufferConverter();

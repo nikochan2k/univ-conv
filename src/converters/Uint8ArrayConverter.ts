@@ -1,22 +1,21 @@
 import { encode } from "base64-arraybuffer";
-import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
-import { BASE64_CONVERTER } from "./Base64Converter";
-import { BINARY_CONVERTER } from "./BinaryConverter";
+import {
+  arrayBufferConverter,
+  base64Converter,
+  binaryConverter,
+  blobConverter,
+  bufferConverter,
+  hexConverter,
+  readableConverter,
+  readableStreamConverter,
+} from "./converters";
 import { AbstractConverter, EMPTY_UINT8_ARRAY } from "./Converter";
-import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
 import { ConvertOptions, InputType, Options } from "./types";
-import {
-  BLOB_CONVERTER,
-  BUFFER_CONVERTER,
-  READABLE_CONVERTER,
-  READABLE_STREAM_CONVERTER,
-} from "./compatibility";
-
 class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
   public typeEquals(input: unknown): input is Uint8Array {
     return (
-      BUFFER_CONVERTER.typeEquals(input) ||
+      bufferConverter().typeEquals(input) ||
       input instanceof Uint8Array ||
       toString.call(input) === "[object Uint8Array]"
     );
@@ -33,26 +32,26 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     if (typeof input === "string") {
       const encoding = options.inputEncoding;
       if (encoding === "base64") {
-        return BASE64_CONVERTER.toUint8Array(input, options);
+        return base64Converter().toUint8Array(input, options);
       } else if (encoding === "binary") {
-        return BINARY_CONVERTER.toUint8Array(input, options);
+        return binaryConverter().toUint8Array(input, options);
       } else if (encoding === "hex") {
-        return HEX_CONVERTER.toUint8Array(input, options);
+        return hexConverter().toUint8Array(input, options);
       } else {
         return TEXT_HELPER.textToBuffer(input, options.outputCharset);
       }
     }
-    if (ARRAY_BUFFER_CONVERTER.typeEquals(input)) {
-      return ARRAY_BUFFER_CONVERTER.toUint8Array(input, options);
+    if (arrayBufferConverter().typeEquals(input)) {
+      return arrayBufferConverter().toUint8Array(input, options);
     }
-    if (BLOB_CONVERTER.typeEquals(input)) {
-      return BLOB_CONVERTER.toUint8Array(input, options);
+    if (blobConverter().typeEquals(input)) {
+      return blobConverter().toUint8Array(input, options);
     }
-    if (READABLE_STREAM_CONVERTER.typeEquals(input)) {
-      return READABLE_STREAM_CONVERTER.toUint8Array(input, options);
+    if (readableStreamConverter().typeEquals(input)) {
+      return readableStreamConverter().toUint8Array(input, options);
     }
-    if (READABLE_CONVERTER.typeEquals(input)) {
-      return READABLE_CONVERTER.toUint8Array(input, options);
+    if (readableConverter().typeEquals(input)) {
+      return readableConverter().toUint8Array(input, options);
     }
 
     return undefined;
@@ -115,4 +114,4 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
   }
 }
 
-export const UINT8_ARRAY_CONVERTER = new Uint8ArrayConverter();
+export const INSTANCE = new Uint8ArrayConverter();

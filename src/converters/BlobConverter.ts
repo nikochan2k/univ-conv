@@ -1,5 +1,9 @@
-import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
-import { BASE64_CONVERTER } from "./Base64Converter";
+import {
+  arrayBufferConverter,
+  base64Converter,
+  readableStreamConverter,
+  uint8ArrayConverter,
+} from "./converters";
 import {
   AbstractConverter,
   dataUrlToBase64,
@@ -14,8 +18,6 @@ import {
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 import { ConvertOptions, InputType, Options } from "./types";
-import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
-import { READABLE_STREAM_CONVERTER } from "./compatibility";
 
 class BlobConverter extends AbstractConverter<Blob> {
   public typeEquals(input: unknown): input is Blob {
@@ -34,14 +36,14 @@ class BlobConverter extends AbstractConverter<Blob> {
       return input;
     }
 
-    if (READABLE_STREAM_CONVERTER.typeEquals(input)) {
+    if (readableStreamConverter().typeEquals(input)) {
       const blobs: Blob[] = [];
       await handleReadableStream(input, async (chunk) => {
         blobs.push(await this.convert(chunk));
       });
       return this.merge(blobs);
     }
-    const u8 = await UINT8_ARRAY_CONVERTER.convert(input, options);
+    const u8 = await uint8ArrayConverter().convert(input, options);
     if (u8) {
       return new Blob([u8]);
     }
@@ -63,7 +65,7 @@ class BlobConverter extends AbstractConverter<Blob> {
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const u8 = await this._toUint8Array(input, options);
-    return ARRAY_BUFFER_CONVERTER.toArrayBuffer(u8, options);
+    return arrayBufferConverter().toArrayBuffer(u8, options);
   }
 
   protected async _toBase64(
@@ -139,13 +141,14 @@ class BlobConverter extends AbstractConverter<Blob> {
       return u8;
     }
     if (hasStreamOnBlob) {
+      const converter = uint8ArrayConverter();
       const readable = input.stream() as unknown as ReadableStream<unknown>;
       const chunks: Uint8Array[] = [];
       await handleReadableStream(readable, async (chunk) => {
-        const u8 = await UINT8_ARRAY_CONVERTER.convert(chunk);
+        const u8 = await converter.convert(chunk);
         chunks.push(u8);
       });
-      return UINT8_ARRAY_CONVERTER.merge(chunks);
+      return converter.merge(chunks);
     } else {
       const chunks: string[] = [];
       for (let start = 0, end = input.size; start < end; start += chunkSize) {
@@ -157,7 +160,7 @@ class BlobConverter extends AbstractConverter<Blob> {
         chunks.push(chunk);
       }
       const base64 = chunks.join("");
-      return BASE64_CONVERTER.toUint8Array(base64, options);
+      return base64Converter().toUint8Array(base64, options);
     }
   }
 

@@ -1,8 +1,7 @@
-import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
+import { arrayBufferConverter, uint8ArrayConverter } from "./converters";
 import { AbstractConverter, EMPTY_BUFFER } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 import { ConvertOptions, InputType, Options } from "./types";
-import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
 class BufferConverter extends AbstractConverter<Buffer> {
   public typeEquals(input: unknown): input is Buffer {
@@ -29,11 +28,11 @@ class BufferConverter extends AbstractConverter<Buffer> {
         return Buffer.from(input, "hex");
       }
     }
-    if (UINT8_ARRAY_CONVERTER.typeEquals(input)) {
+    if (uint8ArrayConverter().typeEquals(input)) {
       return Buffer.from(input.buffer, input.byteOffset, input.byteLength);
     }
 
-    const ab = await ARRAY_BUFFER_CONVERTER.convert(input, options);
+    const ab = await arrayBufferConverter().convert(input, options);
     if (ab) {
       return Buffer.from(ab);
     }
@@ -54,7 +53,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
     input: Buffer,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    return UINT8_ARRAY_CONVERTER.toArrayBuffer(input, options);
+    return uint8ArrayConverter().toArrayBuffer(input, options);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -1,5 +1,11 @@
 import { PassThrough, Readable } from "stream";
-import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
+import {
+  arrayBufferConverter,
+  blobConverter,
+  bufferConverter,
+  readableStreamConverter,
+  uint8ArrayConverter,
+} from "./converters";
 import {
   AbstractConverter,
   EMPTY_READABLE,
@@ -7,12 +13,6 @@ import {
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 import { ConvertOptions, InputType, Options } from "./types";
-import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
-import {
-  BLOB_CONVERTER,
-  BUFFER_CONVERTER,
-  READABLE_STREAM_CONVERTER,
-} from "./compatibility";
 
 class ReadableConverter extends AbstractConverter<Readable> {
   public typeEquals(input: unknown): input is Readable {
@@ -31,12 +31,12 @@ class ReadableConverter extends AbstractConverter<Readable> {
       return input;
     }
 
-    if (BLOB_CONVERTER.typeEquals(input)) {
+    if (blobConverter().typeEquals(input)) {
       if (hasStreamOnBlob) {
         input = input.stream() as unknown as ReadableStream<unknown>;
       }
     }
-    if (READABLE_STREAM_CONVERTER.typeEquals(input)) {
+    if (readableStreamConverter().typeEquals(input)) {
       const stream = input;
       const reader = input.getReader();
       return new Readable({
@@ -64,7 +64,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
       });
     }
 
-    const buffer = await BUFFER_CONVERTER.convert(input, options);
+    const buffer = await bufferConverter().convert(input, options);
     if (buffer) {
       return Readable.from(buffer);
     }
@@ -114,7 +114,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const u8 = await this._toUint8Array(input, options);
-    return ARRAY_BUFFER_CONVERTER.convert(u8);
+    return arrayBufferConverter().convert(u8);
   }
 
   protected async _toBase64(
@@ -122,7 +122,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this._toUint8Array(input, options);
-    return UINT8_ARRAY_CONVERTER.toBase64(u8, options);
+    return uint8ArrayConverter().toBase64(u8, options);
   }
 
   protected async _toText(
@@ -137,14 +137,15 @@ class ReadableConverter extends AbstractConverter<Readable> {
     input: Readable,
     options: ConvertOptions
   ): Promise<Uint8Array> {
+    const converter = uint8ArrayConverter();
     const chunks: Uint8Array[] = [];
     await this.handleReadable(input, async (chunk) => {
-      const u8 = await UINT8_ARRAY_CONVERTER.convert(chunk, {
+      const u8 = await converter.convert(chunk, {
         chunkSize: options.chunkSize,
       });
       chunks.push(u8);
     });
-    return UINT8_ARRAY_CONVERTER.merge(chunks);
+    return converter.merge(chunks);
   }
 
   protected empty(): Readable {

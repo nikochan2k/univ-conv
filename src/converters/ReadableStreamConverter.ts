@@ -1,4 +1,9 @@
 import {
+  blobConverter,
+  readableConverter,
+  uint8ArrayConverter,
+} from "./converters";
+import {
   AbstractConverter,
   EMPTY_READABLE_STREAM,
   handleReadableStream,
@@ -6,8 +11,6 @@ import {
   hasStreamOnBlob,
 } from "./Converter";
 import { ConvertOptions, InputType, Options } from "./types";
-import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
-import { BLOB_CONVERTER, READABLE_CONVERTER } from "./compatibility";
 
 class ReadableStreamConverter extends AbstractConverter<
   ReadableStream<unknown>
@@ -28,12 +31,12 @@ class ReadableStreamConverter extends AbstractConverter<
       return input;
     }
 
-    if (BLOB_CONVERTER.typeEquals(input)) {
+    if (blobConverter().typeEquals(input)) {
       if (hasStreamOnBlob) {
         return input.stream() as unknown as ReadableStream<unknown>;
       }
     }
-    if (READABLE_CONVERTER.typeEquals(input)) {
+    if (readableConverter().typeEquals(input)) {
       const readable = input;
       return new ReadableStream({
         start: (converter) => {
@@ -57,7 +60,7 @@ class ReadableStreamConverter extends AbstractConverter<
 
     const chunkSize = options.chunkSize;
     if (hasBlob) {
-      const blob = await BLOB_CONVERTER.convert(input, options);
+      const blob = await blobConverter().convert(input, options);
       if (hasStreamOnBlob) {
         return blob.stream() as unknown as ReadableStream<unknown>;
       }
@@ -84,7 +87,7 @@ class ReadableStreamConverter extends AbstractConverter<
       });
     }
 
-    const u8 = await UINT8_ARRAY_CONVERTER.convert(input, options);
+    const u8 = await uint8ArrayConverter().convert(input, options);
     if (u8) {
       const length = u8.byteLength;
       let start = 0;
@@ -157,7 +160,7 @@ class ReadableStreamConverter extends AbstractConverter<
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const u8 = await this.toUint8Array(input, options);
-    return UINT8_ARRAY_CONVERTER.toArrayBuffer(u8, options);
+    return uint8ArrayConverter().toArrayBuffer(u8, options);
   }
 
   protected async _toBase64(
@@ -165,15 +168,15 @@ class ReadableStreamConverter extends AbstractConverter<
     options: ConvertOptions
   ): Promise<string> {
     if (hasBlob) {
-      const blob = await BLOB_CONVERTER.convert(input, {
+      const blob = await blobConverter().convert(input, {
         chunkSize: options.chunkSize,
       });
-      return BLOB_CONVERTER.toBase64(blob, options);
+      return blobConverter().toBase64(blob, options);
     } else {
-      const u8 = await UINT8_ARRAY_CONVERTER.convert(input, {
+      const u8 = await uint8ArrayConverter().convert(input, {
         chunkSize: options.chunkSize,
       });
-      return UINT8_ARRAY_CONVERTER.toBase64(u8, options);
+      return uint8ArrayConverter().toBase64(u8, options);
     }
   }
 
@@ -182,15 +185,15 @@ class ReadableStreamConverter extends AbstractConverter<
     options: ConvertOptions
   ): Promise<string> {
     if (hasBlob) {
-      const blob = await BLOB_CONVERTER.convert(input, {
+      const blob = await blobConverter().convert(input, {
         chunkSize: options.chunkSize,
       });
-      return BLOB_CONVERTER.toText(blob, options);
+      return blobConverter().toText(blob, options);
     } else {
-      const u8 = await UINT8_ARRAY_CONVERTER.convert(input, {
+      const u8 = await uint8ArrayConverter().convert(input, {
         chunkSize: options.chunkSize,
       });
-      return UINT8_ARRAY_CONVERTER.toText(u8, options);
+      return uint8ArrayConverter().toText(u8, options);
     }
   }
 
@@ -198,14 +201,15 @@ class ReadableStreamConverter extends AbstractConverter<
     input: ReadableStream<unknown>,
     options: ConvertOptions
   ): Promise<Uint8Array> {
+    const converter = uint8ArrayConverter();
     const chunks: Uint8Array[] = [];
     await handleReadableStream(input, async (chunk) => {
-      const u8 = await UINT8_ARRAY_CONVERTER.convert(chunk, {
+      const u8 = await converter.convert(chunk, {
         chunkSize: options.chunkSize,
       });
       chunks.push(u8);
     });
-    return UINT8_ARRAY_CONVERTER.merge(chunks);
+    return converter.merge(chunks);
   }
 
   protected empty(): ReadableStream<unknown> {

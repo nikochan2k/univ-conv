@@ -1,24 +1,24 @@
 import type { Readable, Writable } from "stream";
 import {
-  ARRAY_BUFFER_CONVERTER,
-  BASE64_CONVERTER,
-  BINARY_CONVERTER,
-  BLOB_CONVERTER,
-  BUFFER_CONVERTER,
+  arrayBufferConverter,
+  base64Converter,
+  binaryConverter,
+  blobConverter,
+  bufferConverter,
   closeStream,
   ConvertOptions,
   handleReadableStream,
-  HEX_CONVERTER,
+  hexConverter,
   InputType,
   isWritable,
   isWritableStream,
   Options,
-  READABLE_CONVERTER,
-  READABLE_STREAM_CONVERTER,
-  TEXT_CONVERTER,
+  readableConverter,
+  readableStreamConverter,
+  textConverter,
   Type,
   typeOf,
-  UINT8_ARRAY_CONVERTER,
+  uint8ArrayConverter,
 } from "./converters";
 
 type ReturnType<T extends Type> = T extends "arraybuffer"
@@ -58,7 +58,7 @@ export class Conv {
     options?: Partial<ConvertOptions>
   ) {
     if (isWritable(output)) {
-      const readable = await READABLE_CONVERTER.convert(input, options);
+      const readable = await readableConverter().convert(input, options);
       await new Promise<void>((resolve, reject) => {
         const onError = (err: Error) => {
           reject(err);
@@ -77,7 +77,7 @@ export class Conv {
     } else if (isWritableStream(output)) {
       let stream: ReadableStream<unknown> | undefined;
       try {
-        stream = await READABLE_STREAM_CONVERTER.convert(input);
+        stream = await readableStreamConverter().convert(input);
         if (typeof stream.pipeTo === "function") {
           await stream.pipeTo(output);
         } else {
@@ -180,25 +180,25 @@ export class Conv {
   ) {
     switch (to) {
       case "arraybuffer":
-        return ARRAY_BUFFER_CONVERTER.convert(input, options);
+        return arrayBufferConverter().convert(input, options);
       case "uint8array":
-        return UINT8_ARRAY_CONVERTER.convert(input, options);
+        return uint8ArrayConverter().convert(input, options);
       case "buffer":
-        return BUFFER_CONVERTER.convert(input, options);
+        return bufferConverter().convert(input, options);
       case "blob":
-        return BLOB_CONVERTER.convert(input, options);
+        return blobConverter().convert(input, options);
       case "readable":
-        return READABLE_CONVERTER.convert(input, options);
+        return readableConverter().convert(input, options);
       case "readablestream":
-        return READABLE_STREAM_CONVERTER.convert(input, options);
+        return readableStreamConverter().convert(input, options);
       case "text":
-        return TEXT_CONVERTER.convert(input, options);
+        return textConverter().convert(input, options);
       case "base64":
-        return BASE64_CONVERTER.convert(input, options);
+        return base64Converter().convert(input, options);
       case "binary":
-        return BINARY_CONVERTER.convert(input, options);
+        return binaryConverter().convert(input, options);
       case "hex":
-        return HEX_CONVERTER.convert(input, options);
+        return hexConverter().convert(input, options);
     }
 
     throw new Error("Illegal output type: " + to);
@@ -213,28 +213,28 @@ export class Conv {
 
     switch (to) {
       case "arraybuffer":
-        return ARRAY_BUFFER_CONVERTER.merge(results as ArrayBuffer[], options);
+        return arrayBufferConverter().merge(results as ArrayBuffer[], options);
       case "uint8array":
-        return UINT8_ARRAY_CONVERTER.merge(results as Uint8Array[], options);
+        return uint8ArrayConverter().merge(results as Uint8Array[], options);
       case "buffer":
-        return BUFFER_CONVERTER.merge(results as Buffer[], options);
+        return bufferConverter().merge(results as Buffer[], options);
       case "blob":
-        return BLOB_CONVERTER.merge(results as Blob[], options);
+        return blobConverter().merge(results as Blob[], options);
       case "readable":
-        return READABLE_CONVERTER.merge(results as Readable[], options);
+        return readableConverter().merge(results as Readable[], options);
       case "readablestream":
-        return READABLE_STREAM_CONVERTER.merge(
+        return readableStreamConverter().merge(
           results as ReadableStream<unknown>[],
           options
         );
       case "text":
-        return TEXT_CONVERTER.merge(results as string[], options);
+        return textConverter().merge(results as string[], options);
       case "base64":
-        return BASE64_CONVERTER.merge(results as string[], options);
+        return base64Converter().merge(results as string[], options);
       case "binary":
-        return BINARY_CONVERTER.merge(results as string[], options);
+        return binaryConverter().merge(results as string[], options);
       case "hex":
-        return HEX_CONVERTER.merge(results as string[], options);
+        return hexConverter().merge(results as string[], options);
     }
 
     throw new Error("Illegal output type: " + to);
