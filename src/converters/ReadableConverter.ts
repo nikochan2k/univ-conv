@@ -14,7 +14,7 @@ import {
   InputType,
   Options,
 } from "./core";
-import { TEXT_HELPER } from "./TextHelper";
+import { textHelper } from "./TextHelper";
 
 class ReadableConverter extends AbstractConverter<Readable> {
   public typeEquals(input: unknown): input is Readable {
@@ -132,7 +132,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return TEXT_HELPER.bufferToText(u8, options.inputCharset);
+    return textHelper().bufferToText(u8, options.inputCharset);
   }
 
   protected async _toUint8Array(

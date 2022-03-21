@@ -1,6 +1,6 @@
 import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
 import { uint8ArrayConverter } from "./converters";
-import { TEXT_HELPER } from "./TextHelper";
+import { textHelper } from "./TextHelper";
 
 const BYTE_TO_HEX: string[] = [];
 for (let n = 0; n <= 0xff; ++n) {
@@ -89,7 +89,7 @@ class HexConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return TEXT_HELPER.bufferToText(u8, options.inputCharset);
+    return textHelper().bufferToText(u8, options.inputCharset);
   }
 
   protected _toUint8Array(

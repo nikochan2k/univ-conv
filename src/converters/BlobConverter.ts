@@ -19,7 +19,7 @@ import {
   InputType,
   Options,
 } from "./core";
-import { TEXT_HELPER } from "./TextHelper";
+import { textHelper } from "./TextHelper";
 
 class BlobConverter extends AbstractConverter<Blob> {
   public typeEquals(input: unknown): input is Blob {
@@ -101,7 +101,7 @@ class BlobConverter extends AbstractConverter<Blob> {
       );
     }
     const u8 = await this.toUint8Array(input, options);
-    return TEXT_HELPER.bufferToText(u8, options.inputCharset);
+    return textHelper().bufferToText(u8, options.inputCharset);
   }
 
   protected async _toUint8Array(

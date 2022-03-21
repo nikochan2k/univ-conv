@@ -6,7 +6,7 @@ import {
   InputType,
   Options,
 } from "./core";
-import { TEXT_HELPER } from "./TextHelper";
+import { textHelper } from "./TextHelper";
 
 class BufferConverter extends AbstractConverter<Buffer> {
   public typeEquals(input: unknown): input is Buffer {
@@ -68,7 +68,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _toText(input: Buffer, options: ConvertOptions): Promise<string> {
-    return TEXT_HELPER.bufferToText(input, options.inputCharset);
+    return textHelper().bufferToText(input, options.inputCharset);
   }
 
   protected _toUint8Array(input: Buffer): Promise<Uint8Array> {

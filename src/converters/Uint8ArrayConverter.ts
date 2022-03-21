@@ -16,7 +16,7 @@ import {
   InputType,
   Options,
 } from "./core";
-import { TEXT_HELPER } from "./TextHelper";
+import { textHelper } from "./TextHelper";
 class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
   public typeEquals(input: unknown): input is Uint8Array {
     return (
@@ -43,7 +43,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
       } else if (encoding === "hex") {
         return hexConverter().toUint8Array(input, options);
       } else {
-        return TEXT_HELPER.textToBuffer(input, options.outputCharset);
+        return textHelper().textToBuffer(input, options.outputCharset);
       }
     }
     if (arrayBufferConverter().typeEquals(input)) {
@@ -103,7 +103,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     input: Uint8Array,
     options: ConvertOptions
   ): Promise<string> {
-    return TEXT_HELPER.bufferToText(input, options.inputCharset);
+    return textHelper().bufferToText(input, options.inputCharset);
   }
 
   protected _toUint8Array(

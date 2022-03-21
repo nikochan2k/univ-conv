@@ -12,7 +12,7 @@ import {
   InputType,
   Options,
 } from "./core";
-import { TEXT_HELPER } from "./TextHelper";
+import { textHelper } from "./TextHelper";
 
 class BinaryConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {
@@ -80,7 +80,7 @@ class BinaryConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return TEXT_HELPER.bufferToText(u8, options.inputCharset);
+    return textHelper().bufferToText(u8, options.inputCharset);
   }
 
   protected _toUint8Array(

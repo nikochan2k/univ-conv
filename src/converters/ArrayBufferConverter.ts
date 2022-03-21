@@ -14,7 +14,7 @@ import {
   InputType,
   Options,
 } from "./core";
-import { TEXT_HELPER } from "./TextHelper";
+import { textHelper } from "./TextHelper";
 
 class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
   public typeEquals(input: unknown): input is ArrayBuffer {
@@ -41,7 +41,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
       } else if (encoding === "hex") {
         return hexConverter().toArrayBuffer(input, options);
       }
-      input = await TEXT_HELPER.textToBuffer(input, options.outputCharset);
+      input = await textHelper().textToBuffer(input, options.outputCharset);
     }
     if (uint8ArrayConverter().typeEquals(input)) {
       return uint8ArrayConverter().toArrayBuffer(input, options);
@@ -98,7 +98,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = new Uint8Array(input);
-    return TEXT_HELPER.bufferToText(u8, options.inputCharset);
+    return textHelper().bufferToText(u8, options.inputCharset);
   }
 
   protected _toUint8Array(

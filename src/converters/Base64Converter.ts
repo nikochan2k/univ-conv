@@ -6,7 +6,7 @@ import {
   uint8ArrayConverter,
 } from "./converters";
 import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
-import { TEXT_HELPER } from "./TextHelper";
+import { textHelper } from "./TextHelper";
 
 class Base64Converter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {
@@ -27,7 +27,7 @@ class Base64Converter extends AbstractConverter<string> {
       } else if (encoding === "hex") {
         return hexConverter().toBase64(input, options);
       }
-      u8 = await TEXT_HELPER.textToBuffer(input, options.outputCharset);
+      u8 = await textHelper().textToBuffer(input, options.outputCharset);
     } else if (blobConverter().typeEquals(input)) {
       return blobConverter().toBase64(input, options);
     } else {
@@ -73,7 +73,7 @@ class Base64Converter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return TEXT_HELPER.bufferToText(u8, options.inputCharset);
+    return textHelper().bufferToText(u8, options.inputCharset);
   }
 
   protected _toUint8Array(
