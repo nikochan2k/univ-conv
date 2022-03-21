@@ -146,7 +146,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     const chunks: Uint8Array[] = [];
     await handleReadable(input, async (chunk) => {
       const u8 = await converter.convert(chunk, {
-        chunkSize: options.chunkSize,
+        bufferSize: options.bufferSize,
       });
       chunks.push(u8);
     });

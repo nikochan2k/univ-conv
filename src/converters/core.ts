@@ -17,7 +17,7 @@ export type Data =
   | ReadableStream<unknown>;
 
 export interface Options {
-  chunkSize: number;
+  bufferSize: number;
   inputCharset: Charset;
   inputEncoding: StringType;
   outputCharset: Charset;
@@ -152,12 +152,12 @@ export abstract class AbstractConverter<T extends Data>
     options?: Partial<ConvertOptions>
   ): ConvertOptions {
     if (!options) options = {};
-    if (options.chunkSize == null) options.chunkSize = DEFAULT_BUFFER_SIZE;
-    const rem = options.chunkSize % 6;
+    if (options.bufferSize == null) options.bufferSize = DEFAULT_BUFFER_SIZE;
+    const rem = options.bufferSize % 6;
     if (rem !== 0) {
-      options.chunkSize -= rem;
+      options.bufferSize -= rem;
       console.info(
-        `"bufferSize" was modified to ${options.chunkSize}. ("bufferSize" must be divisible by 6.)`
+        `"bufferSize" was modified to ${options.bufferSize}. ("bufferSize" must be divisible by 6.)`
       );
     }
     if (typeof input === "string") {

@@ -81,10 +81,10 @@ class BlobConverter extends AbstractConverter<Blob> {
     input: Blob,
     options: ConvertOptions
   ): Promise<string> {
-    const chunkSize = options.chunkSize;
+    const bufferSize = options.bufferSize;
     const chunks: string[] = [];
-    for (let start = 0, end = input.size; start < end; start += chunkSize) {
-      const blobChunk = input.slice(start, start + chunkSize);
+    for (let start = 0, end = input.size; start < end; start += bufferSize) {
+      const blobChunk = input.slice(start, start + bufferSize);
       const chunk = await handleFileReader(
         (reader) => reader.readAsDataURL(blobChunk),
         (data) => dataUrlToBase64(data as string)
@@ -124,12 +124,12 @@ class BlobConverter extends AbstractConverter<Blob> {
       return new Uint8Array(ab);
     }
 
-    const chunkSize = options.chunkSize;
+    const bufferSize = options.bufferSize;
     if (hasReadAsArrayBufferOnBlob) {
       let byteLength = 0;
       const chunks: ArrayBuffer[] = [];
-      for (let start = 0, end = input.size; start < end; start += chunkSize) {
-        const blobChunk = input.slice(start, start + chunkSize);
+      for (let start = 0, end = input.size; start < end; start += bufferSize) {
+        const blobChunk = input.slice(start, start + bufferSize);
         const chunk = await handleFileReader(
           (reader) => reader.readAsArrayBuffer(blobChunk),
           (data) => {
@@ -160,8 +160,8 @@ class BlobConverter extends AbstractConverter<Blob> {
       return converter.merge(chunks);
     } else {
       const chunks: string[] = [];
-      for (let start = 0, end = input.size; start < end; start += chunkSize) {
-        const blobChunk = input.slice(start, start + chunkSize);
+      for (let start = 0, end = input.size; start < end; start += bufferSize) {
+        const blobChunk = input.slice(start, start + bufferSize);
         const chunk: string = await handleFileReader(
           (reader) => reader.readAsDataURL(blobChunk),
           (data) => dataUrlToBase64(data as string)

@@ -26,10 +26,14 @@ class BinaryConverter extends AbstractConverter<string> {
       }
     } else if (blobConverter().typeEquals(input)) {
       if (hasReadAsBinaryStringOnBlob) {
-        const chunkSize = options.chunkSize;
+        const bufferSize = options.bufferSize;
         const chunks: string[] = [];
-        for (let start = 0, end = input.size; start < end; start += chunkSize) {
-          const blobChunk = input.slice(start, start + chunkSize);
+        for (
+          let start = 0, end = input.size;
+          start < end;
+          start += bufferSize
+        ) {
+          const blobChunk = input.slice(start, start + bufferSize);
           const chunk: string = await handleFileReader(
             (reader) => reader.readAsBinaryString(blobChunk),
             (data) => data as string

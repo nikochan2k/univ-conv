@@ -57,7 +57,7 @@ class ReadableStreamConverter extends AbstractConverter<
       });
     }
 
-    const chunkSize = options.chunkSize;
+    const bufferSize = options.bufferSize;
     if (hasBlob) {
       const blob = await blobConverter().convert(input, options);
       if (hasStreamOnBlob) {
@@ -70,7 +70,7 @@ class ReadableStreamConverter extends AbstractConverter<
           do {
             const chunk = await new Promise<unknown>((resolve, reject) => {
               try {
-                const end = start + chunkSize;
+                const end = start + bufferSize;
                 const sliced = blob.slice(start, end);
                 start += sliced.size;
                 resolve(sliced);
@@ -95,7 +95,7 @@ class ReadableStreamConverter extends AbstractConverter<
           do {
             const chunk = await new Promise<unknown>((resolve, reject) => {
               try {
-                const end = start + chunkSize;
+                const end = start + bufferSize;
                 const sliced = u8.slice(start, end);
                 start += sliced.byteLength;
                 resolve(sliced);
@@ -184,12 +184,12 @@ class ReadableStreamConverter extends AbstractConverter<
   ): Promise<string> {
     if (hasBlob) {
       const blob = await blobConverter().convert(input, {
-        chunkSize: options.chunkSize,
+        bufferSize: options.bufferSize,
       });
       return blobConverter().toBase64(blob, options);
     } else {
       const u8 = await uint8ArrayConverter().convert(input, {
-        chunkSize: options.chunkSize,
+        bufferSize: options.bufferSize,
       });
       return uint8ArrayConverter().toBase64(u8, options);
     }
@@ -201,12 +201,12 @@ class ReadableStreamConverter extends AbstractConverter<
   ): Promise<string> {
     if (hasBlob) {
       const blob = await blobConverter().convert(input, {
-        chunkSize: options.chunkSize,
+        bufferSize: options.bufferSize,
       });
       return blobConverter().toText(blob, options);
     } else {
       const u8 = await uint8ArrayConverter().convert(input, {
-        chunkSize: options.chunkSize,
+        bufferSize: options.bufferSize,
       });
       return uint8ArrayConverter().toText(u8, options);
     }
@@ -220,7 +220,7 @@ class ReadableStreamConverter extends AbstractConverter<
     const chunks: Uint8Array[] = [];
     await handleReadableStream(input, async (chunk) => {
       const u8 = await converter.convert(chunk, {
-        chunkSize: options.chunkSize,
+        bufferSize: options.bufferSize,
       });
       chunks.push(u8);
     });
