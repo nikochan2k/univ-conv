@@ -8,7 +8,7 @@ import {
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
-import { EMPTY_READABLE, hasStreamOnBlob } from "./util";
+import { EMPTY_READABLE, handleReadable, hasStreamOnBlob } from "./util";
 
 class ReadableConverter extends AbstractConverter<Readable> {
   public typeEquals(input: unknown): input is Readable {
@@ -70,7 +70,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
   protected async _getSize(input: Readable, options: Options): Promise<number> {
     const converter = uint8ArrayConverter();
     let length = 0;
-    await this.handleReadable(input, async (chunk) => {
+    await handleReadable(input, async (chunk) => {
       const u8 = await converter.convert(chunk, options);
       length += u8.byteLength;
     });
@@ -144,7 +144,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
   ): Promise<Uint8Array> {
     const converter = uint8ArrayConverter();
     const chunks: Uint8Array[] = [];
-    await this.handleReadable(input, async (chunk) => {
+    await handleReadable(input, async (chunk) => {
       const u8 = await converter.convert(chunk, {
         chunkSize: options.chunkSize,
       });
@@ -166,28 +166,6 @@ class ReadableConverter extends AbstractConverter<Readable> {
         },
       })
     );
-  }
-
-  private async handleReadable(
-    readable: Readable,
-    onData: (chunk: Data) => Promise<void> | void
-  ): Promise<void> {
-    if (readable.destroyed) {
-      return;
-    }
-    return new Promise<void>((resolve, reject) => {
-      readable.once("error", (e) => {
-        reject(e);
-        readable.destroy();
-        readable.removeAllListeners();
-      });
-      readable.once("end", () => {
-        resolve();
-        readable.removeAllListeners();
-      });
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      readable.on("data", (chunk) => void (async () => await onData(chunk))());
-    });
   }
 }
 

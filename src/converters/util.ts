@@ -140,6 +140,28 @@ export function isWritableStream(
   );
 }
 
+export async function handleReadable(
+  readable: Readable,
+  onData: (chunk: Data) => Promise<void> | void
+): Promise<void> {
+  if (readable.destroyed) {
+    return;
+  }
+  return new Promise<void>((resolve, reject) => {
+    readable.once("error", (e) => {
+      reject(e);
+      readable.destroy();
+      readable.removeAllListeners();
+    });
+    readable.once("end", () => {
+      resolve();
+      readable.removeAllListeners();
+    });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    readable.on("data", (chunk) => void (async () => await onData(chunk))());
+  });
+}
+
 export function isReadable(stream: unknown): stream is Readable {
   return (
     hasReadable &&
