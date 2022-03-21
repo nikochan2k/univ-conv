@@ -21,7 +21,7 @@ import {
   uint8ArrayConverter,
 } from "./converters";
 
-type ReturnType<T extends DataType> = T extends "arraybuffer"
+export type ReturnData<T extends DataType> = T extends "arraybuffer"
   ? ArrayBuffer
   : T extends "uint8array"
   ? Uint8Array
@@ -40,8 +40,8 @@ export class DefaultConverter {
     input: Data,
     to: T,
     options?: Partial<ConvertOptions>
-  ): Promise<ReturnType<T>> {
-    return this._convert(input, to, options) as Promise<ReturnType<T>>;
+  ): Promise<ReturnData<T>> {
+    return this._convert(input, to, options) as Promise<ReturnData<T>>;
   }
 
   public getSize<T extends DataType>(
@@ -82,8 +82,8 @@ export class DefaultConverter {
     chunks: Data[],
     to: T,
     options?: Partial<Options>
-  ): Promise<ReturnType<T>> {
-    return this._merge(chunks, to, options) as Promise<ReturnType<T>>;
+  ): Promise<ReturnData<T>> {
+    return this._merge(chunks, to, options) as Promise<ReturnData<T>>;
   }
 
   public async pipe(
@@ -242,8 +242,8 @@ export class DefaultConverter {
     chunks: Data[],
     to: T,
     options?: Partial<ConvertOptions>
-  ): Promise<ReturnType<T>[]> {
-    const results: ReturnType<T>[] = [];
+  ): Promise<ReturnData<T>[]> {
+    const results: ReturnData<T>[] = [];
     for (const chunk of chunks) {
       const converted = await this.convert(chunk, to, options);
       results.push(converted);
