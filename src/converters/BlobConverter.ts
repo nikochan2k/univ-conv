@@ -166,4 +166,4 @@ class BlobConverter extends AbstractConverter<Blob> {
   }
 }
 
-export const BLOB_CONVERTER = new BlobConverter();
+export const INSTANCE = new BlobConverter();

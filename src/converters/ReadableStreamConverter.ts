@@ -224,4 +224,4 @@ class ReadableStreamConverter extends AbstractConverter<
   }
 }
 
-export const READABLE_STREAM_CONVERTER = new ReadableStreamConverter();
+export const INSTANCE = new ReadableStreamConverter();

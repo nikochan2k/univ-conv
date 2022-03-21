@@ -76,4 +76,4 @@ class BufferConverter extends AbstractConverter<Buffer> {
   }
 }
 
-export const BUFFER_CONVERTER = new BufferConverter();
+export const INSTANCE = new BufferConverter();

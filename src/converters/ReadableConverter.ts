@@ -185,4 +185,4 @@ class ReadableConverter extends AbstractConverter<Readable> {
   }
 }
 
-export const READABLE_CONVERTER = new ReadableConverter();
+export const INSTANCE = new ReadableConverter();
