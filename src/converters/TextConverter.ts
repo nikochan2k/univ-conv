@@ -9,9 +9,8 @@ import {
   readableStreamConverter,
   uint8ArrayConverter,
 } from "./converters";
-import { AbstractConverter } from "./Converter";
+import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
 import { TEXT_HELPER } from "./TextHelper";
-import { ConvertOptions, InputType, Options } from "./types";
 
 class TextConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {

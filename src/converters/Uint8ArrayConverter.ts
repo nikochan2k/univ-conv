@@ -9,9 +9,14 @@ import {
   readableConverter,
   readableStreamConverter,
 } from "./converters";
-import { AbstractConverter, EMPTY_UINT8_ARRAY } from "./Converter";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  EMPTY_UINT8_ARRAY,
+  InputType,
+  Options,
+} from "./core";
 import { TEXT_HELPER } from "./TextHelper";
-import { ConvertOptions, InputType, Options } from "./types";
 class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
   public typeEquals(input: unknown): input is Uint8Array {
     return (

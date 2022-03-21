@@ -8,11 +8,13 @@ import {
 } from "./converters";
 import {
   AbstractConverter,
+  ConvertOptions,
   EMPTY_READABLE,
   hasStreamOnBlob,
-} from "./Converter";
+  InputType,
+  Options,
+} from "./core";
 import { TEXT_HELPER } from "./TextHelper";
-import { ConvertOptions, InputType, Options } from "./types";
 
 class ReadableConverter extends AbstractConverter<Readable> {
   public typeEquals(input: unknown): input is Readable {

@@ -1,4 +1,4 @@
-import { ConvertOptions, Converter } from "./types";
+import { Converter, ConvertOptions } from "./core";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

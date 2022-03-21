@@ -1,3 +1,2 @@
-export * from "./Converter";
+export * from "./core";
 export * from "./converters";
-export * from "./types";

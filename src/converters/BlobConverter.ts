@@ -6,6 +6,7 @@ import {
 } from "./converters";
 import {
   AbstractConverter,
+  ConvertOptions,
   dataUrlToBase64,
   EMPTY_BLOB,
   EMPTY_UINT8_ARRAY,
@@ -15,9 +16,10 @@ import {
   hasReadAsArrayBufferOnBlob,
   hasStreamOnBlob,
   hasTextOnBlob,
-} from "./Converter";
+  InputType,
+  Options,
+} from "./core";
 import { TEXT_HELPER } from "./TextHelper";
-import { ConvertOptions, InputType, Options } from "./types";
 
 class BlobConverter extends AbstractConverter<Blob> {
   public typeEquals(input: unknown): input is Blob {

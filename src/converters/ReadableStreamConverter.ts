@@ -5,12 +5,14 @@ import {
 } from "./converters";
 import {
   AbstractConverter,
+  ConvertOptions,
   EMPTY_READABLE_STREAM,
   handleReadableStream,
   hasBlob,
   hasStreamOnBlob,
-} from "./Converter";
-import { ConvertOptions, InputType, Options } from "./types";
+  InputType,
+  Options,
+} from "./core";
 
 class ReadableStreamConverter extends AbstractConverter<
   ReadableStream<unknown>

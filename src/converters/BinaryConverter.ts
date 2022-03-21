@@ -5,12 +5,14 @@ import {
 } from "./converters";
 import {
   AbstractConverter,
+  ConvertOptions,
   handleFileReader,
   hasBuffer,
   hasReadAsBinaryStringOnBlob,
-} from "./Converter";
+  InputType,
+  Options,
+} from "./core";
 import { TEXT_HELPER } from "./TextHelper";
-import { ConvertOptions, InputType, Options } from "./types";
 
 class BinaryConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {

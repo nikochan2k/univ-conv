@@ -7,9 +7,14 @@ import {
   readableStreamConverter,
   uint8ArrayConverter,
 } from "./converters";
-import { AbstractConverter, EMPTY_ARRAY_BUFFER } from "./Converter";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  EMPTY_ARRAY_BUFFER,
+  InputType,
+  Options,
+} from "./core";
 import { TEXT_HELPER } from "./TextHelper";
-import { ConvertOptions, InputType, Options } from "./types";
 
 class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
   public typeEquals(input: unknown): input is ArrayBuffer {

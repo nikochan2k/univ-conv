@@ -1,7 +1,6 @@
+import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
 import { uint8ArrayConverter } from "./converters";
-import { AbstractConverter } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
-import { ConvertOptions, InputType, Options } from "./types";
 
 const BYTE_TO_HEX: string[] = [];
 for (let n = 0; n <= 0xff; ++n) {

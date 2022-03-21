@@ -1,6 +1,6 @@
 import { bufferConverter } from "./converters";
+import { CharsetType } from "./core";
 import { TextHelper } from "./TextHelper";
-import { CharsetType } from "./types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let convert: any;
