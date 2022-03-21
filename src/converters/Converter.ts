@@ -1,4 +1,4 @@
-import type { Readable } from "stream";
+import type { Readable, Writable } from "stream";
 
 export type CharsetType =
   | "utf8"
@@ -281,6 +281,84 @@ export async function handleReadableStream(
     throw err;
   } finally {
     stream.cancel().catch((e) => console.warn(e));
+  }
+}
+
+export function isReadableStream(
+  stream: unknown
+): stream is ReadableStream<unknown> {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return (
+    hasReadableStream &&
+    stream != null &&
+    typeof (stream as ReadableStream<unknown>).getReader === "function" &&
+    typeof (stream as ReadableStream<unknown>).cancel === "function"
+  );
+}
+
+export function isWritableStream(
+  stream: unknown
+): stream is WritableStream<unknown> {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return (
+    hasWritableStream &&
+    stream != null &&
+    typeof (stream as WritableStream<unknown>).getWriter === "function" &&
+    typeof (stream as WritableStream<unknown>).close === "function"
+  );
+}
+
+export function isReadable(stream: unknown): stream is Readable {
+  return (
+    hasReadable &&
+    stream != null &&
+    typeof (stream as Readable).pipe === "function" &&
+    typeof (stream as Readable)._read === "function"
+  );
+}
+
+export function isWritable(stream: unknown): stream is Writable {
+  return (
+    hasWritable &&
+    stream != null &&
+    typeof (stream as Writable).pipe === "function" &&
+    typeof (stream as Writable)._write === "function"
+  );
+}
+
+export function closeStream(
+  stream:
+    | Readable
+    | Writable
+    | ReadableStream<unknown>
+    | WritableStream<unknown>
+    | undefined,
+  reason?: unknown
+) {
+  if (!stream) {
+    return;
+  }
+
+  if (isReadable(stream) || isWritable(stream)) {
+    stream.destroy(reason as Error | undefined);
+  } else if (isReadableStream(stream)) {
+    const reader = stream.getReader();
+    reader.releaseLock();
+    reader
+      .cancel()
+      .catch((e) => console.warn(e))
+      .finally(() => {
+        stream.cancel(reason).catch((e) => console.warn(e));
+      });
+  } else if (isWritableStream(stream)) {
+    const writer = stream.getWriter();
+    writer.releaseLock();
+    writer
+      .close()
+      .catch((e) => console.warn(e))
+      .finally(() => {
+        stream.close().catch((e) => console.warn(e));
+      });
   }
 }
 

@@ -5,239 +5,248 @@ import {
   BINARY_STRING_CONVERTER,
   BLOB_CONVERTER,
   BUFFER_CONVERTER,
+  closeStream,
   ConvertOptions,
   handleReadableStream,
-  hasReadable,
-  hasReadableStream,
-  hasWritable,
-  hasWritableStream,
   HEX_CONVERTER,
+  isWritable,
+  isWritableStream,
   Options,
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
   ReturnType,
   TEXT_CONVERTER,
   Type,
+  typeOf,
   UINT8_ARRAY_CONVERTER,
 } from "./converters";
 
-export function convert<T extends Type>(
-  input: unknown,
-  to: T,
-  options?: Partial<ConvertOptions>
-): Promise<ReturnType<T>> {
-  switch (to) {
-    case "arraybuffer":
-      return ARRAY_BUFFER_CONVERTER.convert(input, options) as Promise<
-        ReturnType<T>
-      >;
-    case "uint8array":
-      return UINT8_ARRAY_CONVERTER.convert(input, options) as Promise<
-        ReturnType<T>
-      >;
-    case "buffer":
-      return BUFFER_CONVERTER.convert(input, options) as Promise<ReturnType<T>>;
-    case "blob":
-      return BLOB_CONVERTER.convert(input, options) as Promise<ReturnType<T>>;
-    case "readable":
-      return READABLE_CONVERTER.convert(input, options) as Promise<
-        ReturnType<T>
-      >;
-    case "readablestream":
-      return READABLE_STREAM_CONVERTER.convert(input, options) as Promise<
-        ReturnType<T>
-      >;
+export class Conv {
+  public convert<T extends Type>(
+    input: unknown,
+    to: T,
+    options?: Partial<ConvertOptions>
+  ): Promise<ReturnType<T>> {
+    return this._convert(input, to, options) as Promise<ReturnType<T>>;
   }
 
-  const encoding = options?.encoding;
-  if (encoding === "base64") {
-    return BASE64_CONVERTER.convert(input, options) as Promise<ReturnType<T>>;
-  } else if (encoding === "binary") {
-    return BINARY_STRING_CONVERTER.convert(input, options) as Promise<
-      ReturnType<T>
-    >;
-  } else if (encoding === "hex") {
-    return HEX_CONVERTER.convert(input, options) as Promise<ReturnType<T>>;
-  } else {
-    return TEXT_CONVERTER.convert(input, options) as Promise<ReturnType<T>>;
-  }
-}
-
-async function convertAll<T extends Type>(
-  chunks: unknown[],
-  to: T,
-  options?: Partial<ConvertOptions>
-): Promise<ReturnType<T>[]> {
-  const results: ReturnType<T>[] = [];
-  for (const chunk of chunks) {
-    const converted = await convert(chunk, to, options);
-    results.push(converted);
-  }
-  return results;
-}
-
-export async function merge<T extends Type>(
-  chunks: unknown[],
-  to: T,
-  options?: Partial<Options>
-): Promise<ReturnType<T>> {
-  const results = await convertAll(chunks, to, options);
-
-  switch (to) {
-    case "arraybuffer":
-      return ARRAY_BUFFER_CONVERTER.merge(
-        results as ArrayBuffer[],
-        options
-      ) as Promise<ReturnType<T>>;
-    case "uint8array":
-      return UINT8_ARRAY_CONVERTER.merge(
-        chunks as Uint8Array[],
-        options
-      ) as Promise<ReturnType<T>>;
-    case "buffer":
-      return BUFFER_CONVERTER.merge(results as Buffer[], options) as Promise<
-        ReturnType<T>
-      >;
-    case "blob":
-      return BLOB_CONVERTER.merge(results as Blob[], options) as Promise<
-        ReturnType<T>
-      >;
-    case "readable":
-      return READABLE_CONVERTER.merge(
-        results as Readable[],
-        options
-      ) as Promise<ReturnType<T>>;
-    case "readablestream":
-      return READABLE_STREAM_CONVERTER.merge(
-        results as ReadableStream<unknown>[],
-        options
-      ) as Promise<ReturnType<T>>;
+  public async merge<T extends Type>(
+    chunks: unknown[],
+    to: T,
+    options?: Partial<Options>
+  ): Promise<ReturnType<T>> {
+    return this._merge(chunks, to, options) as Promise<ReturnType<T>>;
   }
 
-  const strings = results as string[];
-  const encoding = options?.encoding;
-  if (encoding === "base64") {
-    return BASE64_CONVERTER.merge(strings, options) as Promise<ReturnType<T>>;
-  } else if (encoding === "binary") {
-    return BINARY_STRING_CONVERTER.convert(strings, options) as Promise<
-      ReturnType<T>
-    >;
-  } else if (encoding === "hex") {
-    return HEX_CONVERTER.convert(strings, options) as Promise<ReturnType<T>>;
-  } else {
-    return TEXT_CONVERTER.convert(strings, options) as Promise<ReturnType<T>>;
-  }
-}
-
-export async function pipe(
-  input: unknown,
-  output: Writable | WritableStream<unknown>,
-  options?: Partial<ConvertOptions>
-) {
-  if (isWritable(output)) {
-    const readable = await READABLE_CONVERTER.convert(input, options);
-    await new Promise<void>((resolve, reject) => {
-      const onError = (err: Error) => {
-        reject(err);
-        readable.destroy();
-        output.destroy();
-        readable.removeAllListeners();
-        output.removeAllListeners();
-      };
-      readable.once("error", onError);
-      output.once("error", onError);
-      output.once("finish", () => {
-        resolve();
+  public async pipe(
+    input: unknown,
+    output: Writable | WritableStream<unknown>,
+    options?: Partial<ConvertOptions>
+  ) {
+    if (isWritable(output)) {
+      const readable = await READABLE_CONVERTER.convert(input, options);
+      await new Promise<void>((resolve, reject) => {
+        const onError = (err: Error) => {
+          reject(err);
+          readable.destroy();
+          output.destroy();
+          readable.removeAllListeners();
+          output.removeAllListeners();
+        };
+        readable.once("error", onError);
+        output.once("error", onError);
+        output.once("finish", () => {
+          resolve();
+        });
+        readable.pipe(output);
       });
-      readable.pipe(output);
-    });
-  } else {
-    let stream: ReadableStream<unknown> | undefined;
-    try {
-      stream = await READABLE_STREAM_CONVERTER.convert(input);
-      if (typeof stream.pipeTo === "function") {
-        await stream.pipeTo(output);
-      } else {
-        const writer = output.getWriter();
-        await handleReadableStream(stream, (chunk) => writer.write(chunk));
+    } else if (isWritableStream(output)) {
+      let stream: ReadableStream<unknown> | undefined;
+      try {
+        stream = await READABLE_STREAM_CONVERTER.convert(input);
+        if (typeof stream.pipeTo === "function") {
+          await stream.pipeTo(output);
+        } else {
+          const writer = output.getWriter();
+          await handleReadableStream(stream, (chunk) => writer.write(chunk));
+        }
+      } finally {
+        closeStream(output);
+        closeStream(stream);
       }
-    } finally {
-      closeStream(output);
-      closeStream(stream);
+    }
+
+    throw new Error("Illegal output type: " + typeOf(output));
+  }
+
+  public toArrayBuffer(input: unknown, options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "arraybuffer", options);
+    } else {
+      return this.convert(input, "arraybuffer", options);
     }
   }
-}
 
-function isReadableStream(stream: unknown): stream is ReadableStream<unknown> {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return (
-    hasReadableStream &&
-    stream != null &&
-    typeof (stream as ReadableStream<unknown>).getReader === "function" &&
-    typeof (stream as ReadableStream<unknown>).cancel === "function"
-  );
-}
-
-function isWritableStream(stream: unknown): stream is WritableStream<unknown> {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return (
-    hasWritableStream &&
-    stream != null &&
-    typeof (stream as WritableStream<unknown>).getWriter === "function" &&
-    typeof (stream as WritableStream<unknown>).close === "function"
-  );
-}
-
-function isReadable(stream: unknown): stream is Readable {
-  return (
-    hasReadable &&
-    stream != null &&
-    typeof (stream as Readable).pipe === "function" &&
-    typeof (stream as Readable)._read === "function"
-  );
-}
-
-function isWritable(stream: unknown): stream is Writable {
-  return (
-    hasWritable &&
-    stream != null &&
-    typeof (stream as Writable).pipe === "function" &&
-    typeof (stream as Writable)._write === "function"
-  );
-}
-
-function closeStream(
-  stream:
-    | Readable
-    | Writable
-    | ReadableStream<unknown>
-    | WritableStream<unknown>
-    | undefined,
-  reason?: unknown
-) {
-  if (!stream) {
-    return;
+  public toBase64(input: unknown, options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "base64", options);
+    } else {
+      return this.convert(input, "base64", options);
+    }
   }
 
-  if (isReadable(stream) || isWritable(stream)) {
-    stream.destroy(reason as Error | undefined);
-  } else if (isReadableStream(stream)) {
-    const reader = stream.getReader();
-    reader.releaseLock();
-    reader
-      .cancel()
-      .catch((e) => console.warn(e))
-      .finally(() => {
-        stream.cancel(reason).catch((e) => console.warn(e));
-      });
-  } else if (isWritableStream(stream)) {
-    const writer = stream.getWriter();
-    writer.releaseLock();
-    writer
-      .close()
-      .catch((e) => console.warn(e))
-      .finally(() => {
-        stream.close().catch((e) => console.warn(e));
-      });
+  public toBinary(input: unknown, options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "binary", options);
+    } else {
+      return this.convert(input, "binary", options);
+    }
+  }
+
+  public toBlob(input: unknown, options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "blob", options);
+    } else {
+      return this.convert(input, "blob", options);
+    }
+  }
+
+  public toBuffer(input: unknown, options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "buffer", options);
+    } else {
+      return this.convert(input, "buffer", options);
+    }
+  }
+
+  public toHex(input: unknown, options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "hex", options);
+    } else {
+      return this.convert(input, "hex", options);
+    }
+  }
+
+  public toReadable(input: unknown, options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "readable", options);
+    } else {
+      return this.convert(input, "readable", options);
+    }
+  }
+
+  public toReadableStream(input: unknown, options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "readablestream", options);
+    } else {
+      return this.convert(input, "readablestream", options);
+    }
+  }
+
+  public toText(input: unknown, options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "text", options);
+    } else {
+      return this.convert(input, "text", options);
+    }
+  }
+
+  public toUint8Array(input: unknown, options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "uint8array", options);
+    } else {
+      return this.convert(input, "uint8array", options);
+    }
+  }
+
+  protected _convert<T extends Type>(
+    input: unknown,
+    to: T,
+    options?: Partial<ConvertOptions>
+  ) {
+    switch (to) {
+      case "arraybuffer":
+        return ARRAY_BUFFER_CONVERTER.convert(input, options);
+      case "uint8array":
+        return UINT8_ARRAY_CONVERTER.convert(input, options);
+      case "buffer":
+        return BUFFER_CONVERTER.convert(input, options);
+      case "blob":
+        return BLOB_CONVERTER.convert(input, options);
+      case "readable":
+        return READABLE_CONVERTER.convert(input, options);
+      case "readablestream":
+        return READABLE_STREAM_CONVERTER.convert(input, options);
+      case "text": {
+        const encoding = options?.encoding;
+        if (encoding === "base64") {
+          return BASE64_CONVERTER.convert(input, options);
+        } else if (encoding === "binary") {
+          return BINARY_STRING_CONVERTER.convert(input, options);
+        } else if (encoding === "hex") {
+          return HEX_CONVERTER.convert(input, options);
+        } else {
+          return TEXT_CONVERTER.convert(input, options);
+        }
+      }
+    }
+
+    throw new Error("Illegal output type: " + to);
+  }
+
+  protected async _merge<T extends Type>(
+    chunks: unknown[],
+    to: T,
+    options?: Partial<Options>
+  ) {
+    const results = await this.convertAll(chunks, to, options);
+
+    switch (to) {
+      case "arraybuffer":
+        return ARRAY_BUFFER_CONVERTER.merge(results as ArrayBuffer[], options);
+      case "uint8array":
+        return UINT8_ARRAY_CONVERTER.merge(chunks as Uint8Array[], options);
+      case "buffer":
+        return BUFFER_CONVERTER.merge(results as Buffer[], options);
+      case "blob":
+        return BLOB_CONVERTER.merge(results as Blob[], options);
+      case "readable":
+        return READABLE_CONVERTER.merge(results as Readable[], options);
+      case "readablestream":
+        return READABLE_STREAM_CONVERTER.merge(
+          results as ReadableStream<unknown>[],
+          options
+        );
+      case "text": {
+        const strings = results as string[];
+        const encoding = options?.encoding;
+        if (encoding === "base64") {
+          return BASE64_CONVERTER.merge(strings, options);
+        } else if (encoding === "binary") {
+          return BINARY_STRING_CONVERTER.convert(strings, options);
+        } else if (encoding === "hex") {
+          return HEX_CONVERTER.convert(strings, options);
+        } else {
+          return TEXT_CONVERTER.convert(strings, options);
+        }
+      }
+    }
+
+    throw new Error("Illegal output type: " + to);
+  }
+
+  protected async convertAll<T extends Type>(
+    chunks: unknown[],
+    to: T,
+    options?: Partial<ConvertOptions>
+  ): Promise<ReturnType<T>[]> {
+    const results: ReturnType<T>[] = [];
+    for (const chunk of chunks) {
+      const converted = await this.convert(chunk, to, options);
+      results.push(converted);
+    }
+    return results;
   }
 }
+
+export default new Conv();
