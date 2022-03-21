@@ -278,14 +278,13 @@ export async function handleReadableStream(
       }
       res = await reader.read();
     }
-    reader.releaseLock();
-    reader.cancel().catch((e) => console.warn(e));
+    reader.cancel().catch((e) => console.debug(e));
   } catch (err) {
-    reader.releaseLock();
-    reader.cancel(err).catch((e) => console.warn(e));
+    reader.cancel(err).catch((e) => console.debug(e));
     throw err;
   } finally {
-    stream.cancel().catch((e) => console.warn(e));
+    reader.releaseLock();
+    stream.cancel().catch((e) => console.debug(e));
   }
 }
 
@@ -353,7 +352,7 @@ export function closeStream(
       .cancel()
       .catch((e) => console.warn(e))
       .finally(() => {
-        stream.cancel(reason).catch((e) => console.warn(e));
+        // stream.cancel(reason).catch((e) => console.warn(e));
       });
   } else if (isWritableStream(stream)) {
     const writer = stream.getWriter();

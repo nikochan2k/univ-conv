@@ -51,16 +51,15 @@ class ReadableConverter extends AbstractConverter<Readable> {
               }
               if (done) {
                 this.push(null);
-                reader.releaseLock();
-                reader.cancel().catch((e) => console.warn(e));
+                reader.cancel().catch((e) => console.debug(e));
               }
             })
             .catch((e) => {
-              reader.releaseLock();
-              reader.cancel(e).catch((e) => console.warn(e));
+              reader.cancel(e).catch((e) => console.debug(e));
             })
             .finally(() => {
-              stream.cancel().catch((e) => console.warn(e));
+              reader.releaseLock();
+              stream.cancel().catch((e) => console.debug(e));
             });
         },
       });

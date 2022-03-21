@@ -220,12 +220,12 @@ class ReadableStreamConverter extends AbstractConverter<
 
   private close(stream: ReadableStream<unknown>) {
     const reader = stream.getReader();
-    reader.releaseLock();
     reader
       .cancel()
-      .catch((e) => console.warn(e))
+      .catch((e) => console.debug(e))
       .finally(() => {
-        stream.cancel().catch((e) => console.warn(e));
+        reader.releaseLock();
+        stream.cancel().catch((e) => console.debug(e));
       });
   }
 }
