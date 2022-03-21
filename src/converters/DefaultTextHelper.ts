@@ -30,7 +30,7 @@ class DefaultTextHelper implements TextHelper {
         return Promise.resolve(
           // eslint-disable-next-line @typescript-eslint/no-unsafe-call
           convert(u8, {
-            to: "UTF16LE",
+            to: "UNICODE",
             from: bufCharset.toUpperCase(),
             type: "string",
           })
@@ -56,7 +56,7 @@ class DefaultTextHelper implements TextHelper {
         // eslint-disable-next-line
         const ab: ArrayBuffer = convert(text, {
           to: bufCharset.toUpperCase(),
-          from: "UTF16LE",
+          from: "UNICODE",
           type: "arraybuffer",
         });
         return Promise.resolve(new Uint8Array(ab));

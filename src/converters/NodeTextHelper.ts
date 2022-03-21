@@ -29,7 +29,7 @@ class NodeTextHelper implements TextHelper {
       try {
         // eslint-disable-next-line
         return convert(buf, {
-          to: "UTF16LE",
+          to: "UNICODE",
           from: bufCharset.toUpperCase(),
           type: "string",
         });
@@ -54,7 +54,7 @@ class NodeTextHelper implements TextHelper {
         // eslint-disable-next-line
         const ab: ArrayBuffer = convert(text, {
           to: bufCharset.toUpperCase(),
-          from: "UTF16LE",
+          from: "UNICODE",
           type: "arraybuffer",
         });
         return Promise.resolve(new Uint8Array(ab));
