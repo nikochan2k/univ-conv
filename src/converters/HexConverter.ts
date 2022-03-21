@@ -1,4 +1,9 @@
-import { AbstractConverter, ConvertOptions, Options } from "./Converter";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  InputType,
+  Options,
+} from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 
@@ -40,7 +45,7 @@ class HexConverter extends AbstractConverter<string> {
   }
 
   protected async _convert(
-    input: unknown,
+    input: InputType,
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string") {
