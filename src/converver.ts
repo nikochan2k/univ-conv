@@ -199,13 +199,13 @@ export class Conv {
     to: T,
     options?: Partial<Options>
   ) {
-    const results = await this.convertAll(chunks, to, options);
+    const results = await this._convertAll(chunks, to, options);
 
     switch (to) {
       case "arraybuffer":
         return ARRAY_BUFFER_CONVERTER.merge(results as ArrayBuffer[], options);
       case "uint8array":
-        return UINT8_ARRAY_CONVERTER.merge(chunks as Uint8Array[], options);
+        return UINT8_ARRAY_CONVERTER.merge(results as Uint8Array[], options);
       case "buffer":
         return BUFFER_CONVERTER.merge(results as Buffer[], options);
       case "blob":
@@ -235,7 +235,7 @@ export class Conv {
     throw new Error("Illegal output type: " + to);
   }
 
-  protected async convertAll<T extends Type>(
+  protected async _convertAll<T extends Type>(
     chunks: unknown[],
     to: T,
     options?: Partial<ConvertOptions>
@@ -249,4 +249,4 @@ export class Conv {
   }
 }
 
-export default new Conv();
+export const conv = new Conv();
