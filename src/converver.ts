@@ -198,7 +198,7 @@ export class Conv {
       case "binary":
         return BINARY_CONVERTER.convert(input, options);
       case "hex":
-        return BINARY_CONVERTER.convert(input, options);
+        return HEX_CONVERTER.convert(input, options);
     }
 
     throw new Error("Illegal output type: " + to);

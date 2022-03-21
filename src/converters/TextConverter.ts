@@ -10,7 +10,12 @@ import {
 import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
-import { BLOB_CONVERTER, BUFFER_CONVERTER, READABLE_CONVERTER } from "./z";
+import {
+  BLOB_CONVERTER,
+  BUFFER_CONVERTER,
+  READABLE_CONVERTER,
+  READABLE_STREAM_CONVERTER,
+} from "./z";
 
 class TextConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {
@@ -46,6 +51,9 @@ class TextConverter extends AbstractConverter<string> {
     }
     if (READABLE_CONVERTER.typeEquals(input)) {
       return READABLE_CONVERTER.toText(input, options);
+    }
+    if (READABLE_STREAM_CONVERTER.typeEquals(input)) {
+      return READABLE_STREAM_CONVERTER.toText(input, options);
     }
 
     return undefined;

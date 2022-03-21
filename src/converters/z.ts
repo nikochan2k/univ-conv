@@ -3,6 +3,7 @@ import {
   Converter,
   EMPTY_BLOB,
   EMPTY_BUFFER,
+  EMPTY_READABLE,
   EMPTY_READABLE_STREAM,
 } from "./Converter";
 import { FalseConverter } from "./FalseConverter";
@@ -28,7 +29,7 @@ if (EMPTY_BUFFER) {
   BUFFER_CONVERTER = new FalseConverter("Buffer");
 }
 export let READABLE_CONVERTER: Converter<Readable>;
-if (EMPTY_READABLE_STREAM) {
+if (EMPTY_READABLE) {
   READABLE_CONVERTER = require("./ReadableConverter").READABLE_CONVERTER;
 } else {
   READABLE_CONVERTER = new FalseConverter("Readable");
