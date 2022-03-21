@@ -7,21 +7,21 @@ import {
   bufferConverter,
   closeStream,
   ConvertOptions,
+  Data,
+  DataType,
   handleReadableStream,
   hexConverter,
-  InputType,
   isWritable,
   isWritableStream,
   Options,
   readableConverter,
   readableStreamConverter,
   textConverter,
-  Type,
   typeOf,
   uint8ArrayConverter,
 } from "./converters";
 
-type ReturnType<T extends Type> = T extends "arraybuffer"
+type ReturnType<T extends DataType> = T extends "arraybuffer"
   ? ArrayBuffer
   : T extends "uint8array"
   ? Uint8Array
@@ -35,17 +35,17 @@ type ReturnType<T extends Type> = T extends "arraybuffer"
   ? ReadableStream<unknown>
   : string;
 
-export class Conv {
-  public convert<T extends Type>(
-    input: InputType,
+export class DefaultConverter {
+  public convert<T extends DataType>(
+    input: Data,
     to: T,
     options?: Partial<ConvertOptions>
   ): Promise<ReturnType<T>> {
     return this._convert(input, to, options) as Promise<ReturnType<T>>;
   }
 
-  public getSize<T extends Type>(
-    input: InputType,
+  public getSize<T extends DataType>(
+    input: Data,
     to: T,
     options?: Partial<Options>
   ) {
@@ -78,8 +78,8 @@ export class Conv {
     throw new Error("Illegal output type: " + to);
   }
 
-  public async merge<T extends Type>(
-    chunks: InputType[],
+  public async merge<T extends DataType>(
+    chunks: Data[],
     to: T,
     options?: Partial<Options>
   ): Promise<ReturnType<T>> {
@@ -87,7 +87,7 @@ export class Conv {
   }
 
   public async pipe(
-    input: InputType,
+    input: Data,
     output: Writable | WritableStream<unknown>,
     options?: Partial<ConvertOptions>
   ) {
@@ -127,7 +127,7 @@ export class Conv {
     throw new Error("Illegal output type: " + typeOf(output));
   }
 
-  public toArrayBuffer(input: InputType, options?: Partial<ConvertOptions>) {
+  public toArrayBuffer(input: Data, options?: Partial<ConvertOptions>) {
     if (Array.isArray(input)) {
       return this.merge(input, "arraybuffer", options);
     } else {
@@ -135,7 +135,7 @@ export class Conv {
     }
   }
 
-  public toBase64(input: InputType, options?: Partial<ConvertOptions>) {
+  public toBase64(input: Data, options?: Partial<ConvertOptions>) {
     if (Array.isArray(input)) {
       return this.merge(input, "base64", options);
     } else {
@@ -143,7 +143,7 @@ export class Conv {
     }
   }
 
-  public toBinary(input: InputType, options?: Partial<ConvertOptions>) {
+  public toBinary(input: Data, options?: Partial<ConvertOptions>) {
     if (Array.isArray(input)) {
       return this.merge(input, "binary", options);
     } else {
@@ -151,7 +151,7 @@ export class Conv {
     }
   }
 
-  public toBlob(input: InputType, options?: Partial<ConvertOptions>) {
+  public toBlob(input: Data, options?: Partial<ConvertOptions>) {
     if (Array.isArray(input)) {
       return this.merge(input, "blob", options);
     } else {
@@ -159,7 +159,7 @@ export class Conv {
     }
   }
 
-  public toBuffer(input: InputType, options?: Partial<ConvertOptions>) {
+  public toBuffer(input: Data, options?: Partial<ConvertOptions>) {
     if (Array.isArray(input)) {
       return this.merge(input, "buffer", options);
     } else {
@@ -167,7 +167,7 @@ export class Conv {
     }
   }
 
-  public toHex(input: InputType, options?: Partial<ConvertOptions>) {
+  public toHex(input: Data, options?: Partial<ConvertOptions>) {
     if (Array.isArray(input)) {
       return this.merge(input, "hex", options);
     } else {
@@ -175,7 +175,7 @@ export class Conv {
     }
   }
 
-  public toReadable(input: InputType, options?: Partial<ConvertOptions>) {
+  public toReadable(input: Data, options?: Partial<ConvertOptions>) {
     if (Array.isArray(input)) {
       return this.merge(input, "readable", options);
     } else {
@@ -183,7 +183,7 @@ export class Conv {
     }
   }
 
-  public toReadableStream(input: InputType, options?: Partial<ConvertOptions>) {
+  public toReadableStream(input: Data, options?: Partial<ConvertOptions>) {
     if (Array.isArray(input)) {
       return this.merge(input, "readablestream", options);
     } else {
@@ -191,7 +191,7 @@ export class Conv {
     }
   }
 
-  public toText(input: InputType, options?: Partial<ConvertOptions>) {
+  public toText(input: Data, options?: Partial<ConvertOptions>) {
     if (Array.isArray(input)) {
       return this.merge(input, "text", options);
     } else {
@@ -199,7 +199,7 @@ export class Conv {
     }
   }
 
-  public toUint8Array(input: InputType, options?: Partial<ConvertOptions>) {
+  public toUint8Array(input: Data, options?: Partial<ConvertOptions>) {
     if (Array.isArray(input)) {
       return this.merge(input, "uint8array", options);
     } else {
@@ -207,8 +207,8 @@ export class Conv {
     }
   }
 
-  protected _convert<T extends Type>(
-    input: InputType,
+  protected _convert<T extends DataType>(
+    input: Data,
     to: T,
     options?: Partial<ConvertOptions>
   ) {
@@ -238,8 +238,8 @@ export class Conv {
     throw new Error("Illegal output type: " + to);
   }
 
-  protected async _convertAll<T extends Type>(
-    chunks: InputType[],
+  protected async _convertAll<T extends DataType>(
+    chunks: Data[],
     to: T,
     options?: Partial<ConvertOptions>
   ): Promise<ReturnType<T>[]> {
@@ -251,8 +251,8 @@ export class Conv {
     return results;
   }
 
-  protected async _merge<T extends Type>(
-    chunks: InputType[],
+  protected async _merge<T extends DataType>(
+    chunks: Data[],
     to: T,
     options?: Partial<Options>
   ) {
@@ -288,4 +288,4 @@ export class Conv {
   }
 }
 
-export const conv = new Conv();
+export const DEFAULT_CONVERTER = new DefaultConverter();

@@ -4,7 +4,7 @@ import {
   hasReadable,
   hasReadableStream,
 } from "../converters";
-import { conv as c } from "../converver";
+import { DEFAULT_CONVERTER as c } from "../converver";
 
 const head = "大谷翔平";
 const tail = "ホームラン";

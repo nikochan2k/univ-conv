@@ -6,7 +6,7 @@ import {
   readableStreamConverter,
   uint8ArrayConverter,
 } from "./converters";
-import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
+import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
 import { EMPTY_READABLE, hasStreamOnBlob } from "./util";
 
@@ -20,7 +20,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
   }
 
   protected async _convert(
-    input: InputType,
+    input: Data,
     options: ConvertOptions
   ): Promise<Readable | undefined> {
     if (this.typeEquals(input)) {
@@ -170,7 +170,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
 
   private async handleReadable(
     readable: Readable,
-    onData: (chunk: InputType) => Promise<void> | void
+    onData: (chunk: Data) => Promise<void> | void
   ): Promise<void> {
     if (readable.destroyed) {
       return;

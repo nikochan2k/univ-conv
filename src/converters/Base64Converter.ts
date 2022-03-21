@@ -5,7 +5,7 @@ import {
   hexConverter,
   uint8ArrayConverter,
 } from "./converters";
-import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
+import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
 
 class Base64Converter extends AbstractConverter<string> {
@@ -14,7 +14,7 @@ class Base64Converter extends AbstractConverter<string> {
   }
 
   protected async _convert(
-    input: InputType,
+    input: Data,
     options: ConvertOptions
   ): Promise<string | undefined> {
     let u8: Uint8Array | undefined;

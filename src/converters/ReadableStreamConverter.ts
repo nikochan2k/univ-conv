@@ -3,7 +3,7 @@ import {
   readableConverter,
   uint8ArrayConverter,
 } from "./converters";
-import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
+import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import {
   EMPTY_READABLE_STREAM,
   handleReadableStream,
@@ -23,7 +23,7 @@ class ReadableStreamConverter extends AbstractConverter<
   }
 
   protected async _convert(
-    input: InputType,
+    input: Data,
     options: ConvertOptions
   ): Promise<ReadableStream<unknown> | undefined> {
     if (this.typeEquals(input)) {

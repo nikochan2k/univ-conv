@@ -1,5 +1,5 @@
 import { uint8ArrayConverter } from "./converters";
-import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
+import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
 
 const BYTE_TO_HEX: string[] = [];
@@ -40,7 +40,7 @@ class HexConverter extends AbstractConverter<string> {
   }
 
   protected async _convert(
-    input: InputType,
+    input: Data,
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string") {

@@ -1,4 +1,4 @@
-import { conv as c } from "../";
+import { DEFAULT_CONVERTER as c } from "../";
 import {
   hasBlob,
   hasBuffer,

@@ -3,7 +3,7 @@ import {
   blobConverter,
   uint8ArrayConverter,
 } from "./converters";
-import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
+import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
 import {
   handleFileReader,
@@ -17,7 +17,7 @@ class BinaryConverter extends AbstractConverter<string> {
   }
 
   protected async _convert(
-    input: InputType,
+    input: Data,
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string") {

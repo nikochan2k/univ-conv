@@ -9,7 +9,7 @@ import {
   readableStreamConverter,
   uint8ArrayConverter,
 } from "./converters";
-import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
+import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
 
 class TextConverter extends AbstractConverter<string> {
@@ -18,7 +18,7 @@ class TextConverter extends AbstractConverter<string> {
   }
 
   protected async _convert(
-    input: InputType,
+    input: Data,
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string") {

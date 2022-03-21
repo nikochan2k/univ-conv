@@ -13,7 +13,7 @@ import {
   AbstractConverter,
   ConvertOptions,
   EMPTY_UINT8_ARRAY,
-  InputType,
+  Data,
   Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
@@ -27,7 +27,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
   }
 
   protected async _convert(
-    input: InputType,
+    input: Data,
     options: ConvertOptions
   ): Promise<Uint8Array | undefined> {
     if (this.typeEquals(input)) {

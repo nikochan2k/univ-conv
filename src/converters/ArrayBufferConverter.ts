@@ -11,7 +11,7 @@ import {
   AbstractConverter,
   ConvertOptions,
   EMPTY_ARRAY_BUFFER,
-  InputType,
+  Data,
   Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
@@ -25,7 +25,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
   }
 
   protected async _convert(
-    input: InputType,
+    input: Data,
     options: ConvertOptions
   ): Promise<ArrayBuffer | undefined> {
     if (this.typeEquals(input)) {

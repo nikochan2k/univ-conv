@@ -1,5 +1,5 @@
 import { arrayBufferConverter, uint8ArrayConverter } from "./converters";
-import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
+import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
 import { EMPTY_BUFFER } from "./util";
 
@@ -11,7 +11,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
   }
 
   protected async _convert(
-    input: InputType,
+    input: Data,
     options: ConvertOptions
   ): Promise<Buffer | undefined> {
     if (this.typeEquals(input)) {

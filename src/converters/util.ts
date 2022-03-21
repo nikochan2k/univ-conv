@@ -1,5 +1,5 @@
 import type { Readable, Writable } from "stream";
-import { EMPTY_UINT8_ARRAY, InputType } from "./core";
+import { EMPTY_UINT8_ARRAY, Data } from "./core";
 
 export let hasBlob = false;
 export let hasTextOnBlob = false;
@@ -94,13 +94,13 @@ export function handleFileReader<T extends string | ArrayBuffer>(
 
 export async function handleReadableStream(
   stream: ReadableStream,
-  onData: (chunk: InputType) => Promise<void> | void
+  onData: (chunk: Data) => Promise<void> | void
 ): Promise<void> {
   const reader = stream.getReader();
   try {
     let res = await reader.read();
     while (!res.done) {
-      const chunk = res.value as InputType;
+      const chunk = res.value as Data;
       if (chunk != null) {
         await onData(chunk);
       }

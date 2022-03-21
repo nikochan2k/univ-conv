@@ -5,9 +5,9 @@ export type StringType = "text" | "base64" | "binary" | "hex";
 export type BinaryType = "arraybuffer" | "uint8array" | "buffer" | "blob";
 export type BlockType = StringType | BinaryType;
 export type StreamType = "readable" | "readablestream";
-export type Type = BlockType | StreamType;
+export type DataType = BlockType | StreamType;
 
-export type InputType =
+export type Data =
   | string
   | ArrayBuffer
   | Uint8Array
@@ -27,8 +27,8 @@ export interface ConvertOptions extends Options {
   start?: number;
 }
 
-export interface Converter<T extends InputType> {
-  convert(input: InputType, options?: Partial<ConvertOptions>): Promise<T>;
+export interface Converter<T extends Data> {
+  convert(input: Data, options?: Partial<ConvertOptions>): Promise<T>;
   getSize(input: T, options?: Partial<Options>): Promise<number>;
   merge(chunks: T[], options?: Partial<Options>): Promise<T>;
   toArrayBuffer(input: T, options: ConvertOptions): Promise<ArrayBuffer>;
@@ -50,11 +50,11 @@ export function typeOf(input: unknown): string {
 export const DEFAULT_BUFFER_SIZE = 96 * 1024;
 export const EMPTY_ARRAY_BUFFER = new ArrayBuffer(0);
 export const EMPTY_UINT8_ARRAY = new Uint8Array(0);
-export abstract class AbstractConverter<T extends InputType>
+export abstract class AbstractConverter<T extends Data>
   implements Converter<T>
 {
   public async convert(
-    input: InputType,
+    input: Data,
     options?: Partial<ConvertOptions>
   ): Promise<T> {
     if (!input) {
@@ -86,10 +86,7 @@ export abstract class AbstractConverter<T extends InputType>
       return Promise.resolve(chunks[0] as T);
     }
 
-    return this._merge(
-      chunks,
-      this._initOptions(chunks[0] as InputType, options)
-    );
+    return this._merge(chunks, this._initOptions(chunks[0] as Data, options));
   }
 
   public toArrayBuffer(
@@ -123,10 +120,10 @@ export abstract class AbstractConverter<T extends InputType>
     return this._toUint8Array(input, options);
   }
 
-  public abstract typeEquals(input: InputType): input is T;
+  public abstract typeEquals(input: Data): input is T;
 
   protected abstract _convert(
-    input: InputType,
+    input: Data,
     options: ConvertOptions
   ): Promise<T | undefined>;
   protected abstract _getSize(input: T, options: Options): Promise<number>;
@@ -151,7 +148,7 @@ export abstract class AbstractConverter<T extends InputType>
   protected abstract empty(): T;
 
   private _initOptions<T extends Options>(
-    input: InputType,
+    input: Data,
     options?: Partial<ConvertOptions>
   ): ConvertOptions {
     if (!options) options = {};
