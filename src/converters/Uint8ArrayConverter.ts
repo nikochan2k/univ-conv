@@ -35,8 +35,6 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
       return input;
     }
 
-    if (!options.outputCharset) options.outputCharset = "utf8";
-
     if (typeof input === "string") {
       const encoding = options.encoding;
       if (encoding === "base64") {

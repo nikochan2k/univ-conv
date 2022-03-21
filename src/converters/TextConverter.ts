@@ -21,8 +21,6 @@ class TextConverter extends AbstractConverter<string> {
     input: InputType,
     options: ConvertOptions
   ): Promise<string | undefined> {
-    if (!options.outputCharset) options.outputCharset = "utf16le";
-
     if (typeof input === "string") {
       const encoding = options.encoding;
       if (encoding === "base64") {
