@@ -1,4 +1,4 @@
-import { conv as c } from "../converver";
+import { conv as c } from "../";
 import {
   hasBlob,
   hasBuffer,
