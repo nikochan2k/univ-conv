@@ -35,12 +35,12 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     }
 
     if (typeof input === "string") {
-      const encoding = options.inputEncoding;
-      if (encoding === "base64") {
+      const inputStringType = options.inputStringType;
+      if (inputStringType === "base64") {
         return base64Converter().toUint8Array(input, options);
-      } else if (encoding === "binary") {
+      } else if (inputStringType === "binary") {
         return binaryConverter().toUint8Array(input, options);
-      } else if (encoding === "hex") {
+      } else if (inputStringType === "hex") {
         return hexConverter().toUint8Array(input, options);
       } else {
         return textHelper().textToBuffer(input, options.outputCharset);

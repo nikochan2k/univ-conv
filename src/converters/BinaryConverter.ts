@@ -21,7 +21,7 @@ class BinaryConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string") {
-      if (options.inputEncoding === "binary") {
+      if (options.inputStringType === "binary") {
         return input;
       }
     } else if (blobConverter().typeEquals(input)) {

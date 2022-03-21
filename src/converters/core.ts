@@ -18,8 +18,8 @@ export type Data =
 
 export interface Options {
   bufferSize: number;
+  inputStringType: StringType;
   inputCharset: Charset;
-  inputEncoding: StringType;
   outputCharset: Charset;
 }
 export interface ConvertOptions extends Options {
@@ -161,7 +161,7 @@ export abstract class AbstractConverter<T extends Data>
       );
     }
     if (typeof input === "string") {
-      if (!options.inputEncoding) options.inputEncoding = "text";
+      if (!options.inputStringType) options.inputStringType = "text";
     }
     if (!options.inputCharset) options.inputCharset = "utf8";
     if (!options.outputCharset) options.outputCharset = "utf8";

@@ -19,12 +19,12 @@ class BufferConverter extends AbstractConverter<Buffer> {
     }
 
     if (typeof input === "string") {
-      const encoding = options.inputEncoding;
-      if (encoding === "base64") {
+      const inputStringType = options.inputStringType;
+      if (inputStringType === "base64") {
         return Buffer.from(input, "base64");
-      } else if (encoding === "binary") {
+      } else if (inputStringType === "binary") {
         return Buffer.from(input, "binary");
-      } else if (encoding === "hex") {
+      } else if (inputStringType === "hex") {
         return Buffer.from(input, "hex");
       }
     }

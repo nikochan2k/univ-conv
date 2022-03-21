@@ -22,12 +22,12 @@ class TextConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string") {
-      const encoding = options.inputEncoding;
-      if (encoding === "base64") {
+      const inputStringType = options.inputStringType;
+      if (inputStringType === "base64") {
         return base64Converter().toText(input, options);
-      } else if (encoding === "binary") {
+      } else if (inputStringType === "binary") {
         return binaryConverter().toText(input, options);
-      } else if (encoding === "hex") {
+      } else if (inputStringType === "hex") {
         return hexConverter().toText(input, options);
       }
       input = await textHelper().textToBuffer(input, options.outputCharset);

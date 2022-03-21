@@ -19,12 +19,12 @@ class Base64Converter extends AbstractConverter<string> {
   ): Promise<string | undefined> {
     let u8: Uint8Array | undefined;
     if (typeof input === "string") {
-      const encoding = options.inputEncoding;
-      if (encoding === "base64") {
+      const inputStringType = options.inputStringType;
+      if (inputStringType === "base64") {
         return input;
-      } else if (encoding === "binary") {
+      } else if (inputStringType === "binary") {
         return binaryConverter().toBase64(input, options);
-      } else if (encoding === "hex") {
+      } else if (inputStringType === "hex") {
         return hexConverter().toBase64(input, options);
       }
       u8 = await textHelper().textToBuffer(input, options.outputCharset);

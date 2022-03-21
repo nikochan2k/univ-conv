@@ -44,7 +44,7 @@ class HexConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string") {
-      if (options.inputEncoding === "hex") {
+      if (options.inputStringType === "hex") {
         return input;
       }
     }

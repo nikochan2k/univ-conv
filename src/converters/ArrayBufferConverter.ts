@@ -10,8 +10,8 @@ import {
 import {
   AbstractConverter,
   ConvertOptions,
-  EMPTY_ARRAY_BUFFER,
   Data,
+  EMPTY_ARRAY_BUFFER,
   Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
@@ -33,12 +33,12 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     }
 
     if (typeof input === "string") {
-      const encoding = options.inputEncoding;
-      if (encoding === "base64") {
+      const inputStringType = options.inputStringType;
+      if (inputStringType === "base64") {
         return base64Converter().toArrayBuffer(input, options);
-      } else if (encoding === "binary") {
+      } else if (inputStringType === "binary") {
         return binaryConverter().toArrayBuffer(input, options);
-      } else if (encoding === "hex") {
+      } else if (inputStringType === "hex") {
         return hexConverter().toArrayBuffer(input, options);
       }
       input = await textHelper().textToBuffer(input, options.outputCharset);
