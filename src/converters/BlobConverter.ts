@@ -15,7 +15,7 @@ import {
 import { TEXT_HELPER } from "./TextHelper";
 import { ConvertOptions, InputType, Options } from "./types";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
-import { READABLE_STREAM_CONVERTER } from "./z";
+import { READABLE_STREAM_CONVERTER } from "./compatibility";
 
 class BlobConverter extends AbstractConverter<Blob> {
   public typeEquals(input: unknown): input is Blob {

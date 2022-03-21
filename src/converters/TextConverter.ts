@@ -11,7 +11,7 @@ import {
   BUFFER_CONVERTER,
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
-} from "./z";
+} from "./compatibility";
 
 class TextConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {

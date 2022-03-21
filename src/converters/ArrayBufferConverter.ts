@@ -9,7 +9,7 @@ import {
   BLOB_CONVERTER,
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
-} from "./z";
+} from "./compatibility";
 
 class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
   public typeEquals(input: unknown): input is ArrayBuffer {

@@ -5,7 +5,7 @@ import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
 import { ConvertOptions, InputType, Options } from "./types";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
-import { BLOB_CONVERTER } from "./z";
+import { BLOB_CONVERTER } from "./compatibility";
 
 class Base64Converter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {

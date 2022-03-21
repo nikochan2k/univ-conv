@@ -7,7 +7,7 @@ import {
 } from "./Converter";
 import { ConvertOptions, InputType, Options } from "./types";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
-import { BLOB_CONVERTER, READABLE_CONVERTER } from "./z";
+import { BLOB_CONVERTER, READABLE_CONVERTER } from "./compatibility";
 
 class ReadableStreamConverter extends AbstractConverter<
   ReadableStream<unknown>

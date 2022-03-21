@@ -11,7 +11,7 @@ import {
   BUFFER_CONVERTER,
   READABLE_CONVERTER,
   READABLE_STREAM_CONVERTER,
-} from "./z";
+} from "./compatibility";
 
 class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
   public typeEquals(input: unknown): input is Uint8Array {

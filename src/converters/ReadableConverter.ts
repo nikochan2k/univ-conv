@@ -12,7 +12,7 @@ import {
   BLOB_CONVERTER,
   BUFFER_CONVERTER,
   READABLE_STREAM_CONVERTER,
-} from "./z";
+} from "./compatibility";
 
 class ReadableConverter extends AbstractConverter<Readable> {
   public typeEquals(input: unknown): input is Readable {
