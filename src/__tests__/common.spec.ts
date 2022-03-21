@@ -54,19 +54,19 @@ it("base64", async () => {
   const chunk1 = await c.toBase64(head);
   const chunk2 = await c.toBase64(tail);
   const chunks = [chunk1, chunk2];
-  const merged = await c.merge(chunks, "text");
+  const merged = await c.merge(chunks, "text", { inputEncoding: "base64" });
   expect(expected).toBe(merged);
 });
 
-it("BinaryString", async () => {
+it("binary", async () => {
   const chunk1 = await c.toBinary(head);
   const chunk2 = await c.toBinary(tail);
   const chunks = [chunk1, chunk2];
-  const merged = await c.merge(chunks, "text");
+  const merged = await c.merge(chunks, "text", { inputEncoding: "binary" });
   expect(expected).toBe(merged);
 });
 
-it("Readable", async () => {
+it("readable", async () => {
   if (!hasReadable) {
     return;
   }
@@ -78,7 +78,7 @@ it("Readable", async () => {
   expect(expected).toBe(merged);
 });
 
-it("ReadableStream", async () => {
+it("readablestream", async () => {
   if (!hasReadableStream) {
     return;
   }
