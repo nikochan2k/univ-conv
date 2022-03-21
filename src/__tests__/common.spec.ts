@@ -10,7 +10,7 @@ const head = "大谷翔平";
 const tail = "ホームラン";
 const expected = "大谷翔平ホームラン";
 
-it("ArrayBuffer", async () => {
+it("arraybuffer", async () => {
   const chunk1 = await c.toArrayBuffer(head);
   const chunk2 = await c.toArrayBuffer(tail);
   const chunks = [chunk1, chunk2];
@@ -18,7 +18,7 @@ it("ArrayBuffer", async () => {
   expect(expected).toBe(merged);
 });
 
-it("Utin8Array", async () => {
+it("uint8array", async () => {
   const chunk1 = await c.toUint8Array(head);
   const chunk2 = await c.toUint8Array(tail);
   const chunks = [chunk1, chunk2];
@@ -26,7 +26,7 @@ it("Utin8Array", async () => {
   expect(expected).toBe(merged);
 });
 
-it("Buffer", async () => {
+it("buffer", async () => {
   if (!hasBuffer) {
     return;
   }
@@ -38,7 +38,7 @@ it("Buffer", async () => {
   expect(expected).toBe(merged);
 });
 
-it("Blob", async () => {
+it("blob", async () => {
   if (!hasBlob) {
     return;
   }
@@ -50,7 +50,7 @@ it("Blob", async () => {
   expect(expected).toBe(merged);
 });
 
-it("Base64", async () => {
+it("base64", async () => {
   const chunk1 = await c.toBase64(head);
   const chunk2 = await c.toBase64(tail);
   const chunks = [chunk1, chunk2];

@@ -22,7 +22,7 @@ class TextConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string") {
-      const encoding = options.encoding;
+      const encoding = options.inputEncoding;
       if (encoding === "base64") {
         return BASE64_CONVERTER.toText(input, options);
       } else if (encoding === "binary") {

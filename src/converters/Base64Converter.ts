@@ -22,7 +22,7 @@ class Base64Converter extends AbstractConverter<string> {
   ): Promise<string | undefined> {
     let u8: Uint8Array | undefined;
     if (typeof input === "string") {
-      const encoding = options.encoding;
+      const encoding = options.inputEncoding;
       if (encoding === "base64") {
         return input;
       } else if (encoding === "binary") {

@@ -36,7 +36,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     }
 
     if (typeof input === "string") {
-      const encoding = options.encoding;
+      const encoding = options.inputEncoding;
       if (encoding === "base64") {
         return BASE64_CONVERTER.toUint8Array(input, options);
       } else if (encoding === "binary") {

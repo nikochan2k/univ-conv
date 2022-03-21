@@ -33,7 +33,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     }
 
     if (typeof input === "string") {
-      const encoding = options.encoding;
+      const encoding = options.inputEncoding;
       if (encoding === "base64") {
         return BASE64_CONVERTER.toArrayBuffer(input, options);
       } else if (encoding === "binary") {

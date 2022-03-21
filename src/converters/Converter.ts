@@ -24,7 +24,7 @@ export type InputType =
 
 export interface Options {
   chunkSize: number;
-  encoding: StringType;
+  inputEncoding: StringType;
   inputCharset: CharsetType;
   outputCharset: CharsetType;
 }
@@ -231,7 +231,7 @@ export abstract class AbstractConverter<T extends InputType>
       );
     }
     if (typeof input === "string") {
-      if (!options.encoding) options.encoding = "text";
+      if (!options.inputEncoding) options.inputEncoding = "text";
     }
     if (!options.inputCharset) options.inputCharset = "utf8";
     if (!options.outputCharset) options.outputCharset = "utf8";
