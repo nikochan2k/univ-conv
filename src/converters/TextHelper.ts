@@ -6,10 +6,9 @@ export interface TextHelper {
 }
 
 export let TEXT_HELPER: TextHelper;
+/* eslint-disable */
 if (hasBuffer) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  TEXT_HELPER = require("./NodeEncoder");
+  TEXT_HELPER = require("./NodeTextHelper").NODE_TEXT_HELPER;
 } else {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  TEXT_HELPER = require("./DefaultEncoder");
+  TEXT_HELPER = require("./DefaultTextHelper").DEFAULT_TEXT_HELPER;
 }

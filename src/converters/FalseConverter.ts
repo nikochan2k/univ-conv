@@ -34,7 +34,7 @@ class FalseConverter implements Converter<any> {
     throw NOT_IMPLEMENTED_ERROR;
   }
 
-  public typeEquals(input: unknown): input is any {
+  public typeEquals(_: unknown): _ is any {
     return false;
   }
 }
