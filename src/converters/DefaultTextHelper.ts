@@ -1,4 +1,4 @@
-import { CharsetType } from "./core";
+import { Charset } from "./core";
 import { TextHelper } from "./TextHelper";
 
 const textEncoder = new TextEncoder();
@@ -23,7 +23,7 @@ function textToUtf16leBuffer(text: string) {
 }
 
 class DefaultTextHelper implements TextHelper {
-  bufferToText(u8: Uint8Array, bufCharset: CharsetType): Promise<string> {
+  bufferToText(u8: Uint8Array, bufCharset: Charset): Promise<string> {
     if (convert) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -50,7 +50,7 @@ class DefaultTextHelper implements TextHelper {
     throw new Error("Illegal encoding: " + bufCharset);
   }
 
-  textToBuffer(text: string, bufCharset: CharsetType): Promise<Uint8Array> {
+  textToBuffer(text: string, bufCharset: Charset): Promise<Uint8Array> {
     if (convert) {
       try {
         // eslint-disable-next-line

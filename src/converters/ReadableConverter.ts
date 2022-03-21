@@ -67,6 +67,16 @@ class ReadableConverter extends AbstractConverter<Readable> {
     return undefined;
   }
 
+  protected async _getSize(input: Readable, options: Options): Promise<number> {
+    const converter = uint8ArrayConverter();
+    let length = 0;
+    await this.handleReadable(input, async (chunk) => {
+      const u8 = await converter.convert(chunk, options);
+      length += u8.byteLength;
+    });
+    return length;
+  }
+
   protected _isEmpty(input: Readable): boolean {
     return !input.readable;
   }

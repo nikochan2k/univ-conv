@@ -59,6 +59,11 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     return undefined;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected _getSize(input: ArrayBuffer, _: Options): Promise<number> {
+    return Promise.resolve(input.byteLength);
+  }
+
   protected _isEmpty(input: ArrayBuffer): boolean {
     return 0 === input.byteLength;
   }

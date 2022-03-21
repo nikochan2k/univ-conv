@@ -55,6 +55,11 @@ class BlobConverter extends AbstractConverter<Blob> {
     return undefined;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected _getSize(input: Blob, _: Options): Promise<number> {
+    return Promise.resolve(input.size);
+  }
+
   protected _isEmpty(input: Blob): boolean {
     return input.size === 0;
   }

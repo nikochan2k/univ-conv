@@ -1,5 +1,5 @@
 import { bufferConverter } from "./converters";
-import { CharsetType } from "./core";
+import { Charset } from "./core";
 import { TextHelper } from "./TextHelper";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -12,10 +12,7 @@ try {
 }
 
 class NodeTextHelper implements TextHelper {
-  async bufferToText(
-    buf: Uint8Array,
-    bufCharset: CharsetType
-  ): Promise<string> {
+  async bufferToText(buf: Uint8Array, bufCharset: Charset): Promise<string> {
     let buffer: Buffer;
     if (bufferConverter().typeEquals(buf)) {
       buffer = buf;
@@ -42,10 +39,7 @@ class NodeTextHelper implements TextHelper {
     throw new Error("Illegal encoding: " + bufCharset);
   }
 
-  async textToBuffer(
-    text: string,
-    bufCharset: CharsetType
-  ): Promise<Uint8Array> {
+  async textToBuffer(text: string, bufCharset: Charset): Promise<Uint8Array> {
     if (bufCharset === "utf8" || bufCharset === "utf16le") {
       return Buffer.from(text, bufCharset as BufferEncoding);
     }

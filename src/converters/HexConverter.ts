@@ -1,5 +1,5 @@
-import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
 import { uint8ArrayConverter } from "./converters";
+import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
 import { textHelper } from "./TextHelper";
 
 const BYTE_TO_HEX: string[] = [];
@@ -60,6 +60,11 @@ class HexConverter extends AbstractConverter<string> {
     }
 
     return undefined;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected _getSize(input: string, _: Options): Promise<number> {
+    return Promise.resolve(input.length);
   }
 
   protected _isEmpty(input: string): boolean {

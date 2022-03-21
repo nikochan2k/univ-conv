@@ -44,6 +44,40 @@ export class Conv {
     return this._convert(input, to, options) as Promise<ReturnType<T>>;
   }
 
+  public getSize<T extends Type>(
+    input: InputType,
+    to: T,
+    options?: Partial<Options>
+  ) {
+    switch (to) {
+      case "arraybuffer":
+        return arrayBufferConverter().getSize(input as ArrayBuffer, options);
+      case "uint8array":
+        return uint8ArrayConverter().getSize(input as Uint8Array, options);
+      case "buffer":
+        return bufferConverter().getSize(input as Buffer, options);
+      case "blob":
+        return blobConverter().getSize(input as Blob, options);
+      case "readable":
+        return readableConverter().getSize(input as Readable, options);
+      case "readablestream":
+        return readableStreamConverter().getSize(
+          input as ReadableStream<unknown>,
+          options
+        );
+      case "text":
+        return textConverter().getSize(input as string, options);
+      case "base64":
+        return base64Converter().getSize(input as string, options);
+      case "binary":
+        return binaryConverter().getSize(input as string, options);
+      case "hex":
+        return hexConverter().getSize(input as string, options);
+    }
+
+    throw new Error("Illegal output type: " + to);
+  }
+
   public async merge<T extends Type>(
     chunks: InputType[],
     to: T,
@@ -204,6 +238,19 @@ export class Conv {
     throw new Error("Illegal output type: " + to);
   }
 
+  protected async _convertAll<T extends Type>(
+    chunks: InputType[],
+    to: T,
+    options?: Partial<ConvertOptions>
+  ): Promise<ReturnType<T>[]> {
+    const results: ReturnType<T>[] = [];
+    for (const chunk of chunks) {
+      const converted = await this.convert(chunk, to, options);
+      results.push(converted);
+    }
+    return results;
+  }
+
   protected async _merge<T extends Type>(
     chunks: InputType[],
     to: T,
@@ -238,19 +285,6 @@ export class Conv {
     }
 
     throw new Error("Illegal output type: " + to);
-  }
-
-  protected async _convertAll<T extends Type>(
-    chunks: InputType[],
-    to: T,
-    options?: Partial<ConvertOptions>
-  ): Promise<ReturnType<T>[]> {
-    const results: ReturnType<T>[] = [];
-    for (const chunk of chunks) {
-      const converted = await this.convert(chunk, to, options);
-      results.push(converted);
-    }
-    return results;
   }
 }
 

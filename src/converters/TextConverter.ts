@@ -54,6 +54,11 @@ class TextConverter extends AbstractConverter<string> {
     return undefined;
   }
 
+  protected async _getSize(input: string, options: Options): Promise<number> {
+    const u8 = await this.toUint8Array(input, options);
+    return u8.byteLength;
+  }
+
   protected _isEmpty(input: string): boolean {
     return !input;
   }

@@ -47,6 +47,11 @@ class BinaryConverter extends AbstractConverter<string> {
     return undefined;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected _getSize(input: string, _: Options): Promise<number> {
+    return Promise.resolve(input.length);
+  }
+
   protected _isEmpty(input: string): boolean {
     return !input;
   }

@@ -1,9 +1,9 @@
-import { CharsetType } from "./core";
+import { Charset } from "./core";
 import { hasBuffer } from "./util";
 
 export interface TextHelper {
-  bufferToText(buf: Uint8Array, bufCharset: CharsetType): Promise<string>;
-  textToBuffer(text: string, bufCharset: CharsetType): Promise<Uint8Array>;
+  bufferToText(buf: Uint8Array, bufCharset: Charset): Promise<string>;
+  textToBuffer(text: string, bufCharset: Charset): Promise<Uint8Array>;
 }
 
 let TEXT_HELPER: TextHelper;

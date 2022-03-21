@@ -40,6 +40,11 @@ class BufferConverter extends AbstractConverter<Buffer> {
     return undefined;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected _getSize(input: Buffer, _: Options): Promise<number> {
+    return Promise.resolve(input.byteLength);
+  }
+
   protected _isEmpty(input: Buffer): boolean {
     return 0 === input.byteLength;
   }

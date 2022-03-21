@@ -1,12 +1,6 @@
 import type { Readable } from "stream";
 
-export type CharsetType =
-  | "utf8"
-  | "utf16le"
-  | "utf16be"
-  | "jis"
-  | "eucjp"
-  | "sjis";
+export type Charset = "utf8" | "utf16le" | "utf16be" | "jis" | "eucjp" | "sjis";
 export type StringType = "text" | "base64" | "binary" | "hex";
 export type BinaryType = "arraybuffer" | "uint8array" | "buffer" | "blob";
 export type BlockType = StringType | BinaryType;
@@ -24,9 +18,9 @@ export type InputType =
 
 export interface Options {
   chunkSize: number;
+  inputCharset: Charset;
   inputEncoding: StringType;
-  inputCharset: CharsetType;
-  outputCharset: CharsetType;
+  outputCharset: Charset;
 }
 export interface ConvertOptions extends Options {
   length?: number;
@@ -35,6 +29,7 @@ export interface ConvertOptions extends Options {
 
 export interface Converter<T extends InputType> {
   convert(input: InputType, options?: Partial<ConvertOptions>): Promise<T>;
+  getSize(input: T, options?: Partial<Options>): Promise<number>;
   merge(chunks: T[], options?: Partial<Options>): Promise<T>;
   toArrayBuffer(input: T, options: ConvertOptions): Promise<ArrayBuffer>;
   toBase64(input: T, options: ConvertOptions): Promise<string>;
@@ -77,6 +72,10 @@ export abstract class AbstractConverter<T extends InputType>
     throw new Error(
       `[${this.constructor.name}] Illegal input: ${typeOf(input)}`
     );
+  }
+
+  public getSize(input: T, options?: Partial<Options>): Promise<number> {
+    return this._getSize(input, this._initOptions(input, options));
   }
 
   public merge(chunks: T[], options?: Partial<Options>): Promise<T> {
@@ -130,6 +129,7 @@ export abstract class AbstractConverter<T extends InputType>
     input: InputType,
     options: ConvertOptions
   ): Promise<T | undefined>;
+  protected abstract _getSize(input: T, options: Options): Promise<number>;
   protected abstract _isEmpty(input: T): boolean;
   protected abstract _merge(chunks: T[], options: Options): Promise<T>;
   protected abstract _toArrayBuffer(
