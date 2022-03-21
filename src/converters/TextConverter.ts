@@ -1,7 +1,12 @@
 import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
 import { BASE64_CONVERTER } from "./Base64Converter";
 import { BINARY_CONVERTER } from "./BinaryConverter";
-import { AbstractConverter, ConvertOptions, Options } from "./Converter";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  InputType,
+  Options,
+} from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
@@ -13,7 +18,7 @@ class TextConverter extends AbstractConverter<string> {
   }
 
   protected async _convert(
-    input: unknown,
+    input: InputType,
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (!options.outputCharset) options.outputCharset = "utf16le";
@@ -27,7 +32,7 @@ class TextConverter extends AbstractConverter<string> {
       } else if (encoding === "hex") {
         return HEX_CONVERTER.toText(input, options);
       }
-      input = TEXT_HELPER.textToBuffer(input, options.outputCharset);
+      input = await TEXT_HELPER.textToBuffer(input, options.outputCharset);
     }
     if (ARRAY_BUFFER_CONVERTER.typeEquals(input)) {
       return ARRAY_BUFFER_CONVERTER.toText(input, options);

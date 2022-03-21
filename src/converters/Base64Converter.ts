@@ -1,6 +1,11 @@
 import { decode, encode } from "base64-arraybuffer";
 import { BINARY_CONVERTER } from "./BinaryConverter";
-import { AbstractConverter, ConvertOptions, Options } from "./Converter";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  InputType,
+  Options,
+} from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
@@ -12,7 +17,7 @@ class Base64Converter extends AbstractConverter<string> {
   }
 
   protected async _convert(
-    input: unknown,
+    input: InputType,
     options: ConvertOptions
   ): Promise<string | undefined> {
     let u8: Uint8Array | undefined;

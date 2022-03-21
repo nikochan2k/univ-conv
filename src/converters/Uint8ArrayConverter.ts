@@ -6,6 +6,7 @@ import {
   AbstractConverter,
   ConvertOptions,
   EMPTY_UINT8_ARRAY,
+  InputType,
   Options,
 } from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
@@ -27,7 +28,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
   }
 
   protected async _convert(
-    input: unknown,
+    input: InputType,
     options: ConvertOptions
   ): Promise<Uint8Array | undefined> {
     if (this.typeEquals(input)) {

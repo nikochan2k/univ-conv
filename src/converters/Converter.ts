@@ -13,6 +13,15 @@ export type BlockType = StringType | BinaryType;
 export type StreamType = "readable" | "readablestream";
 export type Type = BlockType | StreamType;
 
+export type InputType =
+  | string
+  | ArrayBuffer
+  | Uint8Array
+  | Buffer
+  | Blob
+  | Readable
+  | ReadableStream<unknown>;
+
 export interface Options {
   chunkSize: number;
   encoding: StringType;
@@ -24,8 +33,8 @@ export interface ConvertOptions extends Options {
   start?: number;
 }
 
-export interface Converter<T> {
-  convert(input: unknown, options?: Partial<ConvertOptions>): Promise<T>;
+export interface Converter<T extends InputType> {
+  convert(input: InputType, options?: Partial<ConvertOptions>): Promise<T>;
   merge(chunks: T[], options?: Partial<Options>): Promise<T>;
   toArrayBuffer(input: T, options: ConvertOptions): Promise<ArrayBuffer>;
   toBase64(input: T, options: ConvertOptions): Promise<string>;
@@ -113,21 +122,28 @@ if (typeof stream?.Readable === "function") {
 
 export const EMPTY_ARRAY_BUFFER = new ArrayBuffer(0);
 export const EMPTY_UINT8_ARRAY = new Uint8Array(0);
-export abstract class AbstractConverter<T> implements Converter<T> {
+export abstract class AbstractConverter<T extends InputType>
+  implements Converter<T>
+{
   public async convert(
-    input: unknown,
+    input: InputType,
     options?: Partial<ConvertOptions>
   ): Promise<T> {
     if (!input) {
       return this.empty();
     }
 
-    const converted = await this._convert(input, this._initOptions(options));
-    if (converted) {
+    const converted = await this._convert(
+      input,
+      this._initOptions(input, options)
+    );
+    if (typeof converted !== "undefined") {
       return converted;
     }
 
-    throw new Error("Illegal input: " + typeOf(input));
+    throw new Error(
+      `[${this.constructor.name}] Illegal input: ${typeOf(input)}`
+    );
   }
 
   public merge(chunks: T[], options?: Partial<Options>): Promise<T> {
@@ -138,7 +154,10 @@ export abstract class AbstractConverter<T> implements Converter<T> {
       return Promise.resolve(chunks[0] as T);
     }
 
-    return this._merge(chunks, this._initOptions(options));
+    return this._merge(
+      chunks,
+      this._initOptions(chunks[0] as InputType, options)
+    );
   }
 
   public toArrayBuffer(
@@ -172,10 +191,10 @@ export abstract class AbstractConverter<T> implements Converter<T> {
     return this._toUint8Array(input, options);
   }
 
-  public abstract typeEquals(input: unknown): input is T;
+  public abstract typeEquals(input: InputType): input is T;
 
   protected abstract _convert(
-    input: unknown,
+    input: InputType,
     options: ConvertOptions
   ): Promise<T | undefined>;
   protected abstract _isEmpty(input: T): boolean;
@@ -199,7 +218,7 @@ export abstract class AbstractConverter<T> implements Converter<T> {
   protected abstract empty(): T;
 
   private _initOptions<T extends Options>(
-    input: unknown,
+    input: InputType,
     options?: Partial<ConvertOptions>
   ): ConvertOptions {
     if (!options) options = {};
@@ -247,13 +266,13 @@ export function handleFileReader<T extends string | ArrayBuffer>(
 
 export async function handleReadableStream(
   stream: ReadableStream,
-  onData: (chunk: unknown) => Promise<void> | void
+  onData: (chunk: InputType) => Promise<void> | void
 ): Promise<void> {
   const reader = stream.getReader();
   try {
     let res = await reader.read();
     while (!res.done) {
-      const chunk = res.value as unknown;
+      const chunk = res.value as InputType;
       if (chunk != null) {
         await onData(chunk);
       }

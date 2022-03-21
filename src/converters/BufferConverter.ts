@@ -3,6 +3,7 @@ import {
   AbstractConverter,
   ConvertOptions,
   EMPTY_BUFFER,
+  InputType,
   Options,
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
@@ -16,7 +17,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
   }
 
   protected async _convert(
-    input: unknown,
+    input: InputType,
     options: ConvertOptions
   ): Promise<Buffer | undefined> {
     if (this.typeEquals(input)) {

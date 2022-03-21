@@ -5,6 +5,7 @@ import {
   handleReadableStream,
   hasBlob,
   hasStreamOnBlob,
+  InputType,
   Options,
 } from "./Converter";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
@@ -22,7 +23,7 @@ class ReadableStreamConverter extends AbstractConverter<
   }
 
   protected async _convert(
-    input: unknown,
+    input: InputType,
     options: ConvertOptions
   ): Promise<ReadableStream<unknown> | undefined> {
     if (this.typeEquals(input)) {

@@ -12,6 +12,7 @@ import {
   hasReadAsArrayBufferOnBlob,
   hasStreamOnBlob,
   hasTextOnBlob,
+  InputType,
   Options,
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
@@ -28,7 +29,7 @@ class BlobConverter extends AbstractConverter<Blob> {
   }
 
   protected async _convert(
-    input: unknown,
+    input: InputType,
     options: ConvertOptions
   ): Promise<Blob | undefined> {
     if (this.typeEquals(input)) {

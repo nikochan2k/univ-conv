@@ -4,6 +4,7 @@ import {
   AbstractConverter,
   ConvertOptions,
   EMPTY_ARRAY_BUFFER,
+  InputType,
   Options,
 } from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
@@ -24,7 +25,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
   }
 
   protected async _convert(
-    input: unknown,
+    input: InputType,
     options: ConvertOptions
   ): Promise<ArrayBuffer | undefined> {
     if (this.typeEquals(input)) {
@@ -40,7 +41,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
       } else if (encoding === "hex") {
         return HEX_CONVERTER.toArrayBuffer(input, options);
       }
-      input = TEXT_HELPER.textToBuffer(input, options.outputCharset);
+      input = await TEXT_HELPER.textToBuffer(input, options.outputCharset);
     }
     if (UINT8_ARRAY_CONVERTER.typeEquals(input)) {
       return UINT8_ARRAY_CONVERTER.toArrayBuffer(input, options);

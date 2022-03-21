@@ -5,6 +5,7 @@ import {
   ConvertOptions,
   EMPTY_READABLE,
   hasStreamOnBlob,
+  InputType,
   Options,
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
@@ -25,7 +26,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
   }
 
   protected async _convert(
-    input: unknown,
+    input: InputType,
     options: ConvertOptions
   ): Promise<Readable | undefined> {
     if (this.typeEquals(input)) {
@@ -165,7 +166,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
 
   private async handleReadable(
     readable: Readable,
-    onData: (chunk: unknown) => Promise<void> | void
+    onData: (chunk: InputType) => Promise<void> | void
   ): Promise<void> {
     if (readable.destroyed) {
       return;
@@ -180,6 +181,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
         resolve();
         readable.removeAllListeners();
       });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       readable.on("data", (chunk) => void (async () => await onData(chunk))());
     });
   }

@@ -5,6 +5,7 @@ import {
   handleFileReader,
   hasBuffer,
   hasReadAsBinaryStringOnBlob,
+  InputType,
   Options,
 } from "./Converter";
 import { TEXT_HELPER } from "./TextHelper";
@@ -17,7 +18,7 @@ class BinaryConverter extends AbstractConverter<string> {
   }
 
   protected async _convert(
-    input: unknown,
+    input: InputType,
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string") {
