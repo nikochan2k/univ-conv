@@ -1,4 +1,5 @@
-import { CharsetType, hasBuffer } from "./core";
+import { CharsetType } from "./core";
+import { hasBuffer } from "./util";
 
 export interface TextHelper {
   bufferToText(buf: Uint8Array, bufCharset: CharsetType): Promise<string>;

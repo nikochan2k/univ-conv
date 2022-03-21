@@ -3,16 +3,13 @@ import {
   blobConverter,
   uint8ArrayConverter,
 } from "./converters";
+import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
+import { textHelper } from "./TextHelper";
 import {
-  AbstractConverter,
-  ConvertOptions,
   handleFileReader,
   hasBuffer,
   hasReadAsBinaryStringOnBlob,
-  InputType,
-  Options,
-} from "./core";
-import { textHelper } from "./TextHelper";
+} from "./util";
 
 class BinaryConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {

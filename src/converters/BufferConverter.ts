@@ -1,12 +1,7 @@
 import { arrayBufferConverter, uint8ArrayConverter } from "./converters";
-import {
-  AbstractConverter,
-  ConvertOptions,
-  EMPTY_BUFFER,
-  InputType,
-  Options,
-} from "./core";
+import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
 import { textHelper } from "./TextHelper";
+import { EMPTY_BUFFER } from "./util";
 
 class BufferConverter extends AbstractConverter<Buffer> {
   public typeEquals(input: unknown): input is Buffer {

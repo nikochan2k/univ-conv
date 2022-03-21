@@ -6,15 +6,9 @@ import {
   readableStreamConverter,
   uint8ArrayConverter,
 } from "./converters";
-import {
-  AbstractConverter,
-  ConvertOptions,
-  EMPTY_READABLE,
-  hasStreamOnBlob,
-  InputType,
-  Options,
-} from "./core";
+import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
 import { textHelper } from "./TextHelper";
+import { EMPTY_READABLE, hasStreamOnBlob } from "./util";
 
 class ReadableConverter extends AbstractConverter<Readable> {
   public typeEquals(input: unknown): input is Readable {

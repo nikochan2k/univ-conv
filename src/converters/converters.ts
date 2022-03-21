@@ -1,12 +1,12 @@
 import type { Readable } from "stream";
+import { Converter } from "./core";
+import { FalseConverter } from "./FalseConverter";
 import {
-  Converter,
   EMPTY_BLOB,
   EMPTY_BUFFER,
   EMPTY_READABLE,
   EMPTY_READABLE_STREAM,
-} from "./core";
-import { FalseConverter } from "./FalseConverter";
+} from "./util";
 
 /* eslint-disable */
 

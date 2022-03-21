@@ -3,16 +3,13 @@ import {
   readableConverter,
   uint8ArrayConverter,
 } from "./converters";
+import { AbstractConverter, ConvertOptions, InputType, Options } from "./core";
 import {
-  AbstractConverter,
-  ConvertOptions,
   EMPTY_READABLE_STREAM,
   handleReadableStream,
   hasBlob,
   hasStreamOnBlob,
-  InputType,
-  Options,
-} from "./core";
+} from "./util";
 
 class ReadableStreamConverter extends AbstractConverter<
   ReadableStream<unknown>
