@@ -10,7 +10,7 @@ import { TEXT_HELPER } from "./TextHelper";
 import { UINT8_ARRAY_CONVERTER } from "./Uint8ArrayConverter";
 import { BLOB_CONVERTER } from "./z";
 
-class BinaryStringConverter extends AbstractConverter<string> {
+class BinaryConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }
@@ -97,4 +97,4 @@ class BinaryStringConverter extends AbstractConverter<string> {
   }
 }
 
-export const BINARY_STRING_CONVERTER = new BinaryStringConverter();
+export const BINARY_CONVERTER = new BinaryConverter();

@@ -1,5 +1,5 @@
 import { decode, encode } from "base64-arraybuffer";
-import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
+import { BINARY_CONVERTER } from "./BinaryConverter";
 import { AbstractConverter, ConvertOptions } from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
@@ -21,7 +21,7 @@ class Base64Converter extends AbstractConverter<string> {
       if (encoding === "base64") {
         return input;
       } else if (encoding === "binary") {
-        return BINARY_STRING_CONVERTER.toBase64(input, options);
+        return BINARY_CONVERTER.toBase64(input, options);
       } else if (encoding === "hex") {
         return HEX_CONVERTER.toBase64(input, options);
       }

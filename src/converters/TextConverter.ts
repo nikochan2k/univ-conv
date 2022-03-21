@@ -1,6 +1,6 @@
 import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
 import { BASE64_CONVERTER } from "./Base64Converter";
-import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
+import { BINARY_CONVERTER } from "./BinaryConverter";
 import { AbstractConverter, ConvertOptions } from "./Converter";
 import { HEX_CONVERTER } from "./HexConverter";
 import { TEXT_HELPER } from "./TextHelper";
@@ -23,7 +23,7 @@ class TextConverter extends AbstractConverter<string> {
       if (encoding === "base64") {
         return BASE64_CONVERTER.toText(input, options);
       } else if (encoding === "binary") {
-        return BINARY_STRING_CONVERTER.toText(input, options);
+        return BINARY_CONVERTER.toText(input, options);
       } else if (encoding === "hex") {
         return HEX_CONVERTER.toText(input, options);
       }

@@ -1,7 +1,7 @@
 import { encode } from "base64-arraybuffer";
 import { ARRAY_BUFFER_CONVERTER } from "./ArrayBufferConverter";
 import { BASE64_CONVERTER } from "./Base64Converter";
-import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
+import { BINARY_CONVERTER } from "./BinaryConverter";
 import {
   AbstractConverter,
   ConvertOptions,
@@ -41,7 +41,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
       if (encoding === "base64") {
         return BASE64_CONVERTER.toUint8Array(input, options);
       } else if (encoding === "binary") {
-        return BINARY_STRING_CONVERTER.toUint8Array(input, options);
+        return BINARY_CONVERTER.toUint8Array(input, options);
       } else if (encoding === "hex") {
         return HEX_CONVERTER.toUint8Array(input, options);
       } else {

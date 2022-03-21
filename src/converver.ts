@@ -2,7 +2,7 @@ import type { Readable, Writable } from "stream";
 import {
   ARRAY_BUFFER_CONVERTER,
   BASE64_CONVERTER,
-  BINARY_STRING_CONVERTER,
+  BINARY_CONVERTER,
   BLOB_CONVERTER,
   BUFFER_CONVERTER,
   closeStream,
@@ -182,7 +182,7 @@ export class Conv {
         if (encoding === "base64") {
           return BASE64_CONVERTER.convert(input, options);
         } else if (encoding === "binary") {
-          return BINARY_STRING_CONVERTER.convert(input, options);
+          return BINARY_CONVERTER.convert(input, options);
         } else if (encoding === "hex") {
           return HEX_CONVERTER.convert(input, options);
         } else {
@@ -223,7 +223,7 @@ export class Conv {
         if (encoding === "base64") {
           return BASE64_CONVERTER.merge(strings, options);
         } else if (encoding === "binary") {
-          return BINARY_STRING_CONVERTER.convert(strings, options);
+          return BINARY_CONVERTER.convert(strings, options);
         } else if (encoding === "hex") {
           return HEX_CONVERTER.convert(strings, options);
         } else {

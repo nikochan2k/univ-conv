@@ -1,5 +1,5 @@
 import { BASE64_CONVERTER } from "./Base64Converter";
-import { BINARY_STRING_CONVERTER } from "./BinaryStringConverter";
+import { BINARY_CONVERTER } from "./BinaryConverter";
 import {
   AbstractConverter,
   ConvertOptions,
@@ -36,7 +36,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
       if (encoding === "base64") {
         return BASE64_CONVERTER.toArrayBuffer(input, options);
       } else if (encoding === "binary") {
-        return BINARY_STRING_CONVERTER.toArrayBuffer(input, options);
+        return BINARY_CONVERTER.toArrayBuffer(input, options);
       } else if (encoding === "hex") {
         return HEX_CONVERTER.toArrayBuffer(input, options);
       }
