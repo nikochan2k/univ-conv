@@ -122,9 +122,9 @@ export class DefaultConverter {
         closeStream(output);
         closeStream(stream);
       }
+    } else {
+      throw new Error("Illegal output type: " + typeOf(output));
     }
-
-    throw new Error("Illegal output type: " + typeOf(output));
   }
 
   public toArrayBuffer(input: Data, options?: Partial<ConvertOptions>) {
