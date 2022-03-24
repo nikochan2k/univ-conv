@@ -44,38 +44,33 @@ export class DefaultConverter {
     return this._convert(input, to, options) as Promise<ReturnData<T>>;
   }
 
-  public getSize<T extends DataType>(
-    input: Data,
-    to: T,
-    options?: Partial<Options>
-  ) {
-    switch (to) {
-      case "arraybuffer":
-        return arrayBufferConverter().getSize(input as ArrayBuffer, options);
-      case "uint8array":
-        return uint8ArrayConverter().getSize(input as Uint8Array, options);
-      case "buffer":
-        return bufferConverter().getSize(input as Buffer, options);
-      case "blob":
-        return blobConverter().getSize(input as Blob, options);
-      case "readable":
-        return readableConverter().getSize(input as Readable, options);
-      case "readablestream":
-        return readableStreamConverter().getSize(
-          input as ReadableStream<unknown>,
-          options
-        );
-      case "text":
-        return textConverter().getSize(input as string, options);
-      case "base64":
-        return base64Converter().getSize(input as string, options);
-      case "binary":
-        return binaryConverter().getSize(input as string, options);
-      case "hex":
-        return hexConverter().getSize(input as string, options);
+  public getSize(input: Data, options?: Partial<Options>) {
+    if (arrayBufferConverter().typeEquals(input)) {
+      return arrayBufferConverter().getSize(input as ArrayBuffer, options);
+    } else if (bufferConverter().typeEquals(input)) {
+      return bufferConverter().getSize(input as Buffer, options);
+    } else if (uint8ArrayConverter().typeEquals(input)) {
+      return uint8ArrayConverter().getSize(input as Uint8Array, options);
+    } else if (blobConverter().typeEquals(input)) {
+      return blobConverter().getSize(input, options);
+    } else if (readableConverter().typeEquals(input)) {
+      return readableConverter().getSize(input, options);
+    } else if (readableStreamConverter().typeEquals(input)) {
+      return readableStreamConverter().getSize(input, options);
+    } else if (typeof input === "string") {
+      const type = options?.srcStringType;
+      if (type == null || type === "text") {
+        return textConverter().getSize(input, options);
+      } else if (type === "base64") {
+        return base64Converter().getSize(input, options);
+      } else if (type === "binary") {
+        return binaryConverter().getSize(input, options);
+      } else if (type === "hex") {
+        return hexConverter().getSize(input, options);
+      }
     }
 
-    throw new Error("Illegal output type: " + to);
+    throw new Error("Illegal output type: " + typeOf(input));
   }
 
   public async merge<T extends DataType>(
@@ -215,10 +210,10 @@ export class DefaultConverter {
     switch (to) {
       case "arraybuffer":
         return arrayBufferConverter().convert(input, options);
-      case "uint8array":
-        return uint8ArrayConverter().convert(input, options);
       case "buffer":
         return bufferConverter().convert(input, options);
+      case "uint8array":
+        return uint8ArrayConverter().convert(input, options);
       case "blob":
         return blobConverter().convert(input, options);
       case "readable":
@@ -261,10 +256,10 @@ export class DefaultConverter {
     switch (to) {
       case "arraybuffer":
         return arrayBufferConverter().merge(results as ArrayBuffer[], options);
-      case "uint8array":
-        return uint8ArrayConverter().merge(results as Uint8Array[], options);
       case "buffer":
         return bufferConverter().merge(results as Buffer[], options);
+      case "uint8array":
+        return uint8ArrayConverter().merge(results as Uint8Array[], options);
       case "blob":
         return blobConverter().merge(results as Blob[], options);
       case "readable":
