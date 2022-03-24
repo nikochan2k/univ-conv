@@ -31,7 +31,7 @@ export type ReturnData<T extends DataType> = T extends "arraybuffer"
   ? Blob
   : T extends "readable"
   ? Readable
-  : T extends "readblestream"
+  : T extends "readablestream"
   ? ReadableStream<unknown>
   : string;
 
