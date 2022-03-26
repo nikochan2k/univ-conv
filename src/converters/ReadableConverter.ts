@@ -8,15 +8,16 @@ import {
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
-import { EMPTY_READABLE, handleReadable, hasStreamOnBlob } from "./util";
+import {
+  EMPTY_READABLE,
+  handleReadable,
+  hasStreamOnBlob,
+  isReadable,
+} from "./util";
 
 class ReadableConverter extends AbstractConverter<Readable> {
   public typeEquals(input: unknown): input is Readable {
-    return (
-      input != null &&
-      typeof (input as Readable).pipe === "function" &&
-      typeof (input as Readable)._read === "function"
-    );
+    return isReadable(input);
   }
 
   protected async _convert(

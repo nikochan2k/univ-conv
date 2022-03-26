@@ -9,17 +9,14 @@ import {
   handleReadableStream,
   hasBlob,
   hasStreamOnBlob,
+  isReadableStream,
 } from "./util";
 
 class ReadableStreamConverter extends AbstractConverter<
   ReadableStream<unknown>
 > {
   public typeEquals(input: unknown): input is ReadableStream {
-    return (
-      input != null &&
-      typeof (input as ReadableStream<unknown>).getReader === "function" &&
-      typeof (input as ReadableStream<unknown>).cancel === "function"
-    );
+    return isReadableStream(input);
   }
 
   protected async _convert(
