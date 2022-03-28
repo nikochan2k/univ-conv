@@ -197,15 +197,15 @@ export function closeStream(
     stream.destroy(reason as Error | undefined);
   } else if (isReadableStream(stream)) {
     if (reason) {
-      stream.cancel(reason); // eslint-disable-line @typescript-eslint/no-floating-promises
+      stream.cancel(reason).catch(() => {}); // eslint-disable-line @typescript-eslint/no-empty-function
     } else {
-      stream.cancel(); // eslint-disable-line @typescript-eslint/no-floating-promises
+      stream.cancel().catch(() => {}); // eslint-disable-line @typescript-eslint/no-empty-function
     }
   } else if (isWritableStream(stream)) {
     if (reason) {
-      stream.abort(reason); // eslint-disable-line @typescript-eslint/no-floating-promises
+      stream.abort(reason).catch(() => {}); // eslint-disable-line @typescript-eslint/no-empty-function
     } else {
-      stream.close(); // eslint-disable-line @typescript-eslint/no-floating-promises
+      stream.close().catch(() => {}); // eslint-disable-line @typescript-eslint/no-empty-function
     }
   }
 }
