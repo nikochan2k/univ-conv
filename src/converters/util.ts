@@ -196,23 +196,17 @@ export function closeStream(
   if (isReadable(stream) || isWritable(stream)) {
     stream.destroy(reason as Error | undefined);
   } else if (isReadableStream(stream)) {
-    const reader = stream.getReader();
-    reader.releaseLock();
-    reader
-      .cancel()
-      .catch((e) => console.warn(e))
-      .finally(() => {
-        // stream.cancel(reason).catch((e) => console.warn(e));
-      });
+    if (reason) {
+      stream.cancel(reason); // eslint-disable-line @typescript-eslint/no-floating-promises
+    } else {
+      stream.cancel(); // eslint-disable-line @typescript-eslint/no-floating-promises
+    }
   } else if (isWritableStream(stream)) {
-    const writer = stream.getWriter();
-    writer.releaseLock();
-    writer
-      .close()
-      .catch((e) => console.warn(e))
-      .finally(() => {
-        stream.close().catch((e) => console.warn(e));
-      });
+    if (reason) {
+      stream.abort(reason); // eslint-disable-line @typescript-eslint/no-floating-promises
+    } else {
+      stream.close(); // eslint-disable-line @typescript-eslint/no-floating-promises
+    }
   }
 }
 

@@ -9,6 +9,7 @@ import {
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
 import {
+  closeStream,
   EMPTY_READABLE,
   handleReadable,
   hasStreamOnBlob,
@@ -46,16 +47,10 @@ class ReadableConverter extends AbstractConverter<Readable> {
               }
               if (done) {
                 this.push(null);
-                reader.cancel().catch((e) => console.debug(e));
+                closeStream(stream);
               }
             })
-            .catch((e) => {
-              reader.cancel(e).catch((e) => console.debug(e));
-            })
-            .finally(() => {
-              reader.releaseLock();
-              stream.cancel().catch((e) => console.debug(e));
-            });
+            .catch((e) => closeStream(stream, e));
         },
       });
     }

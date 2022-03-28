@@ -5,6 +5,7 @@ import {
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import {
+  closeStream,
   EMPTY_READABLE_STREAM,
   handleReadableStream,
   hasBlob,
@@ -150,7 +151,7 @@ class ReadableStreamConverter extends AbstractConverter<
             converter.error(e);
             for (let j = i; j < end; j++) {
               const s = streams[j] as ReadableStream<unknown>;
-              this.close(s);
+              closeStream(s);
             }
           });
       } else {
@@ -226,17 +227,6 @@ class ReadableStreamConverter extends AbstractConverter<
 
   protected empty(): ReadableStream<unknown> {
     return EMPTY_READABLE_STREAM;
-  }
-
-  private close(stream: ReadableStream<unknown>) {
-    const reader = stream.getReader();
-    reader
-      .cancel()
-      .catch((e) => console.debug(e))
-      .finally(() => {
-        reader.releaseLock();
-        stream.cancel().catch((e) => console.debug(e));
-      });
   }
 }
 
