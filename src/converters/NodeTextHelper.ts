@@ -51,7 +51,7 @@ class NodeTextHelper implements TextHelper {
           from: "UNICODE",
           type: "arraybuffer",
         });
-        return Promise.resolve(new Uint8Array(ab));
+        return Promise.resolve(Buffer.from(ab));
       } catch {
         // Do nothing
       }
