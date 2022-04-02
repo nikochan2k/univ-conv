@@ -167,7 +167,7 @@ export function isReadable(stream: unknown): stream is Readable {
     hasReadable &&
     stream != null &&
     typeof (stream as Readable).pipe === "function" &&
-    typeof (stream as Readable)._read === "function"
+    (stream as Readable).readable
   );
 }
 
@@ -176,7 +176,7 @@ export function isWritable(stream: unknown): stream is Writable {
     hasWritable &&
     stream != null &&
     typeof (stream as Writable).pipe === "function" &&
-    typeof (stream as Writable)._write === "function"
+    (stream as Writable).writable
   );
 }
 
