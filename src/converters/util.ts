@@ -162,14 +162,18 @@ export async function handleReadable(
     readable.once("end", () => {
       Promise.all(promises)
         .catch((e) => console.warn(e))
-        .finally(() => readable.destroy());
+        .finally(() => {
+          resolve();
+          readable.destroy();
+          readable.removeAllListeners();
+        });
     });
-    readable.once("close", () => {
-      resolve();
-      readable.removeAllListeners();
-    });
-    readable.on("data", (chunk) => {
-      promises.push(onData(chunk)); // eslint-disable-line
+    readable.on("readable", () => {
+      let chunk: any; // eslint-disable-line
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      while ((chunk = readable.read()) !== null) {
+        promises.push(onData(chunk)); // eslint-disable-line
+      }
     });
   });
 }

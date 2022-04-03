@@ -46,7 +46,13 @@ class ReadableStreamConverter extends AbstractConverter<
             converter.close();
             readable.removeAllListeners();
           });
-          readable.on("data", (chunk) => converter.enqueue(chunk));
+          readable.on("readable", () => {
+            let chunk: any; // eslint-disable-line
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            while ((chunk = readable.read()) !== null) {
+              converter.enqueue(chunk);
+            }
+          });
         },
         cancel: (err) => {
           readable.destroy(err as Error);
