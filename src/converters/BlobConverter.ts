@@ -154,7 +154,9 @@ class BlobConverter extends AbstractConverter<Blob> {
       const readable = input.stream() as unknown as ReadableStream<unknown>;
       const chunks: Uint8Array[] = [];
       await handleReadableStream(readable, async (chunk) => {
-        const u8 = await converter.convert(chunk);
+        const u8 = await converter.convert(chunk, {
+          bufferSize: options.bufferSize,
+        });
         chunks.push(u8);
       });
       return converter.merge(chunks);

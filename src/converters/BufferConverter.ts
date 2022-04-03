@@ -1,4 +1,9 @@
-import { arrayBufferConverter, uint8ArrayConverter } from "./converters";
+import {
+  arrayBufferConverter,
+  readableConverter,
+  readableStreamConverter,
+  uint8ArrayConverter,
+} from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
 import { EMPTY_BUFFER } from "./util";
@@ -33,6 +38,14 @@ class BufferConverter extends AbstractConverter<Buffer> {
     }
     if (uint8ArrayConverter().typeEquals(input)) {
       return Buffer.from(input.buffer, input.byteOffset, input.byteLength);
+    }
+    if (readableConverter().typeEquals(input)) {
+      const u8 = await readableConverter().toUint8Array(input, options);
+      return u8 as Buffer;
+    }
+    if (readableStreamConverter().typeEquals(input)) {
+      const u8 = await readableStreamConverter().toUint8Array(input, options);
+      return Buffer.from(u8.buffer);
     }
 
     const ab = await arrayBufferConverter().convert(input, options);

@@ -4,7 +4,6 @@ import {
   blobConverter,
   bufferConverter,
   readableStreamConverter,
-  uint8ArrayConverter,
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
@@ -128,8 +127,8 @@ class ReadableConverter extends AbstractConverter<Readable> {
     input: Readable,
     options: ConvertOptions
   ): Promise<string> {
-    const u8 = await this._toUint8Array(input, options);
-    return uint8ArrayConverter().toBase64(u8, options);
+    const buffer = (await this._toUint8Array(input, options)) as Buffer;
+    return bufferConverter().toBase64(buffer, options);
   }
 
   protected async _toText(
@@ -144,15 +143,15 @@ class ReadableConverter extends AbstractConverter<Readable> {
     input: Readable,
     options: ConvertOptions
   ): Promise<Uint8Array> {
-    const converter = uint8ArrayConverter();
-    const chunks: Uint8Array[] = [];
+    const converter = bufferConverter();
+    const buffers: Buffer[] = [];
     await handleReadable(input, async (chunk) => {
-      const u8 = await converter.convert(chunk, {
+      const buffer = await converter.convert(chunk, {
         bufferSize: options.bufferSize,
       });
-      chunks.push(u8);
+      buffers.push(buffer);
     });
-    return converter.merge(chunks);
+    return Buffer.concat(buffers);
   }
 
   protected empty(): Readable {
