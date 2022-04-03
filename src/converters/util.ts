@@ -5,6 +5,7 @@ declare type FS = typeof import("fs");
 declare type OS = typeof import("os");
 declare type PATH = typeof import("path");
 declare type URL = typeof import("url");
+declare type STREAM = typeof import("stream");
 
 export let hasBlob = false;
 export let hasTextOnBlob = false;
@@ -145,6 +146,43 @@ export function isWritableStream(
   );
 }
 
+export async function pipe(readable: Readable, writable: Writable) {
+  return await new Promise<void>((resolve, reject) => {
+    let readableDisposed = false;
+    let writableDisposed = false;
+    const disposeReadable = () => {
+      if (readableDisposed) {
+        return;
+      }
+      readableDisposed = true;
+      readable.destroy();
+      readable.removeAllListeners();
+    };
+    const disposeWritable = () => {
+      if (writableDisposed) {
+        return;
+      }
+      writableDisposed = true;
+      writable.destroy();
+      writable.removeAllListeners();
+    };
+    const onError = (err: Error) => {
+      reject(err);
+      readable.unpipe();
+      disposeReadable();
+      disposeWritable();
+    };
+    readable.once("error", onError);
+    writable.once("error", onError);
+    readable.once("end", () => disposeReadable());
+    writable.once("finish", () => {
+      resolve();
+      disposeWritable();
+    });
+    readable.pipe(writable);
+  });
+}
+
 export async function handleReadable(
   readable: Readable,
   onData: (chunk: Data) => Promise<void>
@@ -152,50 +190,18 @@ export async function handleReadable(
   if (readable.destroyed) {
     return;
   }
-  /* eslint-disable */
-  return new Promise<void>(async (resolve, reject) => {
-    if (typeof readable.read === "function") {
-      const read = () =>
-        new Promise<any>((res, rej) => {
-          try {
-            res(readable.read());
-          } catch (e) {
-            rej(e);
-          }
-        });
-      try {
-        let chunk: any;
-        while ((chunk = await read()) !== null) {
-          await onData(chunk);
-        }
-        resolve();
-      } catch (e) {
-        reject(e);
-      } finally {
-        readable.destroy();
-      }
-    } else {
-      const promises: Promise<void>[] = [];
-      readable.once("error", (e) => {
-        reject(e);
-        readable.destroy();
-        readable.removeAllListeners();
-      });
-      readable.once("end", () => {
-        Promise.all(promises)
-          .then(() => resolve())
-          .catch((e) => reject(e))
-          .finally(() => {
-            readable.destroy();
-            readable.removeAllListeners();
-          });
-      });
-      readable.on("data", (chunk) => {
-        promises.push(onData(chunk)); // eslint-disable-line
-      });
-    }
+
+  const stream: STREAM = require("stream"); // eslint-disable-line
+  const promises: Promise<void>[] = [];
+  const writable = new stream.Writable({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    write(chunk: any, _: string, next: (error?: Error | null) => void): void {
+      promises.push(onData(chunk)); // eslint-disable-line
+      next();
+    },
   });
-  /* eslint-enable */
+  await pipe(readable, writable);
+  await Promise.all(promises);
 }
 
 export function isReadable(stream: unknown): stream is Readable {
@@ -285,22 +291,7 @@ try {
         : "";
     const joined = path.join(os.tmpdir(), Date.now().toString() + extension);
     const writable = fs.createWriteStream("dest.txt");
-    readable.pipe(writable);
-    await new Promise<void>((resolve, reject) => {
-      const onError = (err: Error) => {
-        reject(err);
-        readable.destroy();
-        writable.destroy();
-        readable.removeAllListeners();
-        writable.removeAllListeners();
-      };
-      readable.once("error", onError);
-      writable.once("error", onError);
-      writable.once("finish", () => {
-        resolve();
-      });
-      readable.pipe(writable);
-    });
+    await pipe(readable, writable);
     const u = url.pathToFileURL(joined);
     return u.href;
   };

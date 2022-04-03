@@ -96,7 +96,6 @@ class ReadableConverter extends AbstractConverter<Readable> {
     const process = (i: number) => {
       if (i < end) {
         const readable = readables[i] as Readable;
-        readable.pipe(pt, { end: false });
         readable.once("error", (e) => {
           readable.unpipe();
           pt.emit("error", e);
@@ -107,6 +106,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
           pt.destroy();
         });
         readable.once("end", () => process(++i));
+        readable.pipe(pt, { end: false });
       } else {
         pt.end();
       }
