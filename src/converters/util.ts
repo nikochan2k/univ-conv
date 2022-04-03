@@ -1,6 +1,11 @@
 import type { Readable, Writable } from "stream";
 import { EMPTY_UINT8_ARRAY, Data } from "./core";
 
+declare type FS = typeof import("fs");
+declare type OS = typeof import("os");
+declare type PATH = typeof import("path");
+declare type URL = typeof import("url");
+
 export let hasBlob = false;
 export let hasTextOnBlob = false;
 export let hasStreamOnBlob = false;
@@ -208,6 +213,68 @@ export function closeStream(
       stream.close().catch(() => {}); // eslint-disable-line @typescript-eslint/no-empty-function
     }
   }
+}
+
+export let getFileSize: ((fileURL: string) => Promise<number>) | undefined;
+try {
+  const url: URL = require("url"); // eslint-disable-line
+  const fs: FS = require("fs"); // eslint-disable-line
+
+  getFileSize = async (fileURL: string) => {
+    const p = url.fileURLToPath(fileURL);
+    return new Promise<number>((resolve, reject) => {
+      fs.stat(p, (err, stats) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(stats.size);
+      });
+    });
+  };
+} catch {
+  getFileSize = undefined;
+}
+
+export let toFileURL:
+  | ((readable: Readable, extension?: string) => Promise<string>)
+  | undefined;
+try {
+  const fs: FS = require("fs"); // eslint-disable-line
+  const os: OS = require("os"); // eslint-disable-line
+  const path: PATH = require("path"); // eslint-disable-line
+  const url: URL = require("url"); // eslint-disable-line
+
+  toFileURL = async (readable: Readable, extension?: string) => {
+    extension =
+      typeof extension !== "undefined"
+        ? extension.startsWith(".")
+          ? extension
+          : "." + extension
+        : "";
+    const joined = path.join(os.tmpdir(), Date.now().toString() + extension);
+    const writable = fs.createWriteStream("dest.txt");
+    readable.pipe(writable);
+    await new Promise<void>((resolve, reject) => {
+      const onError = (err: Error) => {
+        reject(err);
+        readable.destroy();
+        writable.destroy();
+        readable.removeAllListeners();
+        writable.removeAllListeners();
+      };
+      readable.once("error", onError);
+      writable.once("error", onError);
+      writable.once("finish", () => {
+        resolve();
+      });
+      readable.pipe(writable);
+    });
+    const u = url.pathToFileURL(joined);
+    return u.href;
+  };
+} catch {
+  toFileURL = undefined;
 }
 
 export function dataUrlToBase64(dataUrl: string) {

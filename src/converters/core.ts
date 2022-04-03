@@ -1,7 +1,9 @@
 import type { Readable } from "stream";
+import { hasBlob, toFileURL } from "./util";
 
 export type Charset = "utf8" | "utf16le" | "utf16be" | "jis" | "eucjp" | "sjis";
-export type StringType = "text" | "base64" | "binary" | "hex";
+export type URLType = "file" | "data" | "blob";
+export type StringType = "text" | "url" | "base64" | "binary" | "hex";
 export type BinaryType = "arraybuffer" | "uint8array" | "buffer" | "blob";
 export type BlockType = StringType | BinaryType;
 export type StreamType = "readable" | "readablestream";
@@ -21,6 +23,7 @@ export interface Options {
   srcStringType: StringType;
   srcCharset: Charset;
   dstCharset: Charset;
+  dstURLType: URLType;
 }
 export interface ConvertOptions extends Options {
   length?: number;
@@ -165,6 +168,25 @@ export abstract class AbstractConverter<T extends Data>
     }
     if (!options.srcCharset) options.srcCharset = "utf8";
     if (!options.dstCharset) options.dstCharset = "utf8";
+    if (options.dstURLType === "file") {
+      if (!toFileURL) {
+        throw new Error("File URL is not supported");
+      }
+    } else if (options.dstURLType === "blob") {
+      if (!hasBlob || typeof URL?.createObjectURL !== "function") {
+        throw new Error("Blob URL is not supported");
+      }
+    } else if (options.dstURLType === "data") {
+      // Do nothing
+    } else {
+      if (toFileURL) {
+        options.dstURLType = "file";
+      } else if (hasBlob && typeof URL?.createObjectURL === "function") {
+        options.dstURLType = "blob";
+      } else {
+        options.dstURLType = "data";
+      }
+    }
     return options as T;
   }
 }

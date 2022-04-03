@@ -1,4 +1,4 @@
-import { PassThrough, Readable } from "stream";
+import { Duplex, PassThrough, Readable } from "stream";
 import {
   arrayBufferConverter,
   blobConverter,
@@ -15,6 +15,31 @@ import {
   hasStreamOnBlob,
   isReadable,
 } from "./util";
+
+class ReadableOfReadableStream extends Readable {
+  private reader: ReadableStreamDefaultReader<unknown> | undefined;
+  constructor(private rs: ReadableStream<unknown> | undefined) {
+    super();
+    this.reader = rs?.getReader();
+  }
+  override _read = () => {
+    if (!this.reader) {
+      return;
+    }
+    this.reader
+      .read()
+      .then(({ value, done }) => {
+        if (value) {
+          this.push(value);
+        }
+        if (done) {
+          this.push(null);
+          closeStream(this.rs);
+        }
+      })
+      .catch((e) => closeStream(this.rs, e));
+  };
+}
 
 class ReadableConverter extends AbstractConverter<Readable> {
   public typeEquals(input: unknown): input is Readable {
@@ -35,42 +60,23 @@ class ReadableConverter extends AbstractConverter<Readable> {
       }
     }
     if (readableStreamConverter().typeEquals(input)) {
-      const stream = input;
-      const reader = input.getReader();
-      return new Readable({
-        read() {
-          reader
-            .read()
-            .then(({ value, done }) => {
-              if (value) {
-                this.push(value);
-              }
-              if (done) {
-                this.push(null);
-                closeStream(stream);
-              }
-            })
-            .catch((e) => closeStream(stream, e));
-        },
-      });
+      return new ReadableOfReadableStream(input);
     }
 
     const buffer = await bufferConverter().convert(input, options);
     if (buffer) {
-      return Readable.from(buffer);
+      const duplex = new Duplex();
+      duplex.push(buffer);
+      duplex.push(null);
+      return duplex;
     }
 
     return undefined;
   }
 
-  protected async _getSize(input: Readable, options: Options): Promise<number> {
-    const converter = uint8ArrayConverter();
-    let length = 0;
-    await handleReadable(input, async (chunk) => {
-      const u8 = await converter.convert(chunk, options);
-      length += u8.byteLength;
-    });
-    return length;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected _getSize(_input: Readable, _options: Options): Promise<number> {
+    throw new Error("Cannot get size of Readable");
   }
 
   protected _isEmpty(input: Readable): boolean {

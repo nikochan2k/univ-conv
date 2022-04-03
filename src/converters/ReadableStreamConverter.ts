@@ -112,20 +112,11 @@ class ReadableStreamConverter extends AbstractConverter<
     return undefined;
   }
 
-  protected async _getSize(
-    input: ReadableStream<unknown>,
-    options: Options
+  protected _getSize(
+    _input: ReadableStream<unknown>, // eslint-disable-line
+    _options: Options // eslint-disable-line
   ): Promise<number> {
-    let length = 0;
-    await handleReadableStream(input, async (chunk) => {
-      if (blobConverter().typeEquals(chunk)) {
-        length += await blobConverter().getSize(chunk, options);
-      } else {
-        const u8 = await uint8ArrayConverter().convert(chunk, options);
-        length += u8.length;
-      }
-    });
-    return length;
+    throw new Error("Cannot get size of ReadableStream");
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
