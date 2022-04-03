@@ -21,9 +21,14 @@ function textToUtf16leBuffer(text: string) {
   }
   return ab;
 }
-
-class DefaultTextHelper implements TextHelper {
+export class DefaultTextHelper implements TextHelper {
   bufferToText(u8: Uint8Array, bufCharset: Charset): Promise<string> {
+    if (bufCharset === "utf8") {
+      return Promise.resolve(textDecoder.decode(u8));
+    }
+    if (bufCharset === "utf16le") {
+      return Promise.resolve(String.fromCharCode.apply(null, Array.from(u8)));
+    }
     if (convert) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -39,18 +44,19 @@ class DefaultTextHelper implements TextHelper {
         // Do nothing
       }
     }
-    if (bufCharset === "utf8") {
-      return Promise.resolve(textDecoder.decode(u8));
-    }
-    if (bufCharset === "utf16le") {
-      return Promise.resolve(String.fromCharCode.apply(null, Array.from(u8)));
-    }
 
     // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
     throw new Error("Illegal encoding: " + bufCharset);
   }
 
   textToBuffer(text: string, bufCharset: Charset): Promise<Uint8Array> {
+    if (bufCharset === "utf8") {
+      return Promise.resolve(textEncoder.encode(text));
+    }
+    if (bufCharset === "utf16le") {
+      const ab = textToUtf16leBuffer(text);
+      return Promise.resolve(new Uint8Array(ab));
+    }
     if (convert) {
       try {
         // eslint-disable-next-line
@@ -63,13 +69,6 @@ class DefaultTextHelper implements TextHelper {
       } catch {
         // Do nothing
       }
-    }
-    if (bufCharset === "utf8") {
-      return Promise.resolve(textEncoder.encode(text));
-    }
-    if (bufCharset === "utf16le") {
-      const ab = textToUtf16leBuffer(text);
-      return Promise.resolve(new Uint8Array(ab));
     }
 
     // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
