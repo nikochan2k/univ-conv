@@ -136,7 +136,9 @@ class ReadableStreamConverter extends AbstractConverter<
     ) => {
       if (i < end) {
         const stream = streams[i] as ReadableStream<unknown>;
-        handleReadableStream(stream, (chunk) => converter.enqueue(chunk))
+        handleReadableStream(stream, (chunk) =>
+          Promise.resolve(converter.enqueue(chunk))
+        )
           .then(() => process(converter, ++i))
           .catch((e) => {
             converter.error(e);
