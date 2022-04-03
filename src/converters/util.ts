@@ -1,5 +1,5 @@
 import type { Readable, Writable } from "stream";
-import { EMPTY_UINT8_ARRAY, Data } from "./core";
+import { Data, EMPTY_UINT8_ARRAY } from "./core";
 
 declare type FS = typeof import("fs");
 declare type OS = typeof import("os");
@@ -152,30 +152,29 @@ export async function handleReadable(
   if (readable.destroyed) {
     return;
   }
-  return new Promise<void>((resolve, reject) => {
-    const promises: Promise<void>[] = [];
-    readable.once("error", (e) => {
-      reject(e);
-      readable.destroy();
-      readable.removeAllListeners();
-    });
-    readable.once("end", () => {
-      Promise.all(promises)
-        .catch((e) => console.warn(e))
-        .finally(() => {
-          resolve();
-          readable.destroy();
-          readable.removeAllListeners();
-        });
-    });
-    readable.on("readable", () => {
-      let chunk: any; // eslint-disable-line
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      while ((chunk = readable.read()) !== null) {
-        promises.push(onData(chunk)); // eslint-disable-line
+  /* eslint-disable */
+  return new Promise<void>(async (resolve, reject) => {
+    const read = () =>
+      new Promise<any>((res, rej) => {
+        try {
+          res(readable.read());
+        } catch (e) {
+          rej(e);
+        }
+      });
+    try {
+      let chunk: any;
+      while ((chunk = await read()) !== null) {
+        await onData(chunk);
       }
-    });
+      resolve();
+    } catch (e) {
+      reject(e);
+    } finally {
+      readable.destroy();
+    }
   });
+  /* eslint-enable */
 }
 
 export function isReadable(stream: unknown): stream is Readable {

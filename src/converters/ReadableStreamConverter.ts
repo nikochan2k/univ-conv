@@ -7,6 +7,7 @@ import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import {
   closeStream,
   EMPTY_READABLE_STREAM,
+  handleReadable,
   handleReadableStream,
   hasBlob,
   hasStreamOnBlob,
@@ -37,22 +38,8 @@ class ReadableStreamConverter extends AbstractConverter<
       const readable = input;
       return new ReadableStream({
         start: (converter) => {
-          readable.once("error", (err) => {
-            converter.error(err);
-            readable.destroy();
-            readable.removeAllListeners();
-          });
-          readable.once("end", () => {
-            converter.close();
-            readable.removeAllListeners();
-          });
-          readable.on("readable", () => {
-            let chunk: any; // eslint-disable-line
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            while ((chunk = readable.read()) !== null) {
-              converter.enqueue(chunk);
-            }
-          });
+          /* eslint-disable-next-line */
+          handleReadable(readable, async (chunk) => converter.enqueue(chunk));
         },
         cancel: (err) => {
           readable.destroy(err as Error);
