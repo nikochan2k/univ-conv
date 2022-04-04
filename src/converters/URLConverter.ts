@@ -5,7 +5,7 @@ import {
   uint8ArrayConverter,
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
-import { dataUrlToBase64, getFileSize, hasBlob, toFileURL } from "./util";
+import { dataUrlToBase64, getFileSize, isBrowser, toFileURL } from "./util";
 
 class TextConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {
@@ -35,7 +35,7 @@ class TextConverter extends AbstractConverter<string> {
   protected async _getSize(input: string, _options: Options): Promise<number> {
     if (input.startsWith("file:") && getFileSize) {
       return getFileSize(input);
-    } else if (input.startsWith("blob:") && hasBlob) {
+    } else if (input.startsWith("blob:") && isBrowser) {
       const res = await fetch(input);
       const blob = await res.blob();
       return blob.size;

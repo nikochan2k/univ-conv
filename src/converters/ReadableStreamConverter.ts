@@ -9,8 +9,8 @@ import {
   EMPTY_READABLE_STREAM,
   handleReadable,
   handleReadableStream,
-  hasBlob,
   hasStreamOnBlob,
+  isBrowser,
   isReadableStream,
 } from "./util";
 
@@ -49,7 +49,7 @@ class ReadableStreamConverter extends AbstractConverter<
     }
 
     const bufferSize = options.bufferSize;
-    if (hasBlob) {
+    if (isBrowser) {
       const blob = await blobConverter().convert(input, options);
       if (hasStreamOnBlob) {
         return blob.stream() as unknown as ReadableStream<unknown>;
@@ -166,7 +166,7 @@ class ReadableStreamConverter extends AbstractConverter<
     input: ReadableStream<unknown>,
     options: ConvertOptions
   ): Promise<string> {
-    if (hasBlob) {
+    if (isBrowser) {
       const blob = await blobConverter().convert(input, {
         bufferSize: options.bufferSize,
       });
@@ -183,7 +183,7 @@ class ReadableStreamConverter extends AbstractConverter<
     input: ReadableStream<unknown>,
     options: ConvertOptions
   ): Promise<string> {
-    if (hasBlob) {
+    if (isBrowser) {
       const blob = await blobConverter().convert(input, {
         bufferSize: options.bufferSize,
       });

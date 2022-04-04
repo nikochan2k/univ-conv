@@ -7,6 +7,20 @@ declare type PATH = typeof import("path");
 declare type URL = typeof import("url");
 declare type STREAM = typeof import("stream");
 
+export let isBrowser = false;
+export let isReactNative = false;
+export let isNode = false;
+if (typeof document !== "undefined") {
+  isBrowser = true;
+} else if (
+  typeof navigator !== "undefined" &&
+  navigator.product === "ReactNative"
+) {
+  isReactNative = true;
+} else {
+  isNode = true;
+}
+
 export let hasBlob = false;
 export let hasTextOnBlob = false;
 export let hasStreamOnBlob = false;
@@ -26,7 +40,7 @@ if (typeof Blob === "function") {
   if (Blob.prototype.arrayBuffer != null) {
     hasArrayBufferOnBlob = true;
   }
-  if (navigator?.product !== "ReactNative") {
+  if (!isReactNative) {
     hasReadAsArrayBufferOnBlob = FileReader.prototype.readAsArrayBuffer != null;
     hasReadAsBinaryStringOnBlob =
       FileReader.prototype.readAsBinaryString != null;

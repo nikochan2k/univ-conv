@@ -9,8 +9,16 @@ import {
   ConvertOptions,
   Data,
   DataType,
+  EMPTY_ARRAY_BUFFER,
+  EMPTY_BLOB,
+  EMPTY_BUFFER,
+  EMPTY_READABLE,
+  EMPTY_READABLE_STREAM,
+  EMPTY_UINT8_ARRAY,
   handleReadableStream,
   hexConverter,
+  isBrowser,
+  isNode,
   isWritable,
   isWritableStream,
   Options,
@@ -42,6 +50,39 @@ export class DefaultConverter {
     options?: Partial<ConvertOptions>
   ): Promise<ReturnData<T>> {
     return this._convert(input, to, options) as Promise<ReturnData<T>>;
+  }
+
+  public empty<T extends DataType>(type?: T) {
+    switch (type) {
+      case "arraybuffer":
+        return EMPTY_ARRAY_BUFFER;
+      case "buffer":
+        return EMPTY_BUFFER;
+      case "uint8array":
+        return EMPTY_UINT8_ARRAY;
+      case "blob":
+        return EMPTY_BLOB;
+      case "readable":
+        return EMPTY_READABLE;
+      case "readablestream":
+        return EMPTY_READABLE_STREAM;
+      case "text":
+        return "";
+      case "base64":
+        return "";
+      case "binary":
+        return "";
+      case "hex":
+        return "";
+    }
+
+    if (isBrowser) {
+      return EMPTY_BLOB;
+    } else if (isNode) {
+      return EMPTY_BUFFER;
+    } else {
+      return EMPTY_UINT8_ARRAY;
+    }
   }
 
   public getSize(input: Data, options?: Partial<Options>) {

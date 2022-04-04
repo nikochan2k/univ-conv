@@ -5,11 +5,7 @@ import {
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
-import {
-  handleFileReader,
-  hasBuffer,
-  hasReadAsBinaryStringOnBlob,
-} from "./util";
+import { handleFileReader, hasReadAsBinaryStringOnBlob, isNode } from "./util";
 
 class BinaryConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {
@@ -94,7 +90,7 @@ class BinaryConverter extends AbstractConverter<string> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _: ConvertOptions
   ): Promise<Uint8Array> {
-    if (hasBuffer) {
+    if (isNode) {
       return Promise.resolve(Buffer.from(input, "binary"));
     } else {
       return Promise.resolve(
