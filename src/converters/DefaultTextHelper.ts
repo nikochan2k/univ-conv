@@ -1,6 +1,10 @@
 import { Charset } from "./core";
 import { TextHelper } from "./TextHelper";
 
+if (!globalThis.TextDecoder || !globalThis.TextEncoder) {
+  require("fast-text-encoding");
+}
+
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 

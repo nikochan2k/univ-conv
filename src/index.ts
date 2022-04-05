@@ -1,6 +1,2 @@
-if (!globalThis.TextDecoder || !globalThis.TextEncoder) {
-  require("fast-text-encoding");
-}
-
 export * from "./converters";
 export * from "./converver";

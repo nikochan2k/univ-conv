@@ -1,11 +1,27 @@
 import {
+  arrayBufferConverter,
   base64Converter,
   blobConverter,
   readableConverter,
+  readableStreamConverter,
+  textConverter,
   uint8ArrayConverter,
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
-import { dataUrlToBase64, getFileSize, isBrowser, toFileURL } from "./util";
+import {
+  dataUrlToBase64,
+  fileToBuffer,
+  getFileSize,
+  isBrowser,
+  isNode,
+  toFileURL,
+} from "./util";
+import type { Readable } from "stream";
+
+if (typeof fetch !== "function") {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  globalThis.fetch = require("node-fetch");
+}
 
 class TextConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {
@@ -18,9 +34,9 @@ class TextConverter extends AbstractConverter<string> {
   ): Promise<string | undefined> {
     let url: string;
     const type = options.dstURLType;
-    if (type === "file") {
+    if (type === "file" && toFileURL) {
       const readable = await readableConverter().convert(input, options);
-      url = await toFileURL!(readable); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+      url = await toFileURL(readable);
     } else if (type === "blob") {
       const blob = await blobConverter().convert(input, options);
       url = URL.createObjectURL(blob);
@@ -42,6 +58,13 @@ class TextConverter extends AbstractConverter<string> {
     } else if (input.startsWith("data:")) {
       const base64 = dataUrlToBase64(input);
       return base64Converter().getSize(base64);
+    } else {
+      const resp = await fetch(input, { method: "HEAD" });
+      const str = resp.headers.get("Content-Length");
+      const length = Math.trunc(str as any); // eslint-disable-line
+      if (!isNaN(length)) {
+        return length;
+      }
     }
     throw new Error(`Cannot get size of ${input}`);
   }
@@ -51,16 +74,56 @@ class TextConverter extends AbstractConverter<string> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _merge(chunks: string[], _: Options): Promise<string> {
-    return Promise.resolve(chunks.join(""));
+  protected async _merge(urls: string[], options: Options): Promise<string> {
+    if (isNode) {
+      const converter = readableConverter();
+      const readables: Readable[] = [];
+      for (const url of urls) {
+        const readable = await converter.convert(url);
+        readables.push(readable);
+      }
+      const merged = await converter.merge(readables);
+      return (await this._convert(merged, {
+        ...options,
+        dstURLType: "file",
+      })) as string;
+    } else if (isBrowser) {
+      const converter = readableStreamConverter();
+      const readables: ReadableStream<unknown>[] = [];
+      for (const url of urls) {
+        const readable = await converter.convert(url);
+        readables.push(readable);
+      }
+      const merged = await converter.merge(readables);
+      return (await this._convert(merged, {
+        ...options,
+        dstURLType: "blob",
+      })) as string;
+    } else {
+      const buffers: ArrayBuffer[] = [];
+      for (const url of urls) {
+        const buffer = await this._toArrayBuffer(url, options);
+        buffers.push(buffer);
+      }
+      const merged = await arrayBufferConverter().merge(buffers, options);
+      return (await this._convert(merged, {
+        ...options,
+        dstURLType: "data",
+      })) as string;
+    }
   }
 
   protected async _toArrayBuffer(
     input: string,
-    options: ConvertOptions
+    _options: ConvertOptions // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<ArrayBuffer> {
-    const u8 = await this._toUint8Array(input, options);
-    return uint8ArrayConverter().toArrayBuffer(u8, options);
+    if (input.startsWith("file:") && fileToBuffer) {
+      const buffer = fileToBuffer(input);
+      return buffer.buffer;
+    } else {
+      const body = await fetch(input);
+      return body.arrayBuffer();
+    }
   }
 
   protected async _toBase64(
@@ -71,26 +134,21 @@ class TextConverter extends AbstractConverter<string> {
     return uint8ArrayConverter().toBase64(u8, options);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toText(input: string, _: ConvertOptions): Promise<string> {
-    return Promise.resolve(input);
+  protected async _toText(
+    input: string,
+    options: ConvertOptions
+  ): Promise<string> {
+    const ab = await this._toArrayBuffer(input, options);
+    return textConverter().convert(ab, options);
   }
 
-  protected _toUint8Array(
+  protected async _toUint8Array(
     input: string,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: ConvertOptions
+    options: ConvertOptions
   ): Promise<Uint8Array> {
-    const u8 = new Uint8Array(input.length * 2);
-    for (let i = 0; i < u8.length; i += 2) {
-      let x = input.charCodeAt(i / 2);
-      const a = x % 256;
-      x -= a;
-      x /= 256;
-      u8[i] = x;
-      u8[i + 1] = a;
-    }
-    return Promise.resolve(u8);
+    const ab = await this.toArrayBuffer(input, options);
+    return new Uint8Array(ab);
   }
 
   protected empty(): string {

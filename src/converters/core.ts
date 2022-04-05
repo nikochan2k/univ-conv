@@ -1,5 +1,5 @@
 import type { Readable } from "stream";
-import { hasBlob, toFileURL } from "./util";
+import { hasBlob, isBrowser, toFileURL } from "./util";
 
 export type Charset = "utf8" | "utf16le" | "utf16be" | "jis" | "eucjp" | "sjis";
 export type URLType = "file" | "data" | "blob";
@@ -181,7 +181,7 @@ export abstract class AbstractConverter<T extends Data>
     } else {
       if (toFileURL) {
         options.dstURLType = "file";
-      } else if (hasBlob && typeof URL?.createObjectURL === "function") {
+      } else if (isBrowser) {
         options.dstURLType = "blob";
       } else {
         options.dstURLType = "data";

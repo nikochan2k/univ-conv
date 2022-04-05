@@ -287,6 +287,15 @@ try {
   getFileSize = undefined;
 }
 
+export let fileToBuffer: ((filePath: string) => Buffer) | undefined;
+try {
+  const fs: FS = require("fs"); // eslint-disable-line
+
+  fileToBuffer = (filePath: string) => fs.readFileSync(filePath);
+} catch {
+  fileToBuffer = undefined;
+}
+
 export let toFileURL:
   | ((readable: Readable, extension?: string) => Promise<string>)
   | undefined;
