@@ -6,6 +6,7 @@ import {
   readableConverter,
   readableStreamConverter,
   uint8ArrayConverter,
+  urlConverter,
 } from "./converters";
 import {
   AbstractConverter,
@@ -40,6 +41,8 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
         return binaryConverter().toArrayBuffer(input, options);
       } else if (srcStringType === "hex") {
         return hexConverter().toArrayBuffer(input, options);
+      } else if (srcStringType === "url") {
+        return urlConverter().toArrayBuffer(input, options);
       }
       input = await textHelper().textToBuffer(input, options.dstCharset);
     }

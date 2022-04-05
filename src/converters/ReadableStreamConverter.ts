@@ -1,3 +1,4 @@
+import type { Readable } from "stream";
 import {
   blobConverter,
   readableConverter,
@@ -7,6 +8,7 @@ import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import {
   closeStream,
   EMPTY_READABLE_STREAM,
+  fileToReadable,
   handleReadable,
   handleReadableStream,
   hasStreamOnBlob,
@@ -29,6 +31,18 @@ class ReadableStreamConverter extends AbstractConverter<
       return input;
     }
 
+    if (typeof input === "string" && options.srcStringType === "url") {
+      if (input.startsWith("http:") || input.startsWith("https:")) {
+        const resp = await fetch(input);
+        if (readableConverter().typeEquals(resp.body)) {
+          input = resp.body as unknown as Readable;
+        } else {
+          return resp.body as ReadableStream<unknown>;
+        }
+      } else if (input.startsWith("file:") && fileToReadable) {
+        input = fileToReadable(input);
+      }
+    }
     if (blobConverter().typeEquals(input)) {
       if (hasStreamOnBlob) {
         return input.stream() as unknown as ReadableStream<unknown>;

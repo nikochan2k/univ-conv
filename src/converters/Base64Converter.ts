@@ -4,6 +4,7 @@ import {
   blobConverter,
   hexConverter,
   uint8ArrayConverter,
+  urlConverter,
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
@@ -26,6 +27,8 @@ class Base64Converter extends AbstractConverter<string> {
         return binaryConverter().toBase64(input, options);
       } else if (srcStringType === "hex") {
         return hexConverter().toBase64(input, options);
+      } else if (srcStringType === "url") {
+        return urlConverter().toBase64(input, options);
       }
       u8 = await textHelper().textToBuffer(input, options.dstCharset);
     } else if (blobConverter().typeEquals(input)) {

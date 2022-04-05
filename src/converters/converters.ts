@@ -50,6 +50,14 @@ export function hexConverter() {
   return HEX_CONVERTER;
 }
 
+let URL_CONVERTER: Converter<string>;
+export function urlConverter() {
+  if (!URL_CONVERTER) {
+    URL_CONVERTER = require("./URLConverter").INSTANCE;
+  }
+  return URL_CONVERTER;
+}
+
 let TEXT_CONVERTER: Converter<string>;
 export function textConverter() {
   if (!TEXT_CONVERTER) {

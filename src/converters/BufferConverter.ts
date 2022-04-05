@@ -25,16 +25,17 @@ class BufferConverter extends AbstractConverter<Buffer> {
 
     if (typeof input === "string") {
       const type = options.srcStringType;
-      if (type == null || type === "text") {
-        const u8 = await textHelper().textToBuffer(input, options.dstCharset);
-        return u8 as Buffer;
-      } else if (type === "base64") {
+      if (type === "base64") {
         return Buffer.from(input, "base64");
       } else if (type === "binary") {
         return Buffer.from(input, "binary");
       } else if (type === "hex") {
         return Buffer.from(input, "hex");
+      } else if (type === "text") {
+        const u8 = await textHelper().textToBuffer(input, options.dstCharset);
+        return u8 as Buffer;
       }
+      // 'type === "url"' is handled arrayBufferConverter().convert();
     }
     if (uint8ArrayConverter().typeEquals(input)) {
       return Buffer.from(input.buffer, input.byteOffset, input.byteLength);

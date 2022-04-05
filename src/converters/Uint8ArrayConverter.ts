@@ -8,12 +8,13 @@ import {
   hexConverter,
   readableConverter,
   readableStreamConverter,
+  urlConverter,
 } from "./converters";
 import {
   AbstractConverter,
   ConvertOptions,
-  EMPTY_UINT8_ARRAY,
   Data,
+  EMPTY_UINT8_ARRAY,
   Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
@@ -42,9 +43,10 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
         return binaryConverter().toUint8Array(input, options);
       } else if (srcStringType === "hex") {
         return hexConverter().toUint8Array(input, options);
-      } else {
-        return textHelper().textToBuffer(input, options.dstCharset);
+      } else if (srcStringType === "url") {
+        return urlConverter().toUint8Array(input, options);
       }
+      return textHelper().textToBuffer(input, options.dstCharset);
     }
     if (arrayBufferConverter().typeEquals(input)) {
       return arrayBufferConverter().toUint8Array(input, options);

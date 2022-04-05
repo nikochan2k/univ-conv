@@ -53,6 +53,14 @@ export function typeOf(input: unknown): string {
 export const DEFAULT_BUFFER_SIZE = 96 * 1024;
 export const EMPTY_ARRAY_BUFFER = new ArrayBuffer(0);
 export const EMPTY_UINT8_ARRAY = new Uint8Array(0);
+
+export function isURL(input: string) {
+  if (!input) {
+    return false;
+  }
+  return /^(file|http|https|blob|data):/.test(input);
+}
+
 export abstract class AbstractConverter<T extends Data>
   implements Converter<T>
 {
@@ -164,7 +172,13 @@ export abstract class AbstractConverter<T extends Data>
       );
     }
     if (typeof input === "string") {
-      if (!options.srcStringType) options.srcStringType = "text";
+      if (!options.srcStringType) {
+        if (isURL(input)) {
+          options.srcStringType = "url";
+        } else {
+          options.srcStringType = "text";
+        }
+      }
     }
     if (!options.srcCharset) options.srcCharset = "utf8";
     if (!options.dstCharset) options.dstCharset = "utf8";

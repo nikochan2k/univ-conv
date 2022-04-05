@@ -10,7 +10,6 @@ import {
   uint8ArrayConverter,
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
-import { textHelper } from "./TextHelper";
 
 class TextConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {
@@ -30,7 +29,7 @@ class TextConverter extends AbstractConverter<string> {
       } else if (srcStringType === "hex") {
         return hexConverter().toText(input, options);
       }
-      input = await textHelper().textToBuffer(input, options.dstCharset);
+      return input;
     }
     if (arrayBufferConverter().typeEquals(input)) {
       return arrayBufferConverter().toText(input, options);

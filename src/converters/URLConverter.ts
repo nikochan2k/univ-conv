@@ -1,3 +1,4 @@
+import type { Readable } from "stream";
 import {
   arrayBufferConverter,
   base64Converter,
@@ -16,14 +17,13 @@ import {
   isNode,
   toFileURL,
 } from "./util";
-import type { Readable } from "stream";
 
 if (typeof fetch !== "function") {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   globalThis.fetch = require("node-fetch");
 }
 
-class TextConverter extends AbstractConverter<string> {
+class URLConverter extends AbstractConverter<string> {
   public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }
@@ -156,4 +156,4 @@ class TextConverter extends AbstractConverter<string> {
   }
 }
 
-export const INSTANCE = new TextConverter();
+export const INSTANCE = new URLConverter();

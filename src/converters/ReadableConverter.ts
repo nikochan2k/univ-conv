@@ -10,8 +10,10 @@ import { textHelper } from "./TextHelper";
 import {
   closeStream,
   EMPTY_READABLE,
+  fileToReadable,
   handleReadable,
   hasStreamOnBlob,
+  isNode,
   isReadable,
 } from "./util";
 
@@ -53,6 +55,17 @@ class ReadableConverter extends AbstractConverter<Readable> {
       return input;
     }
 
+    if (typeof input === "string" && options.srcStringType === "url") {
+      if (input.startsWith("http:") || input.startsWith("https:")) {
+        const resp = await fetch(input);
+        if (isNode) {
+          return resp.body as unknown as Readable;
+        }
+        input = resp.body as ReadableStream<unknown>;
+      } else if (input.startsWith("file:") && fileToReadable) {
+        return fileToReadable(input);
+      }
+    }
     if (blobConverter().typeEquals(input)) {
       if (hasStreamOnBlob) {
         input = input.stream() as unknown as ReadableStream<unknown>;

@@ -296,6 +296,15 @@ try {
   fileToBuffer = undefined;
 }
 
+export let fileToReadable: ((filePath: string) => Readable) | undefined;
+try {
+  const fs: FS = require("fs"); // eslint-disable-line
+
+  fileToReadable = (filePath: string) => fs.createReadStream(filePath);
+} catch {
+  fileToReadable = undefined;
+}
+
 export let toFileURL:
   | ((readable: Readable, extension?: string) => Promise<string>)
   | undefined;
