@@ -114,15 +114,19 @@ export function handleFileReader<T extends string | ArrayBuffer>(
 
 export async function handleReadableStream(
   stream: ReadableStream,
-  onData: (chunk: Data) => Promise<void> | void
+  onData: (chunk: Data) => Promise<boolean>
 ): Promise<void> {
   const reader = stream.getReader();
   try {
     let res = await reader.read();
     while (!res.done) {
       const chunk = res.value as Data;
-      if (chunk != null) {
-        await onData(chunk);
+      if (chunk == null) {
+        break;
+      }
+      const result = await onData(chunk);
+      if (!result) {
+        break;
       }
       res = await reader.read();
     }
@@ -199,23 +203,30 @@ export async function pipe(readable: Readable, writable: Writable) {
 
 export async function handleReadable(
   readable: Readable,
-  onData: (chunk: Data) => Promise<void>
+  onData: (chunk: Data) => Promise<boolean>
 ): Promise<void> {
   if (readable.destroyed) {
     return;
   }
 
   const stream: STREAM = require("stream"); // eslint-disable-line
-  const promises: Promise<void>[] = [];
   const writable = new stream.Writable({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     write(chunk: any, _: string, next: (error?: Error | null) => void): void {
-      promises.push(onData(chunk)); // eslint-disable-line
-      next();
+      onData(chunk as Data)
+        .then((result) => {
+          if (result) {
+            next();
+          } else {
+            writable.destroy();
+          }
+        })
+        .catch((e) => {
+          writable.destroy(e as Error);
+        });
     },
   });
   await pipe(readable, writable);
-  await Promise.all(promises);
 }
 
 export function isReadable(stream: unknown): stream is Readable {

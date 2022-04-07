@@ -9,6 +9,13 @@ import { textHelper } from "./TextHelper";
 import { EMPTY_BUFFER } from "./util";
 
 class BufferConverter extends AbstractConverter<Buffer> {
+  public getStartEnd(
+    input: ArrayBuffer,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(this._getStartEnd(options, input.byteLength));
+  }
+
   public typeEquals(input: unknown): input is Buffer {
     return (
       input instanceof Buffer || toString.call(input) === "[object Buffer]"
@@ -25,28 +32,42 @@ class BufferConverter extends AbstractConverter<Buffer> {
 
     if (typeof input === "string") {
       const type = options.srcStringType;
+      let buffer: Buffer | undefined;
       if (type === "base64") {
-        return Buffer.from(input, "base64");
+        buffer = Buffer.from(input, "base64");
       } else if (type === "binary") {
-        return Buffer.from(input, "binary");
+        buffer = Buffer.from(input, "binary");
       } else if (type === "hex") {
-        return Buffer.from(input, "hex");
+        buffer = Buffer.from(input, "hex");
       } else if (type === "text") {
         const u8 = await textHelper().textToBuffer(input, options.dstCharset);
-        return u8 as Buffer;
+        buffer = u8 as Buffer;
+      }
+      if (buffer) {
+        const { start, end } = await this.getStartEnd(buffer, options);
+        return buffer.slice(start, end);
       }
       // 'type === "url"' is handled arrayBufferConverter().convert();
     }
     if (uint8ArrayConverter().typeEquals(input)) {
-      return Buffer.from(input.buffer, input.byteOffset, input.byteLength);
+      return Buffer.from(
+        input.buffer.slice(
+          input.byteOffset,
+          input.byteOffset + input.byteLength
+        )
+      );
     }
     if (readableConverter().typeEquals(input)) {
       const u8 = await readableConverter().toUint8Array(input, options);
-      return u8 as Buffer;
+      return Buffer.from(
+        u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength)
+      );
     }
     if (readableStreamConverter().typeEquals(input)) {
       const u8 = await readableStreamConverter().toUint8Array(input, options);
-      return Buffer.from(u8.buffer);
+      return Buffer.from(
+        u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength)
+      );
     }
 
     const ab = await arrayBufferConverter().convert(input, options);
@@ -75,21 +96,38 @@ class BufferConverter extends AbstractConverter<Buffer> {
     input: Buffer,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    return uint8ArrayConverter().toArrayBuffer(input, options);
+    const buffer = await this._toUint8Array(input, options);
+    return buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength
+    );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toBase64(input: Buffer, _: ConvertOptions): Promise<string> {
-    return Promise.resolve(input.toString("base64"));
+  protected async _toBase64(
+    input: Buffer,
+    options: ConvertOptions
+  ): Promise<string> {
+    const buffer = (await this._toUint8Array(input, options)) as Buffer;
+    return buffer.toString("base64");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toText(input: Buffer, options: ConvertOptions): Promise<string> {
-    return textHelper().bufferToText(input, options.srcCharset);
+  protected async _toText(
+    input: Buffer,
+    options: ConvertOptions
+  ): Promise<string> {
+    const buffer = await this._toUint8Array(input, options);
+    return textHelper().bufferToText(buffer, options.srcCharset);
   }
 
-  protected _toUint8Array(input: Buffer): Promise<Uint8Array> {
-    return Promise.resolve(input);
+  protected async _toUint8Array(
+    input: Buffer,
+    options: ConvertOptions
+  ): Promise<Uint8Array> {
+    if (options.start == null && input.length == null) {
+      return input;
+    }
+    const { start, end } = await this.getStartEnd(input, options);
+    return input.slice(start, end);
   }
 
   protected empty(): Buffer {

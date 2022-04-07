@@ -12,6 +12,14 @@ import {
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 
 class TextConverter extends AbstractConverter<string> {
+  public async getStartEnd(
+    input: string,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    const u8 = await this.toUint8Array(input, options);
+    return Promise.resolve(this._getStartEnd(options, u8.byteLength));
+  }
+
   public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }

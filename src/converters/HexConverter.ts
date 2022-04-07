@@ -1,4 +1,4 @@
-import { uint8ArrayConverter } from "./converters";
+import { base64Converter, uint8ArrayConverter } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
 
@@ -35,6 +35,13 @@ const MAP_HEX: { [key: string]: number } = {
 };
 
 class HexConverter extends AbstractConverter<string> {
+  public getStartEnd(
+    input: string, // eslint-disable-line
+    options: ConvertOptions // eslint-disable-line
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(this._getStartEnd(options, input.length / 2));
+  }
+
   public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }
@@ -64,7 +71,7 @@ class HexConverter extends AbstractConverter<string> {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _getSize(input: string, _: Options): Promise<number> {
-    return Promise.resolve(input.length);
+    return Promise.resolve(input.length / 2);
   }
 
   protected _isEmpty(input: string): boolean {
@@ -81,12 +88,15 @@ class HexConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const u8 = await this._toUint8Array(input, options);
-    return uint8ArrayConverter().toArrayBuffer(u8, options);
+    return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toBase64(input: string, _: ConvertOptions): Promise<string> {
-    return Promise.resolve(input);
+  protected async _toBase64(
+    input: string,
+    options: ConvertOptions
+  ): Promise<string> {
+    const u8 = await this._toUint8Array(input, options);
+    return base64Converter().convert(u8, this.deleteStartLength(options));
   }
 
   protected async _toText(
@@ -97,24 +107,26 @@ class HexConverter extends AbstractConverter<string> {
     return textHelper().bufferToText(u8, options.srcCharset);
   }
 
-  protected _toUint8Array(
+  protected async _toUint8Array(
     input: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: ConvertOptions
+    options: ConvertOptions
   ): Promise<Uint8Array> {
-    const bytes = new Uint8Array(Math.floor(input.length / 2));
-    let i;
-    for (i = 0; i < bytes.length; i++) {
-      const ai = input[i * 2] as string;
+    const startEnd = await this.getStartEnd(input, options);
+    let start = startEnd.start;
+    const end = startEnd.end as number;
+
+    const bytes = new Uint8Array(end - start);
+    for (; start < end; start++) {
+      const ai = input[start * 2] as string;
       const a = MAP_HEX[ai];
-      const bi = input[i * 2 + 1] as string;
+      const bi = input[start * 2 + 1] as string;
       const b = MAP_HEX[bi];
-      if (a === undefined || b === undefined) {
+      if (a == null || b == null) {
         break;
       }
-      bytes[i] = (a << 4) | b;
+      bytes[start] = (a << 4) | b;
     }
-    return Promise.resolve(i === bytes.length ? bytes : bytes.slice(0, i));
+    return bytes;
   }
 
   protected empty(): string {

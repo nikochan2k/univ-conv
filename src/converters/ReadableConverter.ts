@@ -1,6 +1,5 @@
 import { Duplex, PassThrough, Readable } from "stream";
 import {
-  arrayBufferConverter,
   blobConverter,
   bufferConverter,
   readableStreamConverter,
@@ -43,6 +42,13 @@ class ReadableOfReadableStream extends Readable {
 }
 
 class ReadableConverter extends AbstractConverter<Readable> {
+  public getStartEnd(
+    _input: Readable,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(this._getStartEnd(options));
+  }
+
   public typeEquals(input: unknown): input is Readable {
     return isReadable(input);
   }
@@ -133,7 +139,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const u8 = await this._toUint8Array(input, options);
-    return arrayBufferConverter().convert(u8);
+    return u8.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
   }
 
   protected async _toBase64(
@@ -148,7 +154,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     input: Readable,
     options: ConvertOptions
   ): Promise<string> {
-    const u8 = await this.toUint8Array(input, options);
+    const u8 = await this._toUint8Array(input, options);
     return textHelper().bufferToText(u8, options.srcCharset);
   }
 
@@ -156,15 +162,26 @@ class ReadableConverter extends AbstractConverter<Readable> {
     input: Readable,
     options: ConvertOptions
   ): Promise<Uint8Array> {
+    const { start, end } = await this.getStartEnd(input, options);
+
+    let index = 0;
     const converter = bufferConverter();
-    const buffers: Buffer[] = [];
+    const chunks: Buffer[] = [];
     await handleReadable(input, async (chunk) => {
       const buffer = await converter.convert(chunk, {
         bufferSize: options.bufferSize,
       });
-      buffers.push(buffer);
+      const size = buffer.byteLength;
+      const e = index + size;
+      if (index < start && start < e) {
+        chunks.push(buffer.slice(start, e));
+      } else if (start <= index) {
+        chunks.push(buffer);
+      }
+      index += size;
+      return end == null || index < end;
     });
-    return Buffer.concat(buffers);
+    return Buffer.concat(chunks);
   }
 
   protected empty(): Readable {

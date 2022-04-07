@@ -19,6 +19,13 @@ import {
 } from "./core";
 import { textHelper } from "./TextHelper";
 class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
+  public getStartEnd(
+    input: ArrayBuffer,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(this._getStartEnd(options, input.byteLength));
+  }
+
   public typeEquals(input: unknown): input is Uint8Array {
     return (
       bufferConverter().typeEquals(input) ||
@@ -91,34 +98,39 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     return Promise.resolve(u8);
   }
 
-  protected _toArrayBuffer(
+  protected async _toArrayBuffer(
     input: Uint8Array,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: ConvertOptions
+    options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    return Promise.resolve(
-      input.buffer.slice(input.byteOffset, input.byteOffset + input.byteLength)
-    );
+    const u8 = await this._toUint8Array(input, options);
+    return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toBase64(input: Uint8Array, _: ConvertOptions): Promise<string> {
-    return Promise.resolve(encode(input));
-  }
-
-  protected _toText(
+  protected async _toBase64(
     input: Uint8Array,
     options: ConvertOptions
   ): Promise<string> {
-    return textHelper().bufferToText(input, options.srcCharset);
+    const u8 = await this._toUint8Array(input, options);
+    return encode(u8);
   }
 
-  protected _toUint8Array(
+  protected async _toText(
     input: Uint8Array,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: ConvertOptions
+    options: ConvertOptions
+  ): Promise<string> {
+    const u8 = await this._toUint8Array(input, options);
+    return textHelper().bufferToText(u8, options.srcCharset);
+  }
+
+  protected async _toUint8Array(
+    input: Uint8Array,
+    options: ConvertOptions
   ): Promise<Uint8Array> {
-    return Promise.resolve(input);
+    if (options.start == null && options.length == null) {
+      return input;
+    }
+    const { start, end } = await this.getStartEnd(input, options);
+    return input.slice(start, end);
   }
 
   protected empty(): Uint8Array {

@@ -20,10 +20,10 @@ export type Data =
 
 export interface Options {
   bufferSize: number;
-  srcStringType: StringType;
-  srcCharset: Charset;
   dstCharset: Charset;
   dstURLType: URLType;
+  srcCharset: Charset;
+  srcStringType: StringType;
 }
 export interface ConvertOptions extends Options {
   length?: number;
@@ -33,6 +33,10 @@ export interface ConvertOptions extends Options {
 export interface Converter<T extends Data> {
   convert(input: Data, options?: Partial<ConvertOptions>): Promise<T>;
   getSize(input: T, options?: Partial<Options>): Promise<number>;
+  getStartEnd(
+    input: T,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }>;
   merge(chunks: T[], options?: Partial<Options>): Promise<T>;
   toArrayBuffer(input: T, options: ConvertOptions): Promise<ArrayBuffer>;
   toBase64(input: T, options: ConvertOptions): Promise<string>;
@@ -131,7 +135,43 @@ export abstract class AbstractConverter<T extends Data>
     return this._toUint8Array(input, options);
   }
 
+  public abstract getStartEnd(
+    input: T,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }>;
   public abstract typeEquals(input: Data): input is T;
+
+  protected _getStartEnd(
+    options: ConvertOptions,
+    size?: number
+  ): { start: number; end: number | undefined } {
+    let start = options.start ?? 0;
+    if (size != null && size < start) {
+      start = size;
+    }
+    let end: number | undefined;
+    if (options.length == null) {
+      if (size != null) {
+        end = size;
+      }
+    } else {
+      end = start + options.length;
+    }
+    if (size != null && end != null && size < end) {
+      end = size;
+    }
+    if (end != null && end < start) {
+      end = start;
+    }
+    return { start, end };
+  }
+
+  protected deleteStartLength(options: ConvertOptions) {
+    options = { ...options };
+    delete options.start;
+    delete options.length;
+    return options;
+  }
 
   protected abstract _convert(
     input: Data,

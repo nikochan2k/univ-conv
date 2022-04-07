@@ -13,6 +13,13 @@ export class FalseConverter implements Converter<any> {
     throw new Error("getSize method not implemented: " + this.key);
   }
 
+  public getStartEnd(
+    _1: any,
+    _2: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    throw new Error("Method not implemented.");
+  }
+
   public merge(_1: any[], _2?: ConvertOptions): Promise<any> {
     throw new Error("merge method not implemented: " + this.key);
   }

@@ -1,14 +1,13 @@
 import {
   arrayBufferConverter,
-  base64Converter,
   readableStreamConverter,
   uint8ArrayConverter,
 } from "./converters";
 import {
   AbstractConverter,
   ConvertOptions,
-  EMPTY_UINT8_ARRAY,
   Data,
+  EMPTY_UINT8_ARRAY,
   Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
@@ -24,6 +23,13 @@ import {
 } from "./util";
 
 class BlobConverter extends AbstractConverter<Blob> {
+  public getStartEnd(
+    input: Blob,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(this._getStartEnd(options, input.size));
+  }
+
   public typeEquals(input: unknown): input is Blob {
     return (
       input instanceof Blob ||
@@ -41,12 +47,31 @@ class BlobConverter extends AbstractConverter<Blob> {
     }
 
     if (readableStreamConverter().typeEquals(input)) {
-      const blobs: Blob[] = [];
+      const { start } = await readableStreamConverter().getStartEnd(
+        input,
+        options
+      );
+
+      let index = 0;
+      const chunks: Blob[] = [];
       await handleReadableStream(input, async (chunk) => {
-        blobs.push(await this.convert(chunk));
+        const blob = await this.convert(chunk, {
+          bufferSize: options.bufferSize,
+        });
+        const size = blob.size;
+        const e = index + size;
+        if (index < start && start < e) {
+          chunks.push(blob.slice(start, e));
+        } else if (start <= index) {
+          chunks.push(blob);
+        }
+        index += size;
+        return true;
       });
-      return this.merge(blobs);
+
+      return this.merge(chunks);
     }
+
     const u8 = await uint8ArrayConverter().convert(input, options);
     if (u8) {
       return new Blob([u8]);
@@ -81,10 +106,17 @@ class BlobConverter extends AbstractConverter<Blob> {
     input: Blob,
     options: ConvertOptions
   ): Promise<string> {
-    const bufferSize = options.bufferSize;
+    const startEnd = await this.getStartEnd(input, options);
+    let start = startEnd.start;
+    const end = startEnd.end as number;
     const chunks: string[] = [];
-    for (let start = 0, end = input.size; start < end; start += bufferSize) {
-      const blobChunk = input.slice(start, start + bufferSize);
+    const bufferSize = options.bufferSize;
+    for (; start < end; start += bufferSize) {
+      let e = start + bufferSize;
+      if (end < e) {
+        e = end;
+      }
+      const blobChunk = input.slice(start, e);
       const chunk = await handleFileReader(
         (reader) => reader.readAsDataURL(blobChunk),
         (data) => dataUrlToBase64(data as string)
@@ -121,27 +153,32 @@ class BlobConverter extends AbstractConverter<Blob> {
 
     if (hasArrayBufferOnBlob) {
       const ab = await input.arrayBuffer();
-      return new Uint8Array(ab);
+      return arrayBufferConverter().toUint8Array(ab, options);
     }
+
+    const startEnd = await this.getStartEnd(input, options);
+    let start = startEnd.start;
+    const end = startEnd.end as number;
 
     const bufferSize = options.bufferSize;
     if (hasReadAsArrayBufferOnBlob) {
-      let byteLength = 0;
+      let index = 0;
       const chunks: ArrayBuffer[] = [];
-      for (let start = 0, end = input.size; start < end; start += bufferSize) {
-        const blobChunk = input.slice(start, start + bufferSize);
+      for (; start < end; start += bufferSize) {
+        let e = start + bufferSize;
+        if (end < e) {
+          e = end;
+        }
+        const blobChunk = input.slice(start, e);
         const chunk = await handleFileReader(
           (reader) => reader.readAsArrayBuffer(blobChunk),
-          (data) => {
-            const chunk = data as ArrayBuffer;
-            byteLength += chunk.byteLength;
-            return chunk;
-          }
+          (data) => data as ArrayBuffer
         );
         chunks.push(chunk);
+        index += chunk.byteLength;
       }
 
-      const u8 = new Uint8Array(byteLength);
+      const u8 = new Uint8Array(index);
       let pos = 0;
       for (const chunk of chunks) {
         u8.set(new Uint8Array(chunk), pos);
@@ -153,26 +190,30 @@ class BlobConverter extends AbstractConverter<Blob> {
       const converter = uint8ArrayConverter();
       const readable = input.stream() as unknown as ReadableStream<unknown>;
       const chunks: Uint8Array[] = [];
+      let index = 0;
       await handleReadableStream(readable, async (chunk) => {
         const u8 = await converter.convert(chunk, {
           bufferSize: options.bufferSize,
         });
-        chunks.push(u8);
+        const size = u8.byteLength;
+        let e = index + size;
+        if (end < e) {
+          e = end;
+        }
+        if (index < start && start < e) {
+          chunks.push(u8.slice(start, e));
+        } else if (start <= index) {
+          chunks.push(u8);
+        }
+        index += size;
+        return end == null || index < end;
       });
-      return converter.merge(chunks);
-    } else {
-      const chunks: string[] = [];
-      for (let start = 0, end = input.size; start < end; start += bufferSize) {
-        const blobChunk = input.slice(start, start + bufferSize);
-        const chunk: string = await handleFileReader(
-          (reader) => reader.readAsDataURL(blobChunk),
-          (data) => dataUrlToBase64(data as string)
-        );
-        chunks.push(chunk);
-      }
-      const base64 = chunks.join("");
-      return base64Converter().toUint8Array(base64, options);
+      const u8 = await uint8ArrayConverter().merge(chunks);
+      return u8;
     }
+
+    const base64 = await this._toBase64(input, options);
+    return uint8ArrayConverter().convert(base64);
   }
 
   protected empty(): Blob {

@@ -18,6 +18,13 @@ import {
 import { textHelper } from "./TextHelper";
 
 class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
+  public getStartEnd(
+    input: ArrayBuffer,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(this._getStartEnd(options, input.byteLength));
+  }
+
   public typeEquals(input: unknown): input is ArrayBuffer {
     return (
       input instanceof ArrayBuffer ||
@@ -82,22 +89,27 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
       u8.set(new Uint8Array(chunk), pos);
       pos += chunk.byteLength;
     }
-    return Promise.resolve(u8.buffer);
+    return Promise.resolve(
+      u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength)
+    );
   }
 
-  protected _toArrayBuffer(
+  protected async _toArrayBuffer(
     input: ArrayBuffer,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: ConvertOptions
+    options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    return Promise.resolve(input);
+    if (options.start == null && options.length == null) {
+      return input;
+    }
+    const { start, end } = await this.getStartEnd(input, options);
+    return input.slice(start, end);
   }
 
   protected async _toBase64(
     input: ArrayBuffer,
     options: ConvertOptions
   ): Promise<string> {
-    const u8 = new Uint8Array(input);
+    const u8 = await this._toUint8Array(input, options);
     return uint8ArrayConverter().toBase64(u8, options);
   }
 
@@ -105,16 +117,16 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     input: ArrayBuffer,
     options: ConvertOptions
   ): Promise<string> {
-    const u8 = new Uint8Array(input);
+    const u8 = await this._toUint8Array(input, options);
     return textHelper().bufferToText(u8, options.srcCharset);
   }
 
-  protected _toUint8Array(
+  protected async _toUint8Array(
     input: ArrayBuffer,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: ConvertOptions
+    options: ConvertOptions
   ): Promise<Uint8Array> {
-    return Promise.resolve(new Uint8Array(input));
+    const ab = await this._toArrayBuffer(input, options);
+    return new Uint8Array(ab);
   }
 
   protected empty(): ArrayBuffer {

@@ -8,6 +8,13 @@ import { textHelper } from "./TextHelper";
 import { handleFileReader, hasReadAsBinaryStringOnBlob, isNode } from "./util";
 
 class BinaryConverter extends AbstractConverter<string> {
+  public getStartEnd(
+    input: string,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(this._getStartEnd(options, input.length));
+  }
+
   public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }
@@ -20,15 +27,17 @@ class BinaryConverter extends AbstractConverter<string> {
       if (options.srcStringType === "binary") {
         return input;
       }
-    } else if (blobConverter().typeEquals(input)) {
+    }
+
+    if (blobConverter().typeEquals(input)) {
       if (hasReadAsBinaryStringOnBlob) {
+        const startEnd = await blobConverter().getStartEnd(input, options);
+        let start = startEnd.start;
+        const end = startEnd.end as number;
+
         const bufferSize = options.bufferSize;
         const chunks: string[] = [];
-        for (
-          let start = 0, end = input.size;
-          start < end;
-          start += bufferSize
-        ) {
+        for (; start < end; start += bufferSize) {
           const blobChunk = input.slice(start, start + bufferSize);
           const chunk: string = await handleFileReader(
             (reader) => reader.readAsBinaryString(blobChunk),
@@ -65,7 +74,7 @@ class BinaryConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    const u8 = await this._toUint8Array(input, options);
+    const u8 = this._toUint8ArrayInternal(input);
     return arrayBufferConverter().toArrayBuffer(u8, options);
   }
 
@@ -73,7 +82,7 @@ class BinaryConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<string> {
-    const u8 = await this._toUint8Array(input, options);
+    const u8 = this._toUint8ArrayInternal(input);
     return uint8ArrayConverter().toBase64(u8, options);
   }
 
@@ -81,22 +90,26 @@ class BinaryConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<string> {
-    const u8 = await this.toUint8Array(input, options);
+    const u8 = await this._toUint8Array(input, options);
     return textHelper().bufferToText(u8, options.srcCharset);
   }
 
-  protected _toUint8Array(
+  protected async _toUint8Array(
     input: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: ConvertOptions
+    options: ConvertOptions
   ): Promise<Uint8Array> {
+    const u8 = this._toUint8ArrayInternal(input);
+    return uint8ArrayConverter().toUint8Array(u8, options);
+  }
+
+  protected _toUint8ArrayInternal(input: string): Uint8Array {
+    let u8: Uint8Array;
     if (isNode) {
-      return Promise.resolve(Buffer.from(input, "binary"));
+      u8 = Buffer.from(input, "binary");
     } else {
-      return Promise.resolve(
-        Uint8Array.from(input.split(""), (e) => e.charCodeAt(0))
-      );
+      u8 = Uint8Array.from(input.split(""), (e) => e.charCodeAt(0));
     }
+    return u8;
   }
 
   protected empty(): string {

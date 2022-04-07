@@ -147,12 +147,15 @@ export class DefaultConverter {
     } else if (isWritableStream(output)) {
       let stream: ReadableStream<unknown> | undefined;
       try {
-        stream = await readableStreamConverter().convert(input);
+        stream = await readableStreamConverter().convert(input, options);
         if (typeof stream.pipeTo === "function") {
           await stream.pipeTo(output);
         } else {
           const writer = output.getWriter();
-          await handleReadableStream(stream, (chunk) => writer.write(chunk));
+          await handleReadableStream(stream, async (chunk) => {
+            await writer.write(chunk);
+            return true;
+          });
         }
       } finally {
         closeStream(output);
