@@ -18,6 +18,7 @@ import {
   Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
+import { isNode } from "./util";
 class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
   public getStartEnd(
     input: ArrayBuffer,
@@ -89,7 +90,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
       return sum + chunk.byteLength;
     }, 0);
 
-    const u8 = new Uint8Array(byteLength);
+    const u8 = isNode ? Buffer.alloc(byteLength) : new Uint8Array(byteLength);
     let pos = 0;
     for (const chunk of chunks) {
       u8.set(chunk, pos);

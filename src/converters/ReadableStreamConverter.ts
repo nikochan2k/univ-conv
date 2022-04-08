@@ -267,7 +267,7 @@ class ReadableStreamConverter extends AbstractConverter<
     input: ReadableStream<unknown>,
     options: ConvertOptions
   ): Promise<Uint8Array> {
-    const converter = isNode ? bufferConverter() : uint8ArrayConverter();
+    const converter = uint8ArrayConverter();
     const chunks: Uint8Array[] = [];
     await handleReadableStream(input, async (chunk) => {
       const bufferSize = options.bufferSize;
@@ -275,7 +275,7 @@ class ReadableStreamConverter extends AbstractConverter<
       chunks.push(u8);
       return true;
     });
-    return converter.merge(chunks as any); // eslint-disable-line
+    return converter.merge(chunks, options);
   }
 
   protected empty(): ReadableStream<unknown> {

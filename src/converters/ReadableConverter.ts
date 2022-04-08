@@ -163,14 +163,13 @@ class ReadableConverter extends AbstractConverter<Readable> {
     options: ConvertOptions
   ): Promise<Uint8Array> {
     const { start, end } = await this.getStartEnd(input, options);
+    const bufferSize = options.bufferSize;
 
     let index = 0;
     const converter = bufferConverter();
     const chunks: Buffer[] = [];
     await handleReadable(input, async (chunk) => {
-      const buffer = await converter.convert(chunk, {
-        bufferSize: options.bufferSize,
-      });
+      const buffer = await converter.convert(chunk, { bufferSize });
       const size = buffer.byteLength;
       let e = index + size;
       if (end != null && end < e) e = end;

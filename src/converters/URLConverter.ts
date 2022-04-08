@@ -90,7 +90,7 @@ class URLConverter extends AbstractConverter<string> {
         const readable = await converter.convert(url);
         readables.push(readable);
       }
-      const merged = await converter.merge(readables);
+      const merged = await converter.merge(readables, options);
       return (await this._convert(merged, {
         ...options,
         dstURLType: "file",
@@ -102,7 +102,7 @@ class URLConverter extends AbstractConverter<string> {
         const readable = await converter.convert(url);
         readables.push(readable);
       }
-      const merged = await converter.merge(readables);
+      const merged = await converter.merge(readables, options);
       return (await this._convert(merged, {
         ...options,
         dstURLType: "blob",

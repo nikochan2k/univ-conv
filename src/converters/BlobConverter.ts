@@ -47,29 +47,29 @@ class BlobConverter extends AbstractConverter<Blob> {
     }
 
     if (readableStreamConverter().typeEquals(input)) {
-      const { start } = await readableStreamConverter().getStartEnd(
+      const { start, end } = await readableStreamConverter().getStartEnd(
         input,
         options
       );
+      const bufferSize = options.bufferSize;
 
       let index = 0;
       const chunks: Blob[] = [];
       await handleReadableStream(input, async (chunk) => {
-        const blob = await this.convert(chunk, {
-          bufferSize: options.bufferSize,
-        });
+        const blob = await this.convert(chunk, { bufferSize });
         const size = blob.size;
-        const e = index + size;
+        let e = index + size;
+        if (end != null && end < e) e = end;
         if (index < start && start < e) {
           chunks.push(blob.slice(start, e));
         } else if (start <= index) {
           chunks.push(blob);
         }
         index += size;
-        return true;
+        return end == null || e < end;
       });
 
-      return this.merge(chunks);
+      return this.merge(chunks, options);
     }
 
     const u8 = await uint8ArrayConverter().convert(input, options);
@@ -164,9 +164,7 @@ class BlobConverter extends AbstractConverter<Blob> {
       const chunks: ArrayBuffer[] = [];
       for (; start < end; start += bufferSize) {
         let e = start + bufferSize;
-        if (end < e) {
-          e = end;
-        }
+        if (end < e) e = end;
         const blobChunk = input.slice(start, e);
         const chunk = await handleFileReader(
           (reader) => reader.readAsArrayBuffer(blobChunk),
@@ -190,14 +188,11 @@ class BlobConverter extends AbstractConverter<Blob> {
       const chunks: Uint8Array[] = [];
       let index = 0;
       await handleReadableStream(readable, async (chunk) => {
-        const u8 = await converter.convert(chunk, {
-          bufferSize: options.bufferSize,
-        });
+        const bufferSize = options.bufferSize;
+        const u8 = await converter.convert(chunk, { bufferSize });
         const size = u8.byteLength;
         let e = index + size;
-        if (end < e) {
-          e = end;
-        }
+        if (end < e) e = end;
         if (index < start && start < e) {
           chunks.push(u8.slice(start, e));
         } else if (start <= index) {
@@ -206,8 +201,7 @@ class BlobConverter extends AbstractConverter<Blob> {
         index += size;
         return end == null || index < end;
       });
-      const u8 = await uint8ArrayConverter().merge(chunks);
-      return u8;
+      return uint8ArrayConverter().merge(chunks, options);
     }
 
     const base64 = await this.toBase64(input, options);
