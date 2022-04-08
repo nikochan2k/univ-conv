@@ -10,13 +10,14 @@ import {
   uint8ArrayConverter,
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
+import { isNode } from "./util";
 
 class TextConverter extends AbstractConverter<string> {
-  public async getStartEnd(
+  public getStartEnd(
     input: string,
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
-    const u8 = await this.toUint8Array(input, options);
+    const u8 = this._toUint8ArrayInternal(input);
     return Promise.resolve(this._getStartEnd(options, u8.byteLength));
   }
 
@@ -79,16 +80,19 @@ class TextConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    const u8 = await this._toUint8Array(input, options);
-    return uint8ArrayConverter().toArrayBuffer(u8, options);
+    const u8 = await this.toUint8Array(input, options);
+    return uint8ArrayConverter().toArrayBuffer(
+      u8,
+      this.deleteStartLength(options)
+    );
   }
 
   protected async _toBase64(
     input: string,
     options: ConvertOptions
   ): Promise<string> {
-    const u8 = await this._toUint8Array(input, options);
-    return uint8ArrayConverter().toBase64(u8, options);
+    const u8 = await this.toUint8Array(input, options);
+    return uint8ArrayConverter().toBase64(u8, this.deleteStartLength(options));
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -98,10 +102,15 @@ class TextConverter extends AbstractConverter<string> {
 
   protected _toUint8Array(
     input: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: ConvertOptions
+    options: ConvertOptions
   ): Promise<Uint8Array> {
-    const u8 = new Uint8Array(input.length * 2);
+    const u8 = this._toUint8ArrayInternal(input);
+    return uint8ArrayConverter().toUint8Array(u8, options);
+  }
+
+  protected _toUint8ArrayInternal(input: string): Uint8Array {
+    const size = input.length;
+    const u8 = isNode ? Buffer.alloc(size) : new Uint8Array(size);
     for (let i = 0; i < u8.length; i += 2) {
       let x = input.charCodeAt(i / 2);
       const a = x % 256;
@@ -110,7 +119,7 @@ class TextConverter extends AbstractConverter<string> {
       u8[i] = x;
       u8[i + 1] = a;
     }
-    return Promise.resolve(u8);
+    return u8;
   }
 
   protected empty(): string {

@@ -110,7 +110,7 @@ class URLConverter extends AbstractConverter<string> {
     } else {
       const buffers: ArrayBuffer[] = [];
       for (const url of urls) {
-        const buffer = await this._toArrayBuffer(url, options);
+        const buffer = await this.toArrayBuffer(url, options);
         buffers.push(buffer);
       }
       const merged = await arrayBufferConverter().merge(buffers, options);
@@ -138,7 +138,7 @@ class URLConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<string> {
-    const u8 = await this._toUint8Array(input, options);
+    const u8 = await this.toUint8Array(input, options);
     return uint8ArrayConverter().toBase64(u8, options);
   }
 
@@ -146,7 +146,7 @@ class URLConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<string> {
-    const ab = await this._toArrayBuffer(input, options);
+    const ab = await this.toArrayBuffer(input, options);
     return textConverter().convert(ab, options);
   }
 

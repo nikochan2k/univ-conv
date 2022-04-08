@@ -222,7 +222,7 @@ class ReadableStreamConverter extends AbstractConverter<
     input: ReadableStream<unknown>,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    const u8 = await this._toUint8Array(input, options);
+    const u8 = await this.toUint8Array(input, options);
     return uint8ArrayConverter().toArrayBuffer(
       u8,
       this.deleteStartLength(options)

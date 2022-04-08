@@ -90,7 +90,7 @@ class BinaryConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<string> {
-    const u8 = await this._toUint8Array(input, options);
+    const u8 = await this.toUint8Array(input, options);
     return textHelper().bufferToText(u8, options.srcCharset);
   }
 

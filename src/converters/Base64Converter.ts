@@ -98,7 +98,7 @@ class Base64Converter extends AbstractConverter<string> {
     if (options.start == null && options.length == null) {
       return input;
     }
-    const u8 = await this._toUint8Array(input, options);
+    const u8 = await this.toUint8Array(input, options);
     return this.convert(u8, this.deleteStartLength(options));
   }
 
@@ -106,7 +106,7 @@ class Base64Converter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<string> {
-    const u8 = await this._toUint8Array(input, options);
+    const u8 = await this.toUint8Array(input, options);
     return textHelper().bufferToText(u8, options.srcCharset);
   }
 
@@ -114,7 +114,7 @@ class Base64Converter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<Uint8Array> {
-    const ab = await this._toArrayBuffer(input, options);
+    const ab = await this.toArrayBuffer(input, options);
     return isNode ? Buffer.from(ab) : new Uint8Array(ab);
   }
 

@@ -138,7 +138,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     input: Readable,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    const u8 = await this._toUint8Array(input, options);
+    const u8 = await this.toUint8Array(input, options);
     return u8.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
   }
 
@@ -146,7 +146,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     input: Readable,
     options: ConvertOptions
   ): Promise<string> {
-    const buffer = (await this._toUint8Array(input, options)) as Buffer;
+    const buffer = (await this.toUint8Array(input, options)) as Buffer;
     return bufferConverter().toBase64(buffer, options);
   }
 
@@ -154,7 +154,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     input: Readable,
     options: ConvertOptions
   ): Promise<string> {
-    const u8 = await this._toUint8Array(input, options);
+    const u8 = await this.toUint8Array(input, options);
     return textHelper().bufferToText(u8, options.srcCharset);
   }
 
