@@ -172,7 +172,8 @@ class ReadableConverter extends AbstractConverter<Readable> {
         bufferSize: options.bufferSize,
       });
       const size = buffer.byteLength;
-      const e = index + size;
+      let e = index + size;
+      if (end != null && end < e) e = end;
       if (index < start && start < e) {
         chunks.push(buffer.slice(start, e));
       } else if (start <= index) {

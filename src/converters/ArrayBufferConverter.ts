@@ -16,6 +16,7 @@ import {
   Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
+import { isNode } from "./util";
 
 class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
   public getStartEnd(
@@ -126,7 +127,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     options: ConvertOptions
   ): Promise<Uint8Array> {
     const ab = await this._toArrayBuffer(input, options);
-    return new Uint8Array(ab);
+    return isNode ? Buffer.from(ab) : new Uint8Array(ab);
   }
 
   protected empty(): ArrayBuffer {

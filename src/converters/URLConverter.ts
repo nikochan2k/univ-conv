@@ -24,6 +24,14 @@ if (typeof fetch !== "function") {
 }
 
 class URLConverter extends AbstractConverter<string> {
+  public async getStartEnd(
+    input: string,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    const size = await this._getSize(input, options);
+    return this._getStartEnd(options, size);
+  }
+
   public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }

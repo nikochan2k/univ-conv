@@ -1,6 +1,7 @@
 import { base64Converter, uint8ArrayConverter } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
+import { isNode } from "./util";
 
 const BYTE_TO_HEX: string[] = [];
 for (let n = 0; n <= 0xff; ++n) {
@@ -115,7 +116,7 @@ class HexConverter extends AbstractConverter<string> {
     let start = startEnd.start;
     const end = startEnd.end as number;
 
-    const bytes = new Uint8Array(end - start);
+    const u8 = isNode ? Buffer.alloc(end - start) : new Uint8Array(end - start);
     for (; start < end; start++) {
       const ai = input[start * 2] as string;
       const a = MAP_HEX[ai];
@@ -124,9 +125,9 @@ class HexConverter extends AbstractConverter<string> {
       if (a == null || b == null) {
         break;
       }
-      bytes[start] = (a << 4) | b;
+      u8[start] = (a << 4) | b;
     }
-    return bytes;
+    return u8;
   }
 
   protected empty(): string {

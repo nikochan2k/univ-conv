@@ -113,9 +113,7 @@ class BlobConverter extends AbstractConverter<Blob> {
     const bufferSize = options.bufferSize;
     for (; start < end; start += bufferSize) {
       let e = start + bufferSize;
-      if (end < e) {
-        e = end;
-      }
+      if (end < e) e = end;
       const blobChunk = input.slice(start, e);
       const chunk = await handleFileReader(
         (reader) => reader.readAsDataURL(blobChunk),

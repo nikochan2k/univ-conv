@@ -8,6 +8,7 @@ import {
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
+import { isNode } from "./util";
 
 class Base64Converter extends AbstractConverter<string> {
   public async getStartEnd(
@@ -114,7 +115,7 @@ class Base64Converter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<Uint8Array> {
     const ab = await this._toArrayBuffer(input, options);
-    return new Uint8Array(ab);
+    return isNode ? Buffer.from(ab) : new Uint8Array(ab);
   }
 
   protected empty(): string {
