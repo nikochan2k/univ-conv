@@ -1,4 +1,3 @@
-import { text } from "stream/consumers";
 import {
   arrayBufferConverter,
   base64Converter,
@@ -11,15 +10,15 @@ import {
   uint8ArrayConverter,
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
-import { isNode } from "./util";
+import { textHelper } from "./TextHelper";
 
 class TextConverter extends AbstractConverter<string> {
-  public getStartEnd(
+  public async getStartEnd(
     input: string,
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
-    const u8 = this._toUint8ArrayInternal(input);
-    return Promise.resolve(this._getStartEnd(options, u8.byteLength));
+    const u8 = await this.toUint8Array(input, this.deleteStartLength(options));
+    return this._getStartEnd(options, u8.byteLength);
   }
 
   public typeEquals(input: unknown): input is string {
@@ -39,7 +38,7 @@ class TextConverter extends AbstractConverter<string> {
       } else if (srcStringType === "hex") {
         return hexConverter().toText(input, options);
       }
-      return input;
+      return this.toText(input, options);
     }
     if (arrayBufferConverter().typeEquals(input)) {
       return arrayBufferConverter().toText(input, options);
@@ -107,30 +106,19 @@ class TextConverter extends AbstractConverter<string> {
     ) {
       return input;
     }
-
-    return Promise.resolve(input);
+    const u8 = await this.toUint8Array(input, options);
+    return textHelper().bufferToText(u8, options.bufferToTextCharset);
   }
 
-  protected _toUint8Array(
+  protected async _toUint8Array(
     input: string,
     options: ConvertOptions
   ): Promise<Uint8Array> {
-    const u8 = this._toUint8ArrayInternal(input);
+    const u8 = await textHelper().textToBuffer(
+      input,
+      options.textToBufferCharset
+    );
     return uint8ArrayConverter().toUint8Array(u8, options);
-  }
-
-  protected _toUint8ArrayInternal(input: string): Uint8Array {
-    const size = input.length;
-    const u8 = isNode ? Buffer.alloc(size) : new Uint8Array(size);
-    for (let i = 0; i < u8.length; i += 2) {
-      let x = input.charCodeAt(i / 2);
-      const a = x % 256;
-      x -= a;
-      x /= 256;
-      u8[i] = x;
-      u8[i + 1] = a;
-    }
-    return u8;
   }
 
   protected empty(): string {

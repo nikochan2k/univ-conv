@@ -20,10 +20,10 @@ export type Data =
 
 export interface Options {
   bufferSize: number;
-  textToBufferCharset: Charset;
-  dstURLType: URLType;
   bufferToTextCharset: Charset;
+  dstURLType: URLType;
   srcStringType: StringType;
+  textToBufferCharset: Charset;
 }
 export interface ConvertOptions extends Options {
   length?: number;

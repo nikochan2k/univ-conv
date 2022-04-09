@@ -2,7 +2,7 @@ import { Charset } from "./core";
 import { isNode } from "./util";
 
 export interface TextHelper {
-  bufferToText(buf: Uint8Array, bufCharset: Charset): Promise<string>;
+  bufferToText(u8: Uint8Array, bufCharset: Charset): Promise<string>;
   textToBuffer(text: string, bufCharset: Charset): Promise<Uint8Array>;
 }
 
