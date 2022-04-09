@@ -1,3 +1,4 @@
+import { text } from "stream/consumers";
 import {
   arrayBufferConverter,
   base64Converter,
@@ -95,8 +96,18 @@ class TextConverter extends AbstractConverter<string> {
     return uint8ArrayConverter().toBase64(u8, this.deleteStartLength(options));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _toText(input: string, _: ConvertOptions): Promise<string> {
+  protected async _toText(
+    input: string,
+    options: ConvertOptions
+  ): Promise<string> {
+    if (
+      options.start == null &&
+      options.length == null &&
+      options.bufferToTextCharset === options.textToBufferCharset
+    ) {
+      return input;
+    }
+
     return Promise.resolve(input);
   }
 

@@ -41,7 +41,10 @@ class Base64Converter extends AbstractConverter<string> {
       } else if (srcStringType === "url") {
         return urlConverter().toBase64(input, options);
       }
-      input = await textHelper().textToBuffer(input, options.dstCharset);
+      input = await textHelper().textToBuffer(
+        input,
+        options.textToBufferCharset
+      );
     }
     if (uint8ArrayConverter().typeEquals(input)) {
       return uint8ArrayConverter().toBase64(input, options);
@@ -125,7 +128,7 @@ class Base64Converter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return textHelper().bufferToText(u8, options.srcCharset);
+    return textHelper().bufferToText(u8, options.bufferToTextCharset);
   }
 
   protected async _toUint8Array(

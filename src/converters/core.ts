@@ -20,9 +20,9 @@ export type Data =
 
 export interface Options {
   bufferSize: number;
-  dstCharset: Charset;
+  textToBufferCharset: Charset;
   dstURLType: URLType;
-  srcCharset: Charset;
+  bufferToTextCharset: Charset;
   srcStringType: StringType;
 }
 export interface ConvertOptions extends Options {
@@ -220,8 +220,8 @@ export abstract class AbstractConverter<T extends Data>
         }
       }
     }
-    if (!options.srcCharset) options.srcCharset = "utf8";
-    if (!options.dstCharset) options.dstCharset = "utf8";
+    if (!options.bufferToTextCharset) options.bufferToTextCharset = "utf8";
+    if (!options.textToBufferCharset) options.textToBufferCharset = "utf8";
     if (options.dstURLType === "file") {
       if (!toFileURL) {
         throw new Error("File URL is not supported");

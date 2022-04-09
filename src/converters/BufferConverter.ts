@@ -40,7 +40,10 @@ class BufferConverter extends AbstractConverter<Buffer> {
       } else if (type === "hex") {
         buffer = Buffer.from(input, "hex");
       } else if (type === "text") {
-        const u8 = await textHelper().textToBuffer(input, options.dstCharset);
+        const u8 = await textHelper().textToBuffer(
+          input,
+          options.textToBufferCharset
+        );
         buffer = u8 as Buffer;
       }
       if (buffer) {
@@ -116,7 +119,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
     options: ConvertOptions
   ): Promise<string> {
     const buffer = await this.toUint8Array(input, options);
-    return textHelper().bufferToText(buffer, options.srcCharset);
+    return textHelper().bufferToText(buffer, options.bufferToTextCharset);
   }
 
   protected async _toUint8Array(

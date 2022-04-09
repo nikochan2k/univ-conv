@@ -54,7 +54,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
       } else if (srcStringType === "url") {
         return urlConverter().toUint8Array(input, options);
       }
-      return textHelper().textToBuffer(input, options.dstCharset);
+      return textHelper().textToBuffer(input, options.textToBufferCharset);
     }
     if (arrayBufferConverter().typeEquals(input)) {
       return arrayBufferConverter().toUint8Array(input, options);
@@ -120,7 +120,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return textHelper().bufferToText(u8, options.srcCharset);
+    return textHelper().bufferToText(u8, options.bufferToTextCharset);
   }
 
   protected async _toUint8Array(

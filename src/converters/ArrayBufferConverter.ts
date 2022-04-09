@@ -52,7 +52,10 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
       } else if (srcStringType === "url") {
         return urlConverter().toArrayBuffer(input, options);
       }
-      input = await textHelper().textToBuffer(input, options.dstCharset);
+      input = await textHelper().textToBuffer(
+        input,
+        options.textToBufferCharset
+      );
     }
     if (uint8ArrayConverter().typeEquals(input)) {
       return uint8ArrayConverter().toArrayBuffer(input, options);
@@ -119,7 +122,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return textHelper().bufferToText(u8, options.srcCharset);
+    return textHelper().bufferToText(u8, options.bufferToTextCharset);
   }
 
   protected async _toUint8Array(
