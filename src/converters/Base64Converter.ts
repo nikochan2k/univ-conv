@@ -3,6 +3,7 @@ import {
   arrayBufferConverter,
   binaryConverter,
   blobConverter,
+  bufferConverter,
   hexConverter,
   readableConverter,
   readableStreamConverter,
@@ -45,6 +46,9 @@ class Base64Converter extends AbstractConverter<string> {
         input,
         options.textToBufferCharset
       );
+    }
+    if (bufferConverter().typeEquals(input)) {
+      return bufferConverter().toBase64(input, options);
     }
     if (uint8ArrayConverter().typeEquals(input)) {
       return uint8ArrayConverter().toBase64(input, options);

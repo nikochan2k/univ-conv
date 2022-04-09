@@ -53,7 +53,11 @@ class HexConverter extends AbstractConverter<string> {
   ): Promise<string | undefined> {
     if (typeof input === "string") {
       if (options.srcStringType === "hex") {
-        return input;
+        if (options.start == null && options.length == null) {
+          return input;
+        }
+        const { start, end } = await this.getStartEnd(input, options);
+        return input.slice(start * 2, end ? end * 2 : undefined);
       }
     }
 

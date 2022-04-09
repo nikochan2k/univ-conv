@@ -2,6 +2,7 @@ import {
   base64Converter,
   binaryConverter,
   blobConverter,
+  bufferConverter,
   hexConverter,
   readableConverter,
   readableStreamConverter,
@@ -38,7 +39,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     options: ConvertOptions
   ): Promise<ArrayBuffer | undefined> {
     if (this.typeEquals(input)) {
-      return input;
+      return this.toArrayBuffer(input, options);
     }
 
     if (typeof input === "string") {
@@ -56,6 +57,9 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
         input,
         options.textToBufferCharset
       );
+    }
+    if (bufferConverter().typeEquals(input)) {
+      return bufferConverter().toArrayBuffer(input, options);
     }
     if (uint8ArrayConverter().typeEquals(input)) {
       return uint8ArrayConverter().toArrayBuffer(input, options);

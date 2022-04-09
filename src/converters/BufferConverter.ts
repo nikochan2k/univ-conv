@@ -27,7 +27,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
     options: ConvertOptions
   ): Promise<Buffer | undefined> {
     if (this.typeEquals(input)) {
-      return input;
+      return this.toUint8Array(input, options) as Promise<Buffer>;
     }
 
     if (typeof input === "string") {

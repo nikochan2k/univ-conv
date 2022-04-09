@@ -139,7 +139,7 @@ class ReadableStreamConverter extends AbstractConverter<
             done = res.done;
             if (!done) {
               if (blobConverter().typeEquals(value)) {
-                const blob = await blobConverter().convert(value);
+                const blob = value;
                 const size = blob.size;
                 const e = index + size;
                 if (index < start && start < e) {
