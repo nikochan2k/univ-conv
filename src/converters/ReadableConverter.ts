@@ -3,6 +3,7 @@ import {
   blobConverter,
   bufferConverter,
   readableStreamConverter,
+  uint8ArrayConverter,
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
@@ -17,19 +18,44 @@ import {
 } from "./util";
 
 class ReadableOfReadableStream extends Readable {
-  private reader: ReadableStreamDefaultReader<unknown> | undefined;
-  constructor(private rs: ReadableStream<unknown> | undefined) {
+  private reader: ReadableStreamDefaultReader<unknown>;
+  private index = 0;
+  constructor(
+    private rs: ReadableStream<unknown>,
+    private start: number,
+    private end: number | undefined
+  ) {
     super();
-    this.reader = rs?.getReader();
+    this.reader = rs.getReader();
   }
   override _read = () => {
-    if (!this.reader) {
-      return;
-    }
     this.reader
       .read()
-      .then(({ value, done }) => {
+      .then(async ({ value, done }) => {
         if (value) {
+          if (blobConverter().typeEquals(value)) {
+            const blob = value;
+            const size = blob.size;
+            let e = this.index + size;
+            if (this.end != null && this.end < e) e = this.end;
+            if (this.index < this.start && this.start < e) {
+              this.push(blob.slice(this.start, e));
+            } else if (this.start <= this.index) {
+              this.push(blob);
+            }
+            this.index += size;
+          } else {
+            const u8 = await uint8ArrayConverter().convert(value as Data);
+            const size = u8.byteLength;
+            let e = this.index + size;
+            if (this.end != null && this.end < e) e = this.end;
+            if (this.index < this.start && this.start < e) {
+              this.push(u8.slice(this.start, e));
+            } else if (this.start <= this.index) {
+              this.push(u8);
+            }
+            this.index += size;
+          }
           this.push(value);
         }
         if (done) {
@@ -67,18 +93,22 @@ class ReadableConverter extends AbstractConverter<Readable> {
         if (isNode) {
           return resp.body as unknown as Readable;
         }
-        input = resp.body as ReadableStream<unknown>;
+        input = resp.body as ReadableStream;
       } else if (input.startsWith("file:") && fileToReadable) {
         return fileToReadable(input);
       }
     }
     if (blobConverter().typeEquals(input)) {
       if (hasStreamOnBlob) {
-        input = input.stream() as unknown as ReadableStream<unknown>;
+        input = input.stream() as unknown as ReadableStream;
       }
     }
     if (readableStreamConverter().typeEquals(input)) {
-      return new ReadableOfReadableStream(input);
+      const { start, end } = await readableStreamConverter().getStartEnd(
+        input,
+        options
+      );
+      return new ReadableOfReadableStream(input as ReadableStream, start, end);
     }
 
     const buffer = await bufferConverter().convert(input, options);
