@@ -18,6 +18,36 @@ import {
   isReadableStream,
 } from "./util";
 
+function createReadableStream<T>(
+  bufferSize: number,
+  startEnd: { start: number; end: number | undefined },
+  slice: (s: number, e: number) => T,
+  getSize: (chunk: T) => number
+) {
+  const start = startEnd.start;
+  const end = startEnd.end as number;
+  let index = 0;
+  return new ReadableStream<unknown>({
+    start: (controller) => {
+      do {
+        let e = index + bufferSize;
+        if (end < e) e = end;
+        let chunk: T;
+        if (index < start && start < e) {
+          chunk = slice(start, e);
+        } else if (start <= index) {
+          chunk = slice(index, e);
+        } else {
+          continue;
+        }
+        controller.enqueue(chunk);
+        index += getSize(chunk);
+      } while (index < end);
+      controller.close();
+    },
+  });
+}
+
 class ReadableStreamConverter extends AbstractConverter<
   ReadableStream<unknown>
 > {
@@ -53,45 +83,30 @@ class ReadableStreamConverter extends AbstractConverter<
         input = input.stream() as unknown as ReadableStream<unknown>;
       }
     }
+
     const bufferSize = options.bufferSize;
     if (isBrowser) {
       const blob = await blobConverter().convert(input, options);
       if (hasStreamOnBlob) {
         input = blob.stream() as unknown as ReadableStream<unknown>;
       } else {
-        const end = blob.size;
-        let start = 0;
-        return new ReadableStream<unknown>({
-          start: (controller) => {
-            do {
-              let e = start + bufferSize;
-              if (end < e) e = end;
-              const chunk = blob.slice(start, e);
-              controller.enqueue(chunk);
-              start += chunk.size;
-            } while (start < end);
-            controller.close();
-          },
-        });
+        return createReadableStream(
+          bufferSize,
+          await blobConverter().getStartEnd(blob, options),
+          (s, e) => blob.slice(s, e),
+          (chunk) => chunk.size
+        );
       }
     }
 
     const u8 = await uint8ArrayConverter().convert(input, options);
     if (u8) {
-      const end = u8.byteLength;
-      let start = 0;
-      return new ReadableStream({
-        start: (converter) => {
-          do {
-            let e = start + bufferSize;
-            if (end < e) e = end;
-            const chunk = u8.slice(start, e);
-            converter.enqueue(chunk);
-            start += chunk.byteLength;
-          } while (start < end);
-          converter.close();
-        },
-      });
+      return createReadableStream(
+        bufferSize,
+        await uint8ArrayConverter().getStartEnd(u8, options),
+        (s, e) => u8.slice(s, e),
+        (chunk) => chunk.byteLength
+      );
     }
 
     if (readableConverter().typeEquals(input)) {
@@ -127,41 +142,43 @@ class ReadableStreamConverter extends AbstractConverter<
 
     if (this.typeEquals(input)) {
       const stream = input;
+      const reader = stream.getReader();
       const { start, end } = await this.getStartEnd(stream, options);
       return new ReadableStream({
         start: async (controller) => {
-          const reader = stream.getReader();
           let index = 0;
-          let done = false;
+          let done: boolean;
           do {
             const res = await reader.read();
             const value = res.value;
             done = res.done;
             if (!done) {
+              let data: Blob | Uint8Array;
+              let size: number;
               if (blobConverter().typeEquals(value)) {
-                const blob = value;
-                const size = blob.size;
-                const e = index + size;
-                if (index < start && start < e) {
-                  controller.enqueue(blob.slice(start, e));
-                } else if (start <= index) {
-                  controller.enqueue(blob);
-                }
-                index += size;
+                data = value;
+                size = data.size;
               } else {
-                const u8 = await uint8ArrayConverter().convert(value as Data);
-                const size = u8.byteLength;
-                const e = index + size;
-                if (index < start && start < e) {
-                  controller.enqueue(u8.slice(start, e));
-                } else if (start <= index) {
-                  controller.enqueue(u8);
-                }
-                index += size;
+                data = await uint8ArrayConverter().convert(value as Data);
+                size = data.byteLength;
               }
+              let e = index + size;
+              if (end != null && end < e) e = end;
+              if (index < start && start < e) {
+                controller.enqueue(data.slice(start, e));
+              } else if (start <= index) {
+                controller.enqueue(data);
+              }
+              index += size;
             }
           } while (!done && (end == null || index < end));
           controller.close();
+        },
+        cancel: (err) => {
+          reader
+            .cancel(err)
+            .catch((e) => console.debug(e))
+            .finally(() => closeStream(stream));
         },
       });
     }

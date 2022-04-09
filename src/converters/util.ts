@@ -264,15 +264,15 @@ export function closeStream(
     stream.destroy(reason as Error | undefined);
   } else if (isReadableStream(stream)) {
     if (reason) {
-      stream.cancel(reason).catch(() => {}); // eslint-disable-line @typescript-eslint/no-empty-function
+      stream.cancel(reason).catch((e) => console.debug(e));
     } else {
-      stream.cancel().catch(() => {}); // eslint-disable-line @typescript-eslint/no-empty-function
+      stream.cancel().catch((e) => console.debug(e));
     }
   } else if (isWritableStream(stream)) {
     if (reason) {
-      stream.abort(reason).catch(() => {}); // eslint-disable-line @typescript-eslint/no-empty-function
+      stream.abort(reason).catch((e) => console.debug(e));
     } else {
-      stream.close().catch(() => {}); // eslint-disable-line @typescript-eslint/no-empty-function
+      stream.close().catch((e) => console.debug(e));
     }
   }
 }

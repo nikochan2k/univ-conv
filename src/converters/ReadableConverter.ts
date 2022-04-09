@@ -33,29 +33,23 @@ class ReadableOfReadableStream extends Readable {
       .read()
       .then(async ({ value, done }) => {
         if (value) {
+          let data: Blob | Uint8Array;
+          let size: number;
           if (blobConverter().typeEquals(value)) {
-            const blob = value;
-            const size = blob.size;
-            let e = this.index + size;
-            if (this.end != null && this.end < e) e = this.end;
-            if (this.index < this.start && this.start < e) {
-              this.push(blob.slice(this.start, e));
-            } else if (this.start <= this.index) {
-              this.push(blob);
-            }
-            this.index += size;
+            data = value;
+            size = data.size;
           } else {
-            const u8 = await uint8ArrayConverter().convert(value as Data);
-            const size = u8.byteLength;
-            let e = this.index + size;
-            if (this.end != null && this.end < e) e = this.end;
-            if (this.index < this.start && this.start < e) {
-              this.push(u8.slice(this.start, e));
-            } else if (this.start <= this.index) {
-              this.push(u8);
-            }
-            this.index += size;
+            data = await uint8ArrayConverter().convert(value as Data);
+            size = data.byteLength;
           }
+          let e = this.index + size;
+          if (this.end != null && this.end < e) e = this.end;
+          if (this.index < this.start && this.start < e) {
+            this.push(data.slice(this.start, e));
+          } else if (this.start <= this.index) {
+            this.push(data);
+          }
+          this.index += size;
           this.push(value);
         }
         if (done) {
