@@ -40,7 +40,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     options: ConvertOptions
   ): Promise<Uint8Array | undefined> {
     if (this.typeEquals(input)) {
-      return input;
+      return this.toUint8Array(input, options);
     }
 
     if (typeof input === "string") {
@@ -54,7 +54,11 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
       } else if (srcStringType === "url") {
         return urlConverter().toUint8Array(input, options);
       }
-      return textHelper().textToBuffer(input, options.textToBufferCharset);
+      const u8 = await textHelper().textToBuffer(
+        input,
+        options.textToBufferCharset
+      );
+      return this.toUint8Array(u8, options);
     }
     if (arrayBufferConverter().typeEquals(input)) {
       return arrayBufferConverter().toUint8Array(input, options);

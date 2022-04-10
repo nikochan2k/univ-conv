@@ -50,7 +50,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
         const { start, end } = await this.getStartEnd(buffer, options);
         return buffer.slice(start, end);
       }
-      // 'type === "url"' is handled arrayBufferConverter().convert();
+      // 'type === "url"' is handled by arrayBufferConverter().convert();
     }
     if (uint8ArrayConverter().typeEquals(input)) {
       return Buffer.from(

@@ -37,20 +37,26 @@ class TextConverter extends AbstractConverter<string> {
         return binaryConverter().toText(input, options);
       } else if (srcStringType === "hex") {
         return hexConverter().toText(input, options);
+      } else if (srcStringType === "url") {
+        input = await uint8ArrayConverter().convert(
+          input,
+          this.deleteStartLength(options)
+        );
+      } else {
+        return this.toText(input, options);
       }
-      return this.toText(input, options);
     }
     if (arrayBufferConverter().typeEquals(input)) {
       return arrayBufferConverter().toText(input, options);
+    }
+    if (bufferConverter().typeEquals(input)) {
+      return bufferConverter().toText(input, options);
     }
     if (uint8ArrayConverter().typeEquals(input)) {
       return uint8ArrayConverter().toText(input, options);
     }
     if (blobConverter().typeEquals(input)) {
       return blobConverter().toText(input, options);
-    }
-    if (bufferConverter().typeEquals(input)) {
-      return bufferConverter().toText(input, options);
     }
     if (readableConverter().typeEquals(input)) {
       return readableConverter().toText(input, options);

@@ -234,7 +234,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     options: ConvertOptions
   ): Promise<string> {
     const buffer = (await this.toUint8Array(input, options)) as Buffer;
-    return bufferConverter().toBase64(buffer, options);
+    return bufferConverter().toBase64(buffer, this.deleteStartLength(options));
   }
 
   protected async _toText(
