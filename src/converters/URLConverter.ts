@@ -101,9 +101,9 @@ class URLConverter extends AbstractConverter<string> {
       })) as string;
     } else if (isBrowser) {
       const converter = readableStreamConverter();
-      const readables: ReadableStream<unknown>[] = [];
+      const readables: ReadableStream<Uint8Array>[] = [];
       for (const url of urls) {
-        const readable = await converter.convert(url);
+        const readable = await converter.convert(url, options);
         readables.push(readable);
       }
       const merged = await converter.merge(readables, options);
@@ -135,7 +135,7 @@ class URLConverter extends AbstractConverter<string> {
     } else {
       const resp = await fetch(input);
       return readableStreamConverter().toArrayBuffer(
-        resp.body as ReadableStream,
+        resp.body as ReadableStream<Uint8Array>,
         options
       );
     }

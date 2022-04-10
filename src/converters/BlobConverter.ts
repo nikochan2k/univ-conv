@@ -192,7 +192,7 @@ class BlobConverter extends AbstractConverter<Blob> {
     }
     if (hasStreamOnBlob) {
       const converter = uint8ArrayConverter();
-      const readable = input.stream() as unknown as ReadableStream<unknown>;
+      const readable = input.stream() as unknown as ReadableStream<Uint8Array>;
       const chunks: Uint8Array[] = [];
       let index = 0;
       await handleReadableStream(readable, async (chunk) => {

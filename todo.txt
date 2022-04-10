@@ -1,1 +1,1 @@
-* check ReadableStream<unknown>
+☑︎check ReadableStream<Uint8Array>

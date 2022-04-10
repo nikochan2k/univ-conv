@@ -16,7 +16,7 @@ export type Data =
   | Buffer
   | Blob
   | Readable
-  | ReadableStream<unknown>;
+  | ReadableStream<Uint8Array>;
 
 export interface Options {
   bufferSize: number;

@@ -23,21 +23,21 @@ import {
   isReadableStream,
 } from "./util";
 
-function createReadableStream<T>(
+function createReadableStream(
   bufferSize: number,
   startEnd: { start: number; end: number | undefined },
-  slice: (s: number, e: number) => T,
-  getSize: (chunk: T) => number
+  slice: (s: number, e: number) => Uint8Array,
+  getSize: (chunk: Uint8Array) => number
 ) {
   const start = startEnd.start;
   const end = startEnd.end as number;
   let index = 0;
-  return new ReadableStream<unknown>({
+  return new ReadableStream<Uint8Array>({
     start: (controller) => {
       do {
         let e = index + bufferSize;
         if (end < e) e = end;
-        let chunk: T;
+        let chunk: Uint8Array;
         if (index < start && start < e) {
           chunk = slice(start, e);
         } else if (start <= index) {
@@ -54,7 +54,7 @@ function createReadableStream<T>(
 }
 
 function createReadableStreamOfReadableStream(
-  stream: ReadableStream<unknown>,
+  stream: ReadableStream<Uint8Array>,
   startEnd: { start: number; end: number | undefined }
 ) {
   const reader = stream.getReader();
@@ -69,21 +69,14 @@ function createReadableStreamOfReadableStream(
         const value = res.value;
         done = res.done;
         if (!done) {
-          let data: Blob | Uint8Array;
-          let size: number;
-          if (blobConverter().typeEquals(value)) {
-            data = value;
-            size = data.size;
-          } else {
-            data = await uint8ArrayConverter().convert(value as Data);
-            size = data.byteLength;
-          }
+          const u8 = value as Uint8Array;
+          const size = u8.byteLength;
           let e = index + size;
           if (end != null && end < e) e = end;
           if (index < start && start < e) {
-            controller.enqueue(data.slice(start, e));
+            controller.enqueue(u8.slice(start, e));
           } else if (start <= index) {
-            controller.enqueue(data);
+            controller.enqueue(u8);
           }
           index += size;
         }
@@ -134,9 +127,9 @@ async function createReadableStreamOfReader(
 }
 
 class ReadableStreamConverter extends AbstractConverter<
-  ReadableStream<unknown>
+  ReadableStream<Uint8Array>
 > {
-  public empty(): ReadableStream<unknown> {
+  public empty(): ReadableStream<Uint8Array> {
     return new ReadableStream({
       start: (converter) => {
         converter.enqueue(EMPTY_UINT8_ARRAY);
@@ -146,27 +139,27 @@ class ReadableStreamConverter extends AbstractConverter<
   }
 
   public getStartEnd(
-    _input: ReadableStream<unknown>,
+    _input: ReadableStream<Uint8Array>,
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
     return Promise.resolve(this._getStartEnd(options));
   }
 
-  public typeEquals(input: unknown): input is ReadableStream<unknown> {
+  public typeEquals(input: unknown): input is ReadableStream<Uint8Array> {
     return isReadableStream(input);
   }
 
   protected async _convert(
     input: Data,
     options: ConvertOptions
-  ): Promise<ReadableStream<unknown> | undefined> {
+  ): Promise<ReadableStream<Uint8Array> | undefined> {
     if (typeof input === "string" && options.srcStringType === "url") {
       if (input.startsWith("http:") || input.startsWith("https:")) {
         const resp = await fetch(input);
         if (readableConverter().typeEquals(resp.body)) {
           input = resp.body as unknown as Readable;
         } else {
-          input = resp.body as ReadableStream<unknown>;
+          input = resp.body as ReadableStream<Uint8Array>;
         }
       } else if (input.startsWith("file:") && fileURLToReadable) {
         input = fileURLToReadable(input);
@@ -174,23 +167,14 @@ class ReadableStreamConverter extends AbstractConverter<
     }
     if (blobConverter().typeEquals(input)) {
       if (hasStreamOnBlob) {
-        input = input.stream() as unknown as ReadableStream<unknown>;
+        input = input.stream() as unknown as ReadableStream<Uint8Array>;
       }
     }
 
     const bufferSize = options.bufferSize;
-    if (isBrowser) {
+    if (hasStreamOnBlob) {
       const blob = await blobConverter().convert(input, options);
-      if (hasStreamOnBlob) {
-        input = blob.stream() as unknown as ReadableStream<unknown>;
-      } else {
-        return createReadableStream(
-          bufferSize,
-          await blobConverter().getStartEnd(blob, options),
-          (s, e) => blob.slice(s, e),
-          (chunk) => chunk.size
-        );
-      }
+      input = blob.stream() as unknown as ReadableStream<Uint8Array>;
     }
 
     const u8 = await uint8ArrayConverter().convert(input, options);
@@ -218,28 +202,28 @@ class ReadableStreamConverter extends AbstractConverter<
   }
 
   protected _getSize(
-    _input: ReadableStream<unknown>, // eslint-disable-line
+    _input: ReadableStream<Uint8Array>, // eslint-disable-line
     _options: Options // eslint-disable-line
   ): Promise<number> {
     throw new Error("Cannot get size of ReadableStream");
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _isEmpty(_: ReadableStream<unknown>): boolean {
+  protected _isEmpty(_: ReadableStream<Uint8Array>): boolean {
     return false;
   }
 
   protected _merge(
-    streams: ReadableStream<unknown>[],
+    streams: ReadableStream<Uint8Array>[],
     _: Options // eslint-disable-line @typescript-eslint/no-unused-vars
-  ): Promise<ReadableStream<unknown>> {
+  ): Promise<ReadableStream<Uint8Array>> {
     const end = streams.length;
     const process = (
       controller: ReadableStreamController<unknown>,
       i: number
     ) => {
       if (i < end) {
-        const stream = streams[i] as ReadableStream<unknown>;
+        const stream = streams[i] as ReadableStream<Uint8Array>;
         handleReadableStream(stream, (chunk) => {
           controller.enqueue(chunk);
           return Promise.resolve(true);
@@ -248,7 +232,7 @@ class ReadableStreamConverter extends AbstractConverter<
           .catch((e) => {
             controller.error(e);
             for (let j = i; j < end; j++) {
-              const s = streams[j] as ReadableStream<unknown>;
+              const s = streams[j] as ReadableStream<Uint8Array>;
               closeStream(s);
             }
           });
@@ -267,7 +251,7 @@ class ReadableStreamConverter extends AbstractConverter<
   }
 
   protected async _toArrayBuffer(
-    input: ReadableStream<unknown>,
+    input: ReadableStream<Uint8Array>,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const u8 = await this.toUint8Array(input, options);
@@ -278,7 +262,7 @@ class ReadableStreamConverter extends AbstractConverter<
   }
 
   protected async _toBase64(
-    input: ReadableStream<unknown>,
+    input: ReadableStream<Uint8Array>,
     options: ConvertOptions
   ): Promise<string> {
     const bufferSize = options.bufferSize;
@@ -295,7 +279,7 @@ class ReadableStreamConverter extends AbstractConverter<
   }
 
   protected async _toText(
-    input: ReadableStream<unknown>,
+    input: ReadableStream<Uint8Array>,
     options: ConvertOptions
   ): Promise<string> {
     const bufferSize = options.bufferSize;
@@ -312,7 +296,7 @@ class ReadableStreamConverter extends AbstractConverter<
   }
 
   protected async _toUint8Array(
-    input: ReadableStream<unknown>,
+    input: ReadableStream<Uint8Array>,
     options: ConvertOptions
   ): Promise<Uint8Array> {
     const converter = uint8ArrayConverter();

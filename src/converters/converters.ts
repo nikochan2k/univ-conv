@@ -102,7 +102,7 @@ export function readableConverter() {
   return READABLE_CONVERTER;
 }
 
-let READABLE_STREAM_CONVERTER: Converter<ReadableStream<unknown>>;
+let READABLE_STREAM_CONVERTER: Converter<ReadableStream<Uint8Array>>;
 export function readableStreamConverter() {
   if (!READABLE_STREAM_CONVERTER) {
     if (hasReadableStream) {

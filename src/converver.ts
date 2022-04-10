@@ -36,7 +36,7 @@ export type ReturnData<T extends DataType> = T extends "arraybuffer"
   : T extends "readable"
   ? Readable
   : T extends "readablestream"
-  ? ReadableStream<unknown>
+  ? ReadableStream<Uint8Array>
   : string;
 
 export class DefaultConverter {
@@ -124,14 +124,14 @@ export class DefaultConverter {
 
   public async pipe(
     input: Data,
-    output: Writable | WritableStream<unknown>,
+    output: Writable | WritableStream<Uint8Array>,
     options?: Partial<ConvertOptions>
   ) {
     if (isWritable(output)) {
       const readable = await readableConverter().convert(input, options);
       await pipe(readable, output);
     } else if (isWritableStream(output)) {
-      let stream: ReadableStream<unknown> | undefined;
+      let stream: ReadableStream<Uint8Array> | undefined;
       try {
         stream = await readableStreamConverter().convert(input, options);
         if (typeof stream.pipeTo === "function") {
@@ -218,7 +218,7 @@ export class DefaultConverter {
         return readableConverter().merge(results as Readable[], options);
       case "readablestream":
         return readableStreamConverter().merge(
-          results as ReadableStream<unknown>[],
+          results as ReadableStream<Uint8Array>[],
           options
         );
       case "text":

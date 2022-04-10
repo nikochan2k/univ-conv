@@ -122,13 +122,13 @@ export async function handleReadableStream(
 
 export function isReadableStream(
   stream: unknown
-): stream is ReadableStream<unknown> {
+): stream is ReadableStream<Uint8Array> {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return (
     hasReadableStream &&
     stream != null &&
-    typeof (stream as ReadableStream<unknown>).getReader === "function" &&
-    typeof (stream as ReadableStream<unknown>).cancel === "function"
+    typeof (stream as ReadableStream<Uint8Array>).getReader === "function" &&
+    typeof (stream as ReadableStream<Uint8Array>).cancel === "function"
   );
 }
 
@@ -231,7 +231,7 @@ export function closeStream(
   stream:
     | Readable
     | Writable
-    | ReadableStream<unknown>
+    | ReadableStream<Uint8Array>
     | WritableStream<unknown>
     | undefined,
   reason?: unknown

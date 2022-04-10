@@ -73,7 +73,7 @@ class ReadableOfReadable extends Readable {
 
 class ReadableOfReadableStream extends Readable {
   constructor(
-    private stream: ReadableStream<unknown>,
+    private stream: ReadableStream<Uint8Array>,
     private start: number,
     private end: number | undefined
   ) {
@@ -173,7 +173,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
         input,
         options
       );
-      return new ReadableOfReadableStream(input as ReadableStream, start, end);
+      return new ReadableOfReadableStream(input, start, end);
     }
 
     const buffer = await bufferConverter().convert(input, options);
