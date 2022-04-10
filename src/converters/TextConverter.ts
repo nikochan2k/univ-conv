@@ -91,10 +91,7 @@ class TextConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const u8 = await this.toUint8Array(input, options);
-    return uint8ArrayConverter().toArrayBuffer(
-      u8,
-      this.deleteStartLength(options)
-    );
+    return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
   }
 
   protected async _toBase64(

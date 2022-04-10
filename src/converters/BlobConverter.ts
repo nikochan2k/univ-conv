@@ -107,7 +107,10 @@ class BlobConverter extends AbstractConverter<Blob> {
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const u8 = await this.toUint8Array(input, options);
-    return arrayBufferConverter().toArrayBuffer(u8, options);
+    return arrayBufferConverter().toArrayBuffer(
+      u8,
+      this.deleteStartLength(options)
+    );
   }
 
   protected async _toBase64(
