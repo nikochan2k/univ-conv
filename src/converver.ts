@@ -152,6 +152,100 @@ export class DefaultConverter {
     }
   }
 
+  public toArrayBuffer(
+    input: Data | Data[],
+    options?: Partial<ConvertOptions>
+  ) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "arraybuffer", options);
+    } else {
+      return this.convert(input, "arraybuffer", options);
+    }
+  }
+
+  public toBase64(input: Data | Data[], options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "base64", options);
+    } else {
+      return this.convert(input, "base64", options);
+    }
+  }
+
+  public toBinary(input: Data | Data[], options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "binary", options);
+    } else {
+      return this.convert(input, "binary", options);
+    }
+  }
+
+  public toBlob(input: Data | Data[], options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "blob", options);
+    } else {
+      return this.convert(input, "blob", options);
+    }
+  }
+
+  public toBuffer(input: Data | Data[], options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "buffer", options);
+    } else {
+      return this.convert(input, "buffer", options);
+    }
+  }
+
+  public toHex(input: Data | Data[], options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "hex", options);
+    } else {
+      return this.convert(input, "hex", options);
+    }
+  }
+
+  public toReadable(input: Data | Data[], options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "readable", options);
+    } else {
+      return this.convert(input, "readable", options);
+    }
+  }
+
+  public toReadableStream(
+    input: Data | Data[],
+    options?: Partial<ConvertOptions>
+  ) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "readablestream", options);
+    } else {
+      return this.convert(input, "readablestream", options);
+    }
+  }
+
+  public toText(input: Data | Data[], options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "text", options);
+    } else {
+      return this.convert(input, "text", options);
+    }
+  }
+
+  public toURL(input: Data | Data[], options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "url", options);
+    } else {
+      return this.convert(input, "url", options);
+    }
+  }
+
+  public toUint8Array(input: Data | Data[], options?: Partial<ConvertOptions>) {
+    if (Array.isArray(input)) {
+      return this.merge(input, "uint8array", options);
+    } else {
+      return this.convert(input, "uint8array", options);
+    }
+  }
+
   protected _convert<T extends DataType>(
     input: Data,
     to: T,
