@@ -20,6 +20,10 @@ import {
 import { textHelper } from "./TextHelper";
 import { isNode } from "./util";
 class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
+  public empty(): Uint8Array {
+    return EMPTY_UINT8_ARRAY;
+  }
+
   public getStartEnd(
     input: ArrayBuffer,
     options: ConvertOptions
@@ -136,10 +140,6 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     }
     const { start, end } = await this.getStartEnd(input, options);
     return input.slice(start, end);
-  }
-
-  protected empty(): Uint8Array {
-    return EMPTY_UINT8_ARRAY;
   }
 }
 

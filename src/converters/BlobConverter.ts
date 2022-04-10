@@ -23,6 +23,10 @@ import {
 } from "./util";
 
 class BlobConverter extends AbstractConverter<Blob> {
+  public empty(): Blob {
+    return EMPTY_BLOB;
+  }
+
   public getStartEnd(
     input: Blob,
     options: ConvertOptions
@@ -210,10 +214,6 @@ class BlobConverter extends AbstractConverter<Blob> {
 
     const base64 = await this.toBase64(input, options);
     return uint8ArrayConverter().convert(base64);
-  }
-
-  protected empty(): Blob {
-    return EMPTY_BLOB;
   }
 }
 

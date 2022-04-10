@@ -13,6 +13,10 @@ import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
 
 class TextConverter extends AbstractConverter<string> {
+  public empty(): string {
+    return "";
+  }
+
   public async getStartEnd(
     input: string,
     options: ConvertOptions
@@ -125,10 +129,6 @@ class TextConverter extends AbstractConverter<string> {
       options.textToBufferCharset
     );
     return uint8ArrayConverter().toUint8Array(u8, options);
-  }
-
-  protected empty(): string {
-    return "";
   }
 }
 

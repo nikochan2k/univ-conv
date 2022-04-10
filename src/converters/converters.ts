@@ -4,8 +4,8 @@ import { FalseConverter } from "./FalseConverter";
 import {
   EMPTY_BLOB,
   EMPTY_BUFFER,
-  EMPTY_READABLE,
-  EMPTY_READABLE_STREAM,
+  hasReadable,
+  hasReadableStream,
 } from "./util";
 
 /* eslint-disable */
@@ -93,7 +93,7 @@ export function blobConverter() {
 let READABLE_CONVERTER: Converter<Readable>;
 export function readableConverter() {
   if (!READABLE_CONVERTER) {
-    if (EMPTY_READABLE) {
+    if (hasReadable) {
       READABLE_CONVERTER = require("./ReadableConverter").INSTANCE;
     } else {
       READABLE_CONVERTER = new FalseConverter("Readable");
@@ -105,7 +105,7 @@ export function readableConverter() {
 let READABLE_STREAM_CONVERTER: Converter<ReadableStream<unknown>>;
 export function readableStreamConverter() {
   if (!READABLE_STREAM_CONVERTER) {
-    if (EMPTY_READABLE_STREAM) {
+    if (hasReadableStream) {
       READABLE_STREAM_CONVERTER = require("./ReadableStreamConverter").INSTANCE;
     } else {
       READABLE_STREAM_CONVERTER = new FalseConverter("ReadableStream");

@@ -5,11 +5,16 @@ import {
   readableConverter,
   uint8ArrayConverter,
 } from "./converters";
-import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  Data,
+  EMPTY_UINT8_ARRAY,
+  Options,
+} from "./core";
 import {
   closeStream,
-  EMPTY_READABLE_STREAM,
-  fileToReadable,
+  fileURLToReadable,
   handleReadable,
   handleReadableStream,
   hasStreamOnBlob,
@@ -131,6 +136,15 @@ async function createReadableStreamOfReader(
 class ReadableStreamConverter extends AbstractConverter<
   ReadableStream<unknown>
 > {
+  public empty(): ReadableStream<unknown> {
+    return new ReadableStream({
+      start: (converter) => {
+        converter.enqueue(EMPTY_UINT8_ARRAY);
+        converter.close();
+      },
+    });
+  }
+
   public getStartEnd(
     _input: ReadableStream<unknown>,
     options: ConvertOptions
@@ -154,8 +168,8 @@ class ReadableStreamConverter extends AbstractConverter<
         } else {
           input = resp.body as ReadableStream<unknown>;
         }
-      } else if (input.startsWith("file:") && fileToReadable) {
-        input = fileToReadable(input);
+      } else if (input.startsWith("file:") && fileURLToReadable) {
+        input = fileURLToReadable(input);
       }
     }
     if (blobConverter().typeEquals(input)) {
@@ -310,10 +324,6 @@ class ReadableStreamConverter extends AbstractConverter<
       return true;
     });
     return converter.merge(chunks, options);
-  }
-
-  protected empty(): ReadableStream<unknown> {
-    return EMPTY_READABLE_STREAM;
   }
 }
 

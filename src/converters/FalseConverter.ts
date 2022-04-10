@@ -9,6 +9,10 @@ export class FalseConverter implements Converter<any> {
     throw new Error("convert method not implemented: " + this.key);
   }
 
+  public empty(): any {
+    throw new Error("Method not implemented.");
+  }
+
   public getSize(_1: any, _2?: Partial<Options>): Promise<number> {
     throw new Error("getSize method not implemented: " + this.key);
   }

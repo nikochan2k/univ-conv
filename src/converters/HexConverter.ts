@@ -36,6 +36,10 @@ const MAP_HEX: { [key: string]: number } = {
 };
 
 class HexConverter extends AbstractConverter<string> {
+  public empty(): string {
+    return "";
+  }
+
   public getStartEnd(
     input: string, // eslint-disable-line
     options: ConvertOptions // eslint-disable-line
@@ -132,10 +136,6 @@ class HexConverter extends AbstractConverter<string> {
       u8[start] = (a << 4) | b;
     }
     return u8;
-  }
-
-  protected empty(): string {
-    return "";
   }
 }
 

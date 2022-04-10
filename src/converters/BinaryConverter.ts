@@ -8,6 +8,10 @@ import { textHelper } from "./TextHelper";
 import { handleFileReader, hasReadAsBinaryStringOnBlob, isNode } from "./util";
 
 class BinaryConverter extends AbstractConverter<string> {
+  public empty(): string {
+    return "";
+  }
+
   public getStartEnd(
     input: string,
     options: ConvertOptions
@@ -114,10 +118,6 @@ class BinaryConverter extends AbstractConverter<string> {
       u8 = Uint8Array.from(input.split(""), (e) => e.charCodeAt(0));
     }
     return u8;
-  }
-
-  protected empty(): string {
-    return "";
   }
 }
 

@@ -32,6 +32,7 @@ export interface ConvertOptions extends Options {
 
 export interface Converter<T extends Data> {
   convert(input: Data, options?: Partial<ConvertOptions>): Promise<T>;
+  empty(): T;
   getSize(input: T, options?: Partial<Options>): Promise<number>;
   getStartEnd(
     input: T,
@@ -135,6 +136,7 @@ export abstract class AbstractConverter<T extends Data>
     return this._toUint8Array(input, options);
   }
 
+  public abstract empty(): T;
   public abstract getStartEnd(
     input: T,
     options: ConvertOptions
@@ -196,7 +198,6 @@ export abstract class AbstractConverter<T extends Data>
     input: T,
     options: ConvertOptions
   ): Promise<Uint8Array>;
-  protected abstract empty(): T;
 
   private _initOptions<T extends Options>(
     input: Data,

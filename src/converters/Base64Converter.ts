@@ -15,6 +15,10 @@ import { textHelper } from "./TextHelper";
 import { isBrowser, isNode } from "./util";
 
 class Base64Converter extends AbstractConverter<string> {
+  public empty(): string {
+    return "";
+  }
+
   public async getStartEnd(
     input: string,
     options: ConvertOptions
@@ -141,10 +145,6 @@ class Base64Converter extends AbstractConverter<string> {
   ): Promise<Uint8Array> {
     const ab = await this.toArrayBuffer(input, options);
     return isNode ? Buffer.from(ab) : new Uint8Array(ab);
-  }
-
-  protected empty(): string {
-    return "";
   }
 }
 

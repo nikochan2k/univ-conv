@@ -1,5 +1,5 @@
 import type { Readable, Writable } from "stream";
-import { EMPTY_UINT8_ARRAY, Data } from "./core";
+import { Data } from "./core";
 
 declare type FS = typeof import("fs");
 declare type OS = typeof import("os");
@@ -49,20 +49,9 @@ if (typeof Blob === "function") {
 
 export let hasReadableStream = false;
 export let hasWritableStream = false;
-export let EMPTY_READABLE_STREAM: ReadableStream<unknown>;
 if (typeof ReadableStream === "function") {
   hasReadableStream = true;
   hasWritableStream = true;
-  EMPTY_READABLE_STREAM = EMPTY_READABLE_STREAM = new ReadableStream({
-    start: (converter) => {
-      if (hasBlob) {
-        converter.enqueue(EMPTY_BLOB);
-      } else {
-        converter.enqueue(EMPTY_UINT8_ARRAY);
-      }
-      converter.close();
-    },
-  });
 }
 
 export let hasBuffer = false;
@@ -81,19 +70,10 @@ try {
 
 export let hasReadable = false;
 export let hasWritable = false;
-export let EMPTY_READABLE: Readable;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 if (typeof stream?.Readable === "function") {
   hasReadable = true;
   hasWritable = true;
-  /* eslint-disable */
-  EMPTY_READABLE = EMPTY_READABLE = new stream.Readable({
-    read() {
-      this.push(EMPTY_BUFFER);
-      this.push(null);
-    },
-  });
-  /* eslint-enable */
 }
 
 export function handleFileReader<T extends string | ArrayBuffer>(
@@ -307,13 +287,16 @@ try {
   fileToBuffer = undefined;
 }
 
-export let fileToReadable: ((filePath: string) => Readable) | undefined;
+export let fileURLToReadable: ((fileURL: string) => Readable) | undefined;
 try {
   const fs: FS = require("fs"); // eslint-disable-line
-
-  fileToReadable = (filePath: string) => fs.createReadStream(filePath);
+  const url: URL = require("url"); // eslint-disable-line
+  fileURLToReadable = (fileURL: string) => {
+    const filePath = url.fileURLToPath(fileURL);
+    return fs.createReadStream(filePath);
+  };
 } catch {
-  fileToReadable = undefined;
+  fileURLToReadable = undefined;
 }
 
 export let toFileURL:

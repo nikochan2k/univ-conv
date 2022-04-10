@@ -9,12 +9,6 @@ import {
   ConvertOptions,
   Data,
   DataType,
-  EMPTY_ARRAY_BUFFER,
-  EMPTY_BLOB,
-  EMPTY_BUFFER,
-  EMPTY_READABLE,
-  EMPTY_READABLE_STREAM,
-  EMPTY_UINT8_ARRAY,
   handleReadableStream,
   hexConverter,
   isBrowser,
@@ -28,6 +22,7 @@ import {
   textConverter,
   typeOf,
   uint8ArrayConverter,
+  urlConverter,
 } from "./converters";
 
 export type ReturnData<T extends DataType> = T extends "arraybuffer"
@@ -56,33 +51,35 @@ export class DefaultConverter {
   public empty<T extends DataType>(type?: T) {
     switch (type) {
       case "arraybuffer":
-        return EMPTY_ARRAY_BUFFER;
+        return arrayBufferConverter().empty();
       case "buffer":
-        return EMPTY_BUFFER;
+        return bufferConverter().empty();
       case "uint8array":
-        return EMPTY_UINT8_ARRAY;
+        return uint8ArrayConverter().empty();
       case "blob":
-        return EMPTY_BLOB;
+        return blobConverter().empty();
       case "readable":
-        return EMPTY_READABLE;
+        return readableConverter().empty();
       case "readablestream":
-        return EMPTY_READABLE_STREAM;
+        return readableStreamConverter().empty();
       case "text":
-        return "";
+        return textConverter().empty();
       case "base64":
-        return "";
+        return base64Converter().empty();
       case "binary":
-        return "";
+        return binaryConverter().empty();
       case "hex":
-        return "";
+        return hexConverter().empty();
+      case "url":
+        return urlConverter().empty();
     }
 
     if (isBrowser) {
-      return EMPTY_BLOB;
+      return blobConverter().empty();
     } else if (isNode) {
-      return EMPTY_BUFFER;
+      return bufferConverter().empty();
     } else {
-      return EMPTY_UINT8_ARRAY;
+      return uint8ArrayConverter().empty();
     }
   }
 
@@ -109,6 +106,8 @@ export class DefaultConverter {
         return binaryConverter().getSize(input, options);
       } else if (type === "hex") {
         return hexConverter().getSize(input, options);
+      } else if (type === "url") {
+        return urlConverter().getSize(input, options);
       }
     }
 
@@ -153,86 +152,6 @@ export class DefaultConverter {
     }
   }
 
-  public toArrayBuffer(input: Data, options?: Partial<ConvertOptions>) {
-    if (Array.isArray(input)) {
-      return this.merge(input, "arraybuffer", options);
-    } else {
-      return this.convert(input, "arraybuffer", options);
-    }
-  }
-
-  public toBase64(input: Data, options?: Partial<ConvertOptions>) {
-    if (Array.isArray(input)) {
-      return this.merge(input, "base64", options);
-    } else {
-      return this.convert(input, "base64", options);
-    }
-  }
-
-  public toBinary(input: Data, options?: Partial<ConvertOptions>) {
-    if (Array.isArray(input)) {
-      return this.merge(input, "binary", options);
-    } else {
-      return this.convert(input, "binary", options);
-    }
-  }
-
-  public toBlob(input: Data, options?: Partial<ConvertOptions>) {
-    if (Array.isArray(input)) {
-      return this.merge(input, "blob", options);
-    } else {
-      return this.convert(input, "blob", options);
-    }
-  }
-
-  public toBuffer(input: Data, options?: Partial<ConvertOptions>) {
-    if (Array.isArray(input)) {
-      return this.merge(input, "buffer", options);
-    } else {
-      return this.convert(input, "buffer", options);
-    }
-  }
-
-  public toHex(input: Data, options?: Partial<ConvertOptions>) {
-    if (Array.isArray(input)) {
-      return this.merge(input, "hex", options);
-    } else {
-      return this.convert(input, "hex", options);
-    }
-  }
-
-  public toReadable(input: Data, options?: Partial<ConvertOptions>) {
-    if (Array.isArray(input)) {
-      return this.merge(input, "readable", options);
-    } else {
-      return this.convert(input, "readable", options);
-    }
-  }
-
-  public toReadableStream(input: Data, options?: Partial<ConvertOptions>) {
-    if (Array.isArray(input)) {
-      return this.merge(input, "readablestream", options);
-    } else {
-      return this.convert(input, "readablestream", options);
-    }
-  }
-
-  public toText(input: Data, options?: Partial<ConvertOptions>) {
-    if (Array.isArray(input)) {
-      return this.merge(input, "text", options);
-    } else {
-      return this.convert(input, "text", options);
-    }
-  }
-
-  public toUint8Array(input: Data, options?: Partial<ConvertOptions>) {
-    if (Array.isArray(input)) {
-      return this.merge(input, "uint8array", options);
-    } else {
-      return this.convert(input, "uint8array", options);
-    }
-  }
-
   protected _convert<T extends DataType>(
     input: Data,
     to: T,
@@ -259,6 +178,8 @@ export class DefaultConverter {
         return binaryConverter().convert(input, options);
       case "hex":
         return hexConverter().convert(input, options);
+      case "url":
+        return urlConverter().convert(input, options);
     }
 
     throw new Error("Illegal output type: " + to);
@@ -308,6 +229,8 @@ export class DefaultConverter {
         return binaryConverter().merge(results as string[], options);
       case "hex":
         return hexConverter().merge(results as string[], options);
+      case "url":
+        return urlConverter().merge(results as string[], options);
     }
 
     throw new Error("Illegal output type: " + to);

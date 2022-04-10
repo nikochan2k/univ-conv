@@ -9,8 +9,8 @@ import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
 import {
   closeStream,
-  EMPTY_READABLE,
-  fileToReadable,
+  EMPTY_BUFFER,
+  fileURLToReadable,
   handleReadable,
   hasStreamOnBlob,
   isNode,
@@ -26,8 +26,7 @@ class ReadableOfReadable extends Readable {
     super();
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  public override async _read() {
+  public override _read() {
     const converter = bufferConverter();
     let index = 0;
     const src = this.src;
@@ -120,6 +119,15 @@ class ReadableOfReadableStream extends Readable {
 }
 
 class ReadableConverter extends AbstractConverter<Readable> {
+  public empty(): Readable {
+    return new Readable({
+      read() {
+        this.push(EMPTY_BUFFER);
+        this.push(null);
+      },
+    });
+  }
+
   public getStartEnd(
     _input: Readable,
     options: ConvertOptions
@@ -143,8 +151,8 @@ class ReadableConverter extends AbstractConverter<Readable> {
         } else {
           input = resp.body as ReadableStream;
         }
-      } else if (input.startsWith("file:") && fileToReadable) {
-        input = fileToReadable(input);
+      } else if (input.startsWith("file:") && fileURLToReadable) {
+        input = fileURLToReadable(input);
       }
     }
     if (blobConverter().typeEquals(input)) {
@@ -192,7 +200,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
   protected _merge(readables: Readable[], _: Options): Promise<Readable> {
     const end = readables.length;
     if (!readables || end === 0) {
-      return Promise.resolve(this.createEmptyReadable());
+      return Promise.resolve(this.empty());
     }
     if (end === 1) {
       return Promise.resolve(readables[0] as Readable);
@@ -269,21 +277,6 @@ class ReadableConverter extends AbstractConverter<Readable> {
       return end == null || index < end;
     });
     return Buffer.concat(chunks);
-  }
-
-  protected empty(): Readable {
-    return EMPTY_READABLE;
-  }
-
-  private createEmptyReadable(): Promise<Readable> {
-    return Promise.resolve(
-      new Readable({
-        read() {
-          this.push(Buffer.alloc(0));
-          this.push(null);
-        },
-      })
-    );
   }
 }
 

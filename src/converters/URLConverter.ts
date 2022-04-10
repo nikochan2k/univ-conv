@@ -11,7 +11,7 @@ import {
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import {
   dataUrlToBase64,
-  fileToBuffer,
+  fileURLToReadable,
   getFileSize,
   isBrowser,
   isNode,
@@ -24,6 +24,10 @@ if (typeof fetch !== "function") {
 }
 
 class URLConverter extends AbstractConverter<string> {
+  public empty(): string {
+    return "";
+  }
+
   public async getStartEnd(
     input: string,
     options: ConvertOptions
@@ -123,14 +127,17 @@ class URLConverter extends AbstractConverter<string> {
 
   protected async _toArrayBuffer(
     input: string,
-    _options: ConvertOptions // eslint-disable-line @typescript-eslint/no-unused-vars
+    options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    if (input.startsWith("file:") && fileToBuffer) {
-      const buffer = fileToBuffer(input);
-      return buffer.buffer;
+    if (input.startsWith("file:") && fileURLToReadable) {
+      const readable = fileURLToReadable(input);
+      return readableConverter().toArrayBuffer(readable, options);
     } else {
-      const body = await fetch(input);
-      return body.arrayBuffer();
+      const resp = await fetch(input);
+      return readableStreamConverter().toArrayBuffer(
+        resp.body as ReadableStream,
+        options
+      );
     }
   }
 
@@ -139,7 +146,7 @@ class URLConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return uint8ArrayConverter().toBase64(u8, options);
+    return uint8ArrayConverter().toBase64(u8, this.deleteStartLength(options));
   }
 
   protected async _toText(
@@ -147,20 +154,15 @@ class URLConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const ab = await this.toArrayBuffer(input, options);
-    return textConverter().convert(ab, options);
+    return textConverter().convert(ab, this.deleteStartLength(options));
   }
 
   protected async _toUint8Array(
     input: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     options: ConvertOptions
   ): Promise<Uint8Array> {
     const ab = await this.toArrayBuffer(input, options);
     return new Uint8Array(ab);
-  }
-
-  protected empty(): string {
-    return "";
   }
 }
 

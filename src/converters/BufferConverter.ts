@@ -9,6 +9,10 @@ import { textHelper } from "./TextHelper";
 import { EMPTY_BUFFER } from "./util";
 
 class BufferConverter extends AbstractConverter<Buffer> {
+  public empty(): Buffer {
+    return EMPTY_BUFFER;
+  }
+
   public getStartEnd(
     input: ArrayBuffer,
     options: ConvertOptions
@@ -131,10 +135,6 @@ class BufferConverter extends AbstractConverter<Buffer> {
     }
     const { start, end } = await this.getStartEnd(input, options);
     return input.slice(start, end);
-  }
-
-  protected empty(): Buffer {
-    return EMPTY_BUFFER;
   }
 }
 
