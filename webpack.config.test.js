@@ -5,6 +5,7 @@ module.exports = {
   entry: {
     "conv.spec": "./src/__tests__/conv.spec.ts",
     "common.spec": "./src/__tests__/common.spec.ts",
+    "largefile.spec": "./src/__tests__/largefile-web.ts",
   },
   output: {
     filename: "[name].js",
