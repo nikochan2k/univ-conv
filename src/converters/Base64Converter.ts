@@ -51,6 +51,9 @@ class Base64Converter extends AbstractConverter<string> {
         options.textToBufferCharset
       );
     }
+    if (arrayBufferConverter().typeEquals(input)) {
+      return arrayBufferConverter().toBase64(input, options);
+    }
     if (bufferConverter().typeEquals(input)) {
       return bufferConverter().toBase64(input, options);
     }
