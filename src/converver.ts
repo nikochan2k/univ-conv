@@ -22,6 +22,7 @@ import {
   isWritable,
   isWritableStream,
   Options,
+  pipe,
   readableConverter,
   readableStreamConverter,
   textConverter,
@@ -129,21 +130,7 @@ export class DefaultConverter {
   ) {
     if (isWritable(output)) {
       const readable = await readableConverter().convert(input, options);
-      await new Promise<void>((resolve, reject) => {
-        const onError = (err: Error) => {
-          reject(err);
-          readable.destroy();
-          output.destroy();
-          readable.removeAllListeners();
-          output.removeAllListeners();
-        };
-        readable.once("error", onError);
-        output.once("error", onError);
-        output.once("finish", () => {
-          resolve();
-        });
-        readable.pipe(output);
-      });
+      await pipe(readable, output);
     } else if (isWritableStream(output)) {
       let stream: ReadableStream<unknown> | undefined;
       try {

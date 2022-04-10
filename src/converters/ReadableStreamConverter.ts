@@ -48,6 +48,40 @@ function createReadableStream<T>(
   });
 }
 
+async function createReadableStreamOfReader(
+  readable: Readable,
+  options: ConvertOptions
+) {
+  const { start, end } = await readableConverter().getStartEnd(
+    readable,
+    options
+  );
+  const bufferSize = options.bufferSize;
+  const converter = uint8ArrayConverter();
+  let index = 0;
+  return new ReadableStream({
+    start: async (controller) => {
+      await handleReadable(readable, async (chunk) => {
+        const u8 = await converter.convert(chunk, { bufferSize });
+        const size = u8.byteLength;
+        let e = index + size;
+        if (end != null && end < e) e = end;
+        if (index < start && start < e) {
+          controller.enqueue(u8.slice(start, e));
+        } else if (start <= index) {
+          controller.enqueue(u8);
+        }
+        index += size;
+        return end == null || index < end;
+      });
+    },
+    cancel: (err) => {
+      readable.destroy(err as Error);
+      readable.removeAllListeners();
+    },
+  });
+}
+
 class ReadableStreamConverter extends AbstractConverter<
   ReadableStream<unknown>
 > {
@@ -110,34 +144,7 @@ class ReadableStreamConverter extends AbstractConverter<
     }
 
     if (readableConverter().typeEquals(input)) {
-      const readable = input;
-      const { start, end } = await readableConverter().getStartEnd(
-        readable,
-        options
-      );
-      const converter = bufferConverter();
-      let index = 0;
-      return new ReadableStream({
-        start: async (controller) => {
-          await handleReadable(readable, async (chunk) => {
-            const buffer = await converter.convert(chunk, { bufferSize });
-            const size = buffer.byteLength;
-            let e = index + size;
-            if (end != null && end < e) e = end;
-            if (index < start && start < e) {
-              controller.enqueue(buffer.slice(start, e));
-            } else if (start <= index) {
-              controller.enqueue(buffer);
-            }
-            index += size;
-            return end == null || index < end;
-          });
-        },
-        cancel: (err) => {
-          readable.destroy(err as Error);
-          readable.removeAllListeners();
-        },
-      });
+      return createReadableStreamOfReader(input, options);
     }
 
     if (this.typeEquals(input)) {

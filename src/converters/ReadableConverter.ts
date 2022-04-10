@@ -2,8 +2,8 @@ import { Duplex, PassThrough, Readable } from "stream";
 import {
   blobConverter,
   bufferConverter,
+  readableConverter,
   readableStreamConverter,
-  uint8ArrayConverter,
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
@@ -17,48 +17,106 @@ import {
   isReadable,
 } from "./util";
 
-class ReadableOfReadableStream extends Readable {
-  private reader: ReadableStreamDefaultReader<unknown>;
-  private index = 0;
+class ReadableOfReadable extends Readable {
   constructor(
-    private rs: ReadableStream<unknown>,
+    private src: Readable,
     private start: number,
     private end: number | undefined
   ) {
     super();
-    this.reader = rs.getReader();
   }
-  override _read = () => {
-    this.reader
-      .read()
-      .then(async ({ value, done }) => {
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  public override async _read() {
+    const converter = bufferConverter();
+    let index = 0;
+    const src = this.src;
+    let srcDisposed = false;
+    const disposeSrc = () => {
+      if (srcDisposed) {
+        return;
+      }
+      srcDisposed = true;
+      src.destroy();
+      src.removeAllListeners();
+    };
+    src.once("error", (e) => {
+      this.destroy(e);
+      disposeSrc();
+    });
+    src.once("end", () => {
+      this.push(null);
+      this.destroy();
+      disposeSrc();
+    });
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    src.on("data", async (value) => {
+      const chunk = await converter.convert(value as Data);
+      const size = chunk.byteLength;
+      let e = index + size;
+      if (this.end != null && this.end < e) e = this.end;
+      let cont: boolean | undefined;
+      if (index < this.start && this.start < e) {
+        cont = this.push(chunk.slice(this.start, e));
+      } else if (this.start <= index) {
+        cont = this.push(chunk);
+      }
+      if (cont === false) {
+        disposeSrc();
+        this.push(null);
+        this.destroy();
+        return;
+      }
+      index += size;
+    });
+  }
+}
+
+class ReadableOfReadableStream extends Readable {
+  constructor(
+    private stream: ReadableStream<unknown>,
+    private start: number,
+    private end: number | undefined
+  ) {
+    super();
+  }
+
+  public override async _read() {
+    const reader = this.stream.getReader();
+    try {
+      const converter = bufferConverter();
+      let index = 0;
+      let done: boolean;
+      do {
+        const res = await reader.read();
+        const value = res.value;
+        done = res.done;
         if (value) {
-          let data: Blob | Uint8Array;
-          let size: number;
-          if (blobConverter().typeEquals(value)) {
-            data = value;
-            size = data.size;
-          } else {
-            data = await uint8ArrayConverter().convert(value as Data);
-            size = data.byteLength;
-          }
-          let e = this.index + size;
+          const chunk = await converter.convert(value as Data);
+          const size = chunk.byteLength;
+          let e = index + size;
           if (this.end != null && this.end < e) e = this.end;
-          if (this.index < this.start && this.start < e) {
-            this.push(data.slice(this.start, e));
-          } else if (this.start <= this.index) {
-            this.push(data);
+          let cont: boolean | undefined;
+          if (index < this.start && this.start < e) {
+            cont = this.push(chunk.slice(this.start, e));
+          } else if (this.start <= index) {
+            cont = this.push(chunk);
           }
-          this.index += size;
-          this.push(value);
+          if (cont === false) {
+            break;
+          }
+          index += size;
         }
-        if (done) {
-          this.push(null);
-          closeStream(this.rs);
-        }
-      })
-      .catch((e) => closeStream(this.rs, e));
-  };
+      } while (!done && (this.end == null || index < this.end));
+      this.push(null);
+      this.destroy();
+    } catch (e) {
+      this.destroy(e as Error);
+    } finally {
+      reader.cancel().catch((e) => console.debug(e));
+      closeStream(this.stream);
+    }
+  }
 }
 
 class ReadableConverter extends AbstractConverter<Readable> {
@@ -77,25 +135,30 @@ class ReadableConverter extends AbstractConverter<Readable> {
     input: Data,
     options: ConvertOptions
   ): Promise<Readable | undefined> {
-    if (this.typeEquals(input)) {
-      return input;
-    }
-
     if (typeof input === "string" && options.srcStringType === "url") {
       if (input.startsWith("http:") || input.startsWith("https:")) {
         const resp = await fetch(input);
         if (isNode) {
-          return resp.body as unknown as Readable;
+          input = resp.body as unknown as Readable;
+        } else {
+          input = resp.body as ReadableStream;
         }
-        input = resp.body as ReadableStream;
       } else if (input.startsWith("file:") && fileToReadable) {
-        return fileToReadable(input);
+        input = fileToReadable(input);
       }
     }
     if (blobConverter().typeEquals(input)) {
       if (hasStreamOnBlob) {
         input = input.stream() as unknown as ReadableStream;
       }
+    }
+
+    if (this.typeEquals(input)) {
+      const { start, end } = await readableConverter().getStartEnd(
+        input,
+        options
+      );
+      return new ReadableOfReadable(input, start, end);
     }
     if (readableStreamConverter().typeEquals(input)) {
       const { start, end } = await readableStreamConverter().getStartEnd(
