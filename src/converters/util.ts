@@ -145,7 +145,7 @@ export function isWritableStream(
 }
 
 export async function pipe(readable: Readable, writable: Writable) {
-  return await new Promise<void>((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     let readableDisposed = false;
     let writableDisposed = false;
     const disposeReadable = () => {

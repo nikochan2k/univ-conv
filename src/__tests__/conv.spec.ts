@@ -1,10 +1,10 @@
-import { DEFAULT_CONVERTER as c } from "../";
 import {
   hasBlob,
   hasBuffer,
   hasReadable,
   hasReadableStream,
 } from "../converters";
+import { DEFAULT_CONVERTER as c } from "../converver";
 
 it("arraybuffer", async () => {
   const expected = "大谷翔平ホームラン";

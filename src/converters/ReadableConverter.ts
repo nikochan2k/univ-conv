@@ -4,6 +4,7 @@ import {
   bufferConverter,
   readableConverter,
   readableStreamConverter,
+  uint8ArrayConverter,
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
@@ -18,56 +19,41 @@ import {
 } from "./util";
 
 class ReadableOfReadable extends Readable {
+  private index = 0;
+  private converter = uint8ArrayConverter();
+
   constructor(
     private src: Readable,
     private start: number,
     private end: number | undefined
   ) {
     super();
+    src.once("readable", () => this.setup());
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async onData(value: any) {
+    const chunk = await this.converter.convert(value as Data);
+    const size = chunk.byteLength;
+    let e = this.index + size;
+    if (this.end != null && this.end < e) e = this.end;
+    if (this.index < this.start && this.start < e) {
+      this.push(chunk.slice(this.start, e));
+    } else if (this.start <= this.index) {
+      this.push(chunk);
+    }
+    this.index += size;
+  }
+
+  private setup() {
+    const src = this.src;
+    src.once("error", (e) => this.destroy(e));
+    src.once("end", () => this.push(null));
+    src.on("data", async (value) => this.onData(value)); // eslint-disable-line @typescript-eslint/no-misused-promises
   }
 
   public override _read() {
-    const converter = bufferConverter();
-    let index = 0;
-    const src = this.src;
-    let srcDisposed = false;
-    const disposeSrc = () => {
-      if (srcDisposed) {
-        return;
-      }
-      srcDisposed = true;
-      src.destroy();
-      src.removeAllListeners();
-    };
-    src.once("error", (e) => {
-      this.destroy(e);
-      disposeSrc();
-    });
-    src.once("end", () => {
-      this.push(null);
-      this.destroy();
-      disposeSrc();
-    });
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    src.on("data", async (value) => {
-      const chunk = await converter.convert(value as Data);
-      const size = chunk.byteLength;
-      let e = index + size;
-      if (this.end != null && this.end < e) e = this.end;
-      let cont: boolean | undefined;
-      if (index < this.start && this.start < e) {
-        cont = this.push(chunk.slice(this.start, e));
-      } else if (this.start <= index) {
-        cont = this.push(chunk);
-      }
-      if (cont === false) {
-        disposeSrc();
-        this.push(null);
-        this.destroy();
-        return;
-      }
-      index += size;
-    });
+    // noop
   }
 }
 
@@ -78,9 +64,10 @@ class ReadableOfReadableStream extends Readable {
     private end: number | undefined
   ) {
     super();
+    this.setup(); // eslint-disable-line @typescript-eslint/no-floating-promises
   }
 
-  public override async _read() {
+  private async setup() {
     const reader = this.stream.getReader();
     try {
       const converter = bufferConverter();
@@ -95,14 +82,10 @@ class ReadableOfReadableStream extends Readable {
           const size = chunk.byteLength;
           let e = index + size;
           if (this.end != null && this.end < e) e = this.end;
-          let cont: boolean | undefined;
           if (index < this.start && this.start < e) {
-            cont = this.push(chunk.slice(this.start, e));
+            this.push(chunk.slice(this.start, e));
           } else if (this.start <= index) {
-            cont = this.push(chunk);
-          }
-          if (cont === false) {
-            break;
+            this.push(chunk);
           }
           index += size;
         }
@@ -112,6 +95,7 @@ class ReadableOfReadableStream extends Readable {
     } catch (e) {
       this.destroy(e as Error);
     } finally {
+      reader.releaseLock();
       reader.cancel().catch((e) => console.debug(e));
       closeStream(this.stream);
     }
