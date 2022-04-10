@@ -1,3 +1,5 @@
+const { resolve } = require("path"); // eslint-disable-line
+
 module.exports = {
   mode: "production",
   entry: {
@@ -18,8 +20,15 @@ module.exports = {
   },
   resolve: {
     extensions: [".ts", ".js"],
+    alias: {
+      "node-fetch": resolve(__dirname, "dummy.js"),
+    },
     fallback: {
       stream: false,
+      fs: false,
+      os: false,
+      path: false,
+      url: false,
     },
   },
 };
