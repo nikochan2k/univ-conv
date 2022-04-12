@@ -129,9 +129,13 @@ export class DefaultConverter {
   ) {
     if (isWritable(output)) {
       const readable = await readableConverter().convert(input, options);
-      await pipe(readable, output);
+      try {
+        await pipe(readable, output);
+      } catch (e) {
+        closeStream(output, e);
+      }
     } else if (isWritableStream(output)) {
-      let stream: ReadableStream<Uint8Array> | undefined;
+      let stream: ReadableStream<Uint8Array>;
       try {
         stream = await readableStreamConverter().convert(input, options);
         if (typeof stream.pipeTo === "function") {
@@ -143,9 +147,9 @@ export class DefaultConverter {
             return true;
           });
         }
-      } finally {
         closeStream(output);
-        closeStream(stream);
+      } catch (e) {
+        closeStream(output, e);
       }
     } else {
       throw new Error("Illegal output type: " + typeOf(output));

@@ -4,12 +4,10 @@ import {
   bufferConverter,
   readableConverter,
   readableStreamConverter,
-  uint8ArrayConverter,
 } from "./converters";
 import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
 import { textHelper } from "./TextHelper";
 import {
-  closeStream,
   EMPTY_BUFFER,
   fileURLToReadable,
   handleReadable,
@@ -20,7 +18,6 @@ import {
 
 class ReadableOfReadable extends Readable {
   private index = 0;
-  private converter = uint8ArrayConverter();
 
   constructor(
     private src: Readable,
@@ -31,25 +28,30 @@ class ReadableOfReadable extends Readable {
     src.once("readable", () => this.setup());
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async onData(value: any) {
-    const chunk = await this.converter.convert(value as Data);
-    const size = chunk.byteLength;
-    let e = this.index + size;
-    if (this.end != null && this.end < e) e = this.end;
-    if (this.index < this.start && this.start < e) {
-      this.push(chunk.slice(this.start, e));
-    } else if (this.start <= this.index) {
-      this.push(chunk);
-    }
-    this.index += size;
-  }
-
   private setup() {
+    const onData = (value: unknown) => {
+      const chunk = value as Uint8Array;
+      const size = chunk.byteLength;
+      let e = this.index + size;
+      if (this.end != null && this.end < e) e = this.end;
+      if (this.index < this.start && this.start < e) {
+        this.push(chunk.slice(this.start, e));
+      } else if (this.start <= this.index) {
+        this.push(chunk);
+      }
+      this.index += size;
+    };
+
     const src = this.src;
-    src.once("error", (e) => this.destroy(e));
-    src.once("end", () => this.push(null));
-    src.on("data", async (value) => this.onData(value)); // eslint-disable-line @typescript-eslint/no-misused-promises
+    src.once("error", (e) => {
+      this.destroy(e);
+      src.off("data", onData);
+    });
+    src.once("end", () => {
+      this.push(null);
+      src.off("data", onData);
+    });
+    src.on("data", onData);
   }
 
   public override _read() {
@@ -91,13 +93,11 @@ class ReadableOfReadableStream extends Readable {
         }
       } while (!done && (this.end == null || index < this.end));
       this.push(null);
-      this.destroy();
     } catch (e) {
       this.destroy(e as Error);
     } finally {
       reader.releaseLock();
-      reader.cancel().catch((e) => console.debug(e));
-      closeStream(this.stream);
+      this.stream.cancel().catch((e) => console.debug(e));
     }
   }
 }

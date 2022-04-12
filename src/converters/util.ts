@@ -93,10 +93,10 @@ export function handleFileReader<T extends string | ArrayBuffer>(
 }
 
 export async function handleReadableStream(
-  stream: ReadableStream,
+  source: ReadableStream,
   onData: (chunk: Data) => Promise<boolean>
 ): Promise<void> {
-  const reader = stream.getReader();
+  const reader = source.getReader();
   try {
     let res = await reader.read();
     while (!res.done) {
@@ -110,13 +110,11 @@ export async function handleReadableStream(
       }
       res = await reader.read();
     }
-    reader.cancel().catch((e) => console.debug(e));
-  } catch (err) {
-    reader.cancel(err).catch((e) => console.debug(e));
-    throw err;
-  } finally {
     reader.releaseLock();
-    stream.cancel().catch((e) => console.debug(e));
+    closeStream(source);
+  } catch (e) {
+    reader.releaseLock();
+    closeStream(source, e);
   }
 }
 
@@ -146,37 +144,9 @@ export function isWritableStream(
 
 export async function pipe(readable: Readable, writable: Writable) {
   return new Promise<void>((resolve, reject) => {
-    let readableDisposed = false;
-    let writableDisposed = false;
-    const disposeReadable = () => {
-      if (readableDisposed) {
-        return;
-      }
-      readableDisposed = true;
-      readable.destroy();
-      readable.removeAllListeners();
-    };
-    const disposeWritable = () => {
-      if (writableDisposed) {
-        return;
-      }
-      writableDisposed = true;
-      writable.destroy();
-      writable.removeAllListeners();
-    };
-    const onError = (err: Error) => {
-      reject(err);
-      readable.unpipe();
-      disposeReadable();
-      disposeWritable();
-    };
-    readable.once("error", onError);
-    writable.once("error", onError);
-    readable.once("end", () => disposeReadable());
-    writable.once("finish", () => {
-      resolve();
-      disposeWritable();
-    });
+    readable.once("error", reject);
+    writable.once("error", reject);
+    writable.once("finish", resolve);
     readable.pipe(writable);
   });
 }

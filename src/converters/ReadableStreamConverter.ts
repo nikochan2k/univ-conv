@@ -54,10 +54,10 @@ function createReadableStream(
 }
 
 function createReadableStreamOfReadableStream(
-  stream: ReadableStream<Uint8Array>,
+  source: ReadableStream<Uint8Array>,
   startEnd: { start: number; end: number | undefined }
 ) {
-  const reader = stream.getReader();
+  const reader = source.getReader();
   const start = startEnd.start;
   const end = startEnd.end;
   return new ReadableStream({
@@ -82,12 +82,12 @@ function createReadableStreamOfReadableStream(
         }
       } while (!done && (end == null || index < end));
       controller.close();
+      reader.releaseLock();
+      closeStream(source);
     },
-    cancel: (err) => {
-      reader
-        .cancel(err)
-        .catch((e) => console.debug(e))
-        .finally(() => closeStream(stream));
+    cancel: (e) => {
+      reader.releaseLock();
+      closeStream(source, e);
     },
   });
 }

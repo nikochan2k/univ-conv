@@ -13,11 +13,13 @@
     "blob",
     "arraybuffer",
     "base64",
-    "binarystring",
     "uint8array",
     "readable",
     "readablestream",
-    "utf8"
+    "utf8",
+    "binary",
+    "hex",
+    "url"
   ],
   "scripts": {
     "clean": "rimraf ./lib",
