@@ -1,7 +1,7 @@
 const { resolve } = require("path"); // eslint-disable-line
 
 module.exports = {
-  mode: "production",
+  mode: "development",
   entry: {
     "conv.spec": "./src/__tests__/conv.spec.ts",
     "common.spec": "./src/__tests__/common.spec.ts",

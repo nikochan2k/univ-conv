@@ -8,8 +8,6 @@ module.exports = {
   output: {
     filename: "univ-conv.js",
     path: __dirname + "/dist",
-    libraryTarget: "umd",
-    globalObject: "this",
   },
   module: {
     rules: [
