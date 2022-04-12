@@ -121,7 +121,6 @@ async function createReadableStreamOfReader(
     },
     cancel: (err) => {
       readable.destroy(err as Error);
-      readable.removeAllListeners();
     },
   });
 }

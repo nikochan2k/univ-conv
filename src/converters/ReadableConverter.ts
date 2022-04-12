@@ -196,12 +196,11 @@ class ReadableConverter extends AbstractConverter<Readable> {
         const readable = readables[i] as Readable;
         readable.once("error", (e) => {
           readable.unpipe();
-          pt.emit("error", e);
+          pt.destroy(e);
           for (let j = i; j < end; j++) {
             const r = readables[j] as Readable;
             r.destroy();
           }
-          pt.destroy();
         });
         readable.once("end", () => process(++i));
         readable.pipe(pt, { end: false });
