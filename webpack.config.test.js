@@ -21,9 +21,6 @@ module.exports = {
   },
   resolve: {
     extensions: [".ts", ".js"],
-    alias: {
-      "node-fetch": resolve(__dirname, "dummy.js"),
-    },
     fallback: {
       stream: false,
       fs: false,
