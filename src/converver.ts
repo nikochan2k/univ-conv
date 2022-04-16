@@ -9,14 +9,14 @@ import {
   ConvertOptions,
   Data,
   DataType,
-  handleReadableStream,
   hexConverter,
   isBrowser,
   isNode,
   isWritable,
   isWritableStream,
   Options,
-  pipe,
+  pipeNodeStream,
+  pipeWebStream,
   readableConverter,
   readableStreamConverter,
   textConverter,
@@ -130,7 +130,7 @@ export class DefaultConverter {
     if (isWritable(output)) {
       const readable = await readableConverter().convert(input, options);
       try {
-        await pipe(readable, output);
+        await pipeNodeStream(readable, output);
       } catch (e) {
         closeStream(output, e);
       }
@@ -138,15 +138,7 @@ export class DefaultConverter {
       let stream: ReadableStream<Uint8Array>;
       try {
         stream = await readableStreamConverter().convert(input, options);
-        if (typeof stream.pipeTo === "function") {
-          await stream.pipeTo(output);
-        } else {
-          const writer = output.getWriter();
-          await handleReadableStream(stream, async (chunk) => {
-            await writer.write(chunk);
-            return true;
-          });
-        }
+        await pipeWebStream(stream, output);
         closeStream(output);
       } catch (e) {
         closeStream(output, e);

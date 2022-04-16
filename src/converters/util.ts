@@ -142,7 +142,40 @@ export function isWritableStream(
   );
 }
 
-export async function pipe(readable: Readable, writable: Writable) {
+export function isReadable(stream: unknown): stream is Readable {
+  return (
+    hasReadable &&
+    stream != null &&
+    typeof (stream as Readable).pipe === "function" &&
+    (stream as Readable).readable
+  );
+}
+
+export async function pipeWebStream(
+  readable: ReadableStream<unknown>,
+  writable: WritableStream<unknown>
+) {
+  if (typeof readable.pipeTo === "function") {
+    await readable.pipeTo(writable);
+  } else {
+    const writer = writable.getWriter();
+    await handleReadableStream(readable, async (chunk) => {
+      await writer.write(chunk);
+      return true;
+    });
+  }
+}
+
+export function isWritable(stream: unknown): stream is Writable {
+  return (
+    hasWritable &&
+    stream != null &&
+    typeof (stream as Writable).pipe === "function" &&
+    (stream as Writable).writable
+  );
+}
+
+export async function pipeNodeStream(readable: Readable, writable: Writable) {
   return new Promise<void>((resolve, reject) => {
     readable.once("error", reject);
     writable.once("error", reject);
@@ -176,25 +209,7 @@ export async function handleReadable(
         });
     },
   });
-  await pipe(readable, writable);
-}
-
-export function isReadable(stream: unknown): stream is Readable {
-  return (
-    hasReadable &&
-    stream != null &&
-    typeof (stream as Readable).pipe === "function" &&
-    (stream as Readable).readable
-  );
-}
-
-export function isWritable(stream: unknown): stream is Writable {
-  return (
-    hasWritable &&
-    stream != null &&
-    typeof (stream as Writable).pipe === "function" &&
-    (stream as Writable).writable
-  );
+  await pipeNodeStream(readable, writable);
 }
 
 export function closeStream(
@@ -287,7 +302,7 @@ try {
         : "";
     const joined = path.join(os.tmpdir(), Date.now().toString() + extension);
     const writable = fs.createWriteStream("dest.txt");
-    await pipe(readable, writable);
+    await pipeNodeStream(readable, writable);
     const u = url.pathToFileURL(joined);
     return u.href;
   };
