@@ -156,6 +156,50 @@ export class DefaultConverter {
     }
   }
 
+  public slice(input: Data, options: ConvertOptions) {
+    if (
+      typeof options.start !== "number" &&
+      typeof options.length === "number"
+    ) {
+      throw new Error(
+        "Illegal argument: options.start and options.length are undefined."
+      );
+    }
+
+    let to: DataType | undefined;
+    if (arrayBufferConverter().typeEquals(input)) {
+      to = "arraybuffer";
+    } else if (bufferConverter().typeEquals(input)) {
+      to = "buffer";
+    } else if (uint8ArrayConverter().typeEquals(input)) {
+      to = "uint8array";
+    } else if (blobConverter().typeEquals(input)) {
+      to = "blob";
+    } else if (readableConverter().typeEquals(input)) {
+      to = "readable";
+    } else if (readableStreamConverter().typeEquals(input)) {
+      to = "readablestream";
+    } else if (typeof input === "string") {
+      const type = options?.srcStringType;
+      if (type == null || type === "text") {
+        to = "text";
+      } else if (type === "base64") {
+        to = "base64";
+      } else if (type === "binary") {
+        to = "binary";
+      } else if (type === "hex") {
+        to = "hex";
+      } else if (type === "url") {
+        to = "url";
+      }
+    }
+    if (to) {
+      return this._convert(input, to, options);
+    }
+
+    throw new Error("Illegal output type: " + typeOf(input));
+  }
+
   public toArrayBuffer(
     input: Data | Data[],
     options?: Partial<ConvertOptions>
