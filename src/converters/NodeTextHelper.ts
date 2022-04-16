@@ -39,9 +39,9 @@ class NodeTextHelper implements TextHelper {
     throw new Error("Illegal encoding: " + bufCharset);
   }
 
-  async textToBuffer(text: string, bufCharset: Charset): Promise<Uint8Array> {
+  textToBuffer(text: string, bufCharset: Charset): Promise<Uint8Array> {
     if (bufCharset === "utf8" || bufCharset === "utf16le") {
-      return Buffer.from(text, bufCharset as BufferEncoding);
+      return Promise.resolve(Buffer.from(text, bufCharset as BufferEncoding));
     }
     if (convert) {
       try {
