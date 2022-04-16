@@ -156,7 +156,7 @@ export class DefaultConverter {
     }
   }
 
-  public slice(input: Data, options: ConvertOptions) {
+  public slice(input: Data, options: Partial<ConvertOptions>) {
     if (
       typeof options.start !== "number" &&
       typeof options.length === "number"
