@@ -298,7 +298,7 @@ export class DefaultConverter {
     input: Data,
     to: T,
     options?: Partial<ConvertOptions>
-  ) {
+  ): Promise<Data> {
     switch (to) {
       case "arraybuffer":
         return arrayBufferConverter().convert(input, options);
