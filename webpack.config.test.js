@@ -1,26 +1,16 @@
-const { resolve } = require("path"); // eslint-disable-line
-
 module.exports = {
   mode: "development",
   entry: {
-    "conv.spec": "./src/__tests__/conv.spec.ts",
-    "common.spec": "./src/__tests__/common.spec.ts",
-    "largefile.spec": "./src/__tests__/largefile-web.ts",
+    "conv.spec": "./lib/__tests__/conv.spec.js",
+    "common.spec": "./lib/__tests__/common.spec.js",
+    "largefile.spec": "./lib/__tests__/largefile-web.js",
   },
   output: {
     filename: "[name].js",
     path: __dirname + "/dist",
   },
-  module: {
-    rules: [
-      {
-        test: /\.ts$/,
-        use: "ts-loader",
-      },
-    ],
-  },
   resolve: {
-    extensions: [".ts", ".js"],
+    extensions: [".js"],
     fallback: {
       stream: false,
       fs: false,

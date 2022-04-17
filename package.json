@@ -30,9 +30,11 @@
     "release": "npm-run-all clean compile npm-version npm-publish",
     "test": "jest --runInBand",
     "web-clean": "rimraf ./dist",
-    "web-compile": "webpack",
+    "webpack": "webpack",
+    "web-compile": "npm-run-all compile webpack",
     "web-build": "npm-run-all web-clean web-compile",
-    "web-compile-test": "webpack --config webpack.config.test.js",
+    "webpack-test": "webpack --config webpack.config.test.js",
+    "web-compile-test": "npm-run-all compile webpack-test",
     "web-build-test": "npm-run-all web-clean web-compile-test",
     "karma": "karma start",
     "web-test": "npm-run-all web-build-test karma"
@@ -76,7 +78,6 @@
     "prettier": "^2.6.2",
     "rimraf": "^3.0.2",
     "ts-jest": "^27.1.4",
-    "ts-loader": "^9.2.8",
     "typescript": "^4.6.3",
     "webpack": "^5.72.0",
     "webpack-cli": "^4.9.2"
