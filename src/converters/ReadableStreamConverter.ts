@@ -32,7 +32,7 @@ function createReadableStream(u8: Uint8Array) {
   });
 }
 
-function createReadableStreamOfReadableStream(
+export function createPartialReadableStream(
   source: ReadableStream<Uint8Array>,
   startEnd: { start: number; end?: number }
 ) {
@@ -192,7 +192,7 @@ class ReadableStreamConverter extends AbstractConverter<
     }
 
     if (this.typeEquals(input)) {
-      return createReadableStreamOfReadableStream(
+      return createPartialReadableStream(
         input,
         await this.getStartEnd(input, options)
       );
