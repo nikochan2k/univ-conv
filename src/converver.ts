@@ -37,7 +37,17 @@ export type ReturnData<T extends DataType> = T extends "arraybuffer"
   ? Readable
   : T extends "readablestream"
   ? ReadableStream<Uint8Array>
-  : string;
+  : T extends "text"
+  ? string
+  : T extends "base64"
+  ? string
+  : T extends "binary"
+  ? string
+  : T extends "hex"
+  ? string
+  : T extends "url"
+  ? string
+  : Data;
 
 export class DefaultConverter {
   public convert<T extends DataType>(
@@ -48,42 +58,62 @@ export class DefaultConverter {
     return this._convert(input, to, options) as Promise<ReturnData<T>>;
   }
 
-  public empty<T extends DataType>(type?: T) {
+  public empty<T extends DataType>(type?: T): ReturnData<T> {
     switch (type) {
       case "arraybuffer":
-        return arrayBufferConverter().empty();
+        return arrayBufferConverter().empty() as ReturnData<T>;
       case "buffer":
-        return bufferConverter().empty();
+        return bufferConverter().empty() as ReturnData<T>;
       case "uint8array":
-        return uint8ArrayConverter().empty();
+        return uint8ArrayConverter().empty() as ReturnData<T>;
       case "blob":
-        return blobConverter().empty();
+        return blobConverter().empty() as ReturnData<T>;
       case "readable":
-        return readableConverter().empty();
+        return readableConverter().empty() as ReturnData<T>;
       case "readablestream":
-        return readableStreamConverter().empty();
+        return readableStreamConverter().empty() as ReturnData<T>;
       case "text":
-        return textConverter().empty();
+        return textConverter().empty() as ReturnData<T>;
       case "base64":
-        return base64Converter().empty();
+        return base64Converter().empty() as ReturnData<T>;
       case "binary":
-        return binaryConverter().empty();
+        return binaryConverter().empty() as ReturnData<T>;
       case "hex":
-        return hexConverter().empty();
+        return hexConverter().empty() as ReturnData<T>;
       case "url":
-        return urlConverter().empty();
+        return urlConverter().empty() as ReturnData<T>;
     }
 
     if (isBrowser) {
-      return blobConverter().empty();
+      return blobConverter().empty() as ReturnData<T>;
     } else if (isNode) {
-      return bufferConverter().empty();
+      return bufferConverter().empty() as ReturnData<T>;
     } else {
-      return uint8ArrayConverter().empty();
+      return uint8ArrayConverter().empty() as ReturnData<T>;
     }
   }
 
-  public getSize(input: Data, options?: Partial<Options>) {
+  public emptyOf<T extends Data>(input: T): T {
+    if (arrayBufferConverter().typeEquals(input)) {
+      return arrayBufferConverter().empty() as T;
+    } else if (bufferConverter().typeEquals(input)) {
+      return bufferConverter().empty() as T;
+    } else if (uint8ArrayConverter().typeEquals(input)) {
+      return uint8ArrayConverter().empty() as T;
+    } else if (blobConverter().typeEquals(input)) {
+      return blobConverter().empty() as T;
+    } else if (readableConverter().typeEquals(input)) {
+      return readableConverter().empty() as T;
+    } else if (readableStreamConverter().typeEquals(input)) {
+      return readableStreamConverter().empty() as T;
+    } else if (typeof input === "string") {
+      return "" as T;
+    }
+
+    throw new Error("Illegal input: " + typeOf(input));
+  }
+
+  public getSize(input: Data, options?: Partial<Options>): Promise<number> {
     if (arrayBufferConverter().typeEquals(input)) {
       return arrayBufferConverter().getSize(input as ArrayBuffer, options);
     } else if (bufferConverter().typeEquals(input)) {
@@ -111,7 +141,7 @@ export class DefaultConverter {
       }
     }
 
-    throw new Error("Illegal output type: " + typeOf(input));
+    throw new Error("Illegal input: " + typeOf(input));
   }
 
   public async merge<T extends DataType>(
@@ -126,7 +156,7 @@ export class DefaultConverter {
     input: Data,
     output: Writable | WritableStream<Uint8Array>,
     options?: Partial<ConvertOptions>
-  ) {
+  ): Promise<void> {
     if (isWritable(output)) {
       const readable = await readableConverter().convert(input, options);
       try {
@@ -195,7 +225,7 @@ export class DefaultConverter {
   public toArrayBuffer(
     input: Data | Data[],
     options?: Partial<ConvertOptions>
-  ) {
+  ): Promise<ArrayBuffer> {
     if (Array.isArray(input)) {
       return this.merge(input, "arraybuffer", options);
     } else {
@@ -203,7 +233,10 @@ export class DefaultConverter {
     }
   }
 
-  public toBase64(input: Data | Data[], options?: Partial<ConvertOptions>) {
+  public toBase64(
+    input: Data | Data[],
+    options?: Partial<ConvertOptions>
+  ): Promise<string> {
     if (Array.isArray(input)) {
       return this.merge(input, "base64", options);
     } else {
@@ -211,7 +244,10 @@ export class DefaultConverter {
     }
   }
 
-  public toBinary(input: Data | Data[], options?: Partial<ConvertOptions>) {
+  public toBinary(
+    input: Data | Data[],
+    options?: Partial<ConvertOptions>
+  ): Promise<string> {
     if (Array.isArray(input)) {
       return this.merge(input, "binary", options);
     } else {
@@ -219,7 +255,10 @@ export class DefaultConverter {
     }
   }
 
-  public toBlob(input: Data | Data[], options?: Partial<ConvertOptions>) {
+  public toBlob(
+    input: Data | Data[],
+    options?: Partial<ConvertOptions>
+  ): Promise<Blob> {
     if (Array.isArray(input)) {
       return this.merge(input, "blob", options);
     } else {
@@ -227,7 +266,10 @@ export class DefaultConverter {
     }
   }
 
-  public toBuffer(input: Data | Data[], options?: Partial<ConvertOptions>) {
+  public toBuffer(
+    input: Data | Data[],
+    options?: Partial<ConvertOptions>
+  ): Promise<Buffer> {
     if (Array.isArray(input)) {
       return this.merge(input, "buffer", options);
     } else {
@@ -235,7 +277,10 @@ export class DefaultConverter {
     }
   }
 
-  public toHex(input: Data | Data[], options?: Partial<ConvertOptions>) {
+  public toHex(
+    input: Data | Data[],
+    options?: Partial<ConvertOptions>
+  ): Promise<string> {
     if (Array.isArray(input)) {
       return this.merge(input, "hex", options);
     } else {
@@ -243,7 +288,10 @@ export class DefaultConverter {
     }
   }
 
-  public toReadable(input: Data | Data[], options?: Partial<ConvertOptions>) {
+  public toReadable(
+    input: Data | Data[],
+    options?: Partial<ConvertOptions>
+  ): Promise<Readable> {
     if (Array.isArray(input)) {
       return this.merge(input, "readable", options);
     } else {
@@ -254,7 +302,7 @@ export class DefaultConverter {
   public toReadableStream(
     input: Data | Data[],
     options?: Partial<ConvertOptions>
-  ) {
+  ): Promise<ReadableStream<Uint8Array>> {
     if (Array.isArray(input)) {
       return this.merge(input, "readablestream", options);
     } else {
@@ -262,7 +310,10 @@ export class DefaultConverter {
     }
   }
 
-  public toText(input: Data | Data[], options?: Partial<ConvertOptions>) {
+  public toText(
+    input: Data | Data[],
+    options?: Partial<ConvertOptions>
+  ): Promise<string> {
     if (Array.isArray(input)) {
       return this.merge(input, "text", options);
     } else {
@@ -270,7 +321,10 @@ export class DefaultConverter {
     }
   }
 
-  public toURL(input: Data | Data[], options?: Partial<ConvertOptions>) {
+  public toURL(
+    input: Data | Data[],
+    options?: Partial<ConvertOptions>
+  ): Promise<string> {
     if (Array.isArray(input)) {
       return this.merge(input, "url", options);
     } else {
@@ -278,7 +332,10 @@ export class DefaultConverter {
     }
   }
 
-  public toUint8Array(input: Data | Data[], options?: Partial<ConvertOptions>) {
+  public toUint8Array(
+    input: Data | Data[],
+    options?: Partial<ConvertOptions>
+  ): Promise<Uint8Array> {
     if (Array.isArray(input)) {
       return this.merge(input, "uint8array", options);
     } else {
