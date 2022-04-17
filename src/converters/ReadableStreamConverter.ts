@@ -25,18 +25,18 @@ import {
 
 function createReadableStream(
   bufferSize: number,
-  startEnd: { start: number; end: number | undefined },
+  startEnd: { start: number; end?: number },
   slice: (s: number, e: number) => Uint8Array,
   getSize: (chunk: Uint8Array) => number
 ) {
   const start = startEnd.start;
-  const end = startEnd.end as number;
+  const end = startEnd.end;
   let index = 0;
   return new ReadableStream<Uint8Array>({
     start: (controller) => {
       do {
         let e = index + bufferSize;
-        if (end < e) e = end;
+        if (end != null && end < e) e = end;
         let chunk: Uint8Array;
         if (index < start && start < e) {
           chunk = slice(start, e);
@@ -45,9 +45,12 @@ function createReadableStream(
         } else {
           continue;
         }
+        if (chunk.byteLength === 0) {
+          break;
+        }
         controller.enqueue(chunk);
         index += getSize(chunk);
-      } while (index < end);
+      } while (end != null && index < end);
       controller.close();
     },
   });
@@ -55,7 +58,7 @@ function createReadableStream(
 
 function createReadableStreamOfReadableStream(
   source: ReadableStream<Uint8Array>,
-  startEnd: { start: number; end: number | undefined }
+  startEnd: { start: number; end?: number }
 ) {
   const reader = source.getReader();
   const start = startEnd.start;
