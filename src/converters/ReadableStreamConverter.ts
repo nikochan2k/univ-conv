@@ -23,34 +23,10 @@ import {
   isReadableStream,
 } from "./util";
 
-function createReadableStream(
-  bufferSize: number,
-  startEnd: { start: number; end?: number },
-  slice: (s: number, e: number) => Uint8Array,
-  getSize: (chunk: Uint8Array) => number
-) {
-  const start = startEnd.start;
-  const end = startEnd.end;
-  let index = 0;
+function createReadableStream(u8: Uint8Array) {
   return new ReadableStream<Uint8Array>({
     start: (controller) => {
-      do {
-        let e = index + bufferSize;
-        if (end != null && end < e) e = end;
-        let chunk: Uint8Array;
-        if (index < start && start < e) {
-          chunk = slice(start, e);
-        } else if (start <= index) {
-          chunk = slice(index, e);
-        } else {
-          continue;
-        }
-        if (chunk.byteLength === 0) {
-          break;
-        }
-        controller.enqueue(chunk);
-        index += getSize(chunk);
-      } while (end != null && index < end);
+      controller.enqueue(u8);
       controller.close();
     },
   });
@@ -62,10 +38,10 @@ function createReadableStreamOfReadableStream(
 ) {
   const reader = source.getReader();
   const start = startEnd.start;
-  const end = startEnd.end;
+  const end = startEnd.end ?? Number.MAX_SAFE_INTEGER;
   return new ReadableStream({
     start: async (controller) => {
-      let index = 0;
+      let iStart = 0;
       let done: boolean;
       do {
         const res = await reader.read();
@@ -74,16 +50,33 @@ function createReadableStreamOfReadableStream(
         if (!done) {
           const u8 = value as Uint8Array;
           const size = u8.byteLength;
-          let e = index + size;
-          if (end != null && end < e) e = end;
-          if (index < start && start < e) {
-            controller.enqueue(u8.slice(start, e));
-          } else if (start <= index) {
-            controller.enqueue(u8);
+          const iEnd = iStart + size;
+          let chunk: Uint8Array | undefined;
+          if (iStart <= start && start < iEnd) {
+            /*
+            range :   |-------|
+            buffer: |-------|
+            range :   |-----|
+            buffer: |-------|
+            range :   |--|
+            buffer: |-------|
+            */
+            chunk = u8.slice(start, iEnd < end ? iEnd : end);
+          } else if (start < iStart && iStart < end) {
+            /*
+            range : |-------|
+            buffer:   |-------|
+            range : |-------|
+            buffer:   |-----|
+            */
+            chunk = u8.slice(iStart, end);
           }
-          index += size;
+          if (chunk) {
+            controller.enqueue(chunk);
+          }
+          iStart += size;
         }
-      } while (!done && (end == null || index < end));
+      } while (!done && iStart < end);
       controller.close();
       reader.releaseLock();
       closeStream(source);
@@ -99,27 +92,43 @@ async function createReadableStreamOfReader(
   readable: Readable,
   options: ConvertOptions
 ) {
-  const { start, end } = await readableConverter().getStartEnd(
-    readable,
-    options
-  );
+  const startEnd = await readableConverter().getStartEnd(readable, options);
+  const start = startEnd.start;
+  const end = startEnd.end ?? Number.MAX_SAFE_INTEGER;
   const bufferSize = options.bufferSize;
   const converter = uint8ArrayConverter();
-  let index = 0;
+  let iStart = 0;
   return new ReadableStream({
     start: async (controller) => {
-      await handleReadable(readable, async (chunk) => {
-        const u8 = await converter.convert(chunk, { bufferSize });
+      await handleReadable(readable, async (value) => {
+        const u8 = await converter.convert(value, { bufferSize });
         const size = u8.byteLength;
-        let e = index + size;
-        if (end != null && end < e) e = end;
-        if (index < start && start < e) {
-          controller.enqueue(u8.slice(start, e));
-        } else if (start <= index) {
-          controller.enqueue(u8);
+        const iEnd = iStart + size;
+        let chunk: Uint8Array | undefined;
+        if (iStart <= start && start < iEnd) {
+          /*
+          range :   |-------|
+          buffer: |-------|
+          range :   |-----|
+          buffer: |-------|
+          range :   |--|
+          buffer: |-------|
+          */
+          chunk = u8.slice(start, iEnd < end ? iEnd : end);
+        } else if (start < iStart && iStart < end) {
+          /*
+          range : |-------|
+          buffer:   |-------|
+          range : |-------|
+          buffer:   |-----|
+          */
+          chunk = u8.slice(iStart, end);
         }
-        index += size;
-        return end == null || index < end;
+        if (chunk) {
+          controller.enqueue(chunk);
+        }
+        iStart += size;
+        return iStart < end;
       });
     },
     cancel: (err) => {
@@ -173,20 +182,9 @@ class ReadableStreamConverter extends AbstractConverter<
       }
     }
 
-    const bufferSize = options.bufferSize;
     if (hasStreamOnBlob) {
       const blob = await blobConverter().convert(input, options);
       input = blob.stream() as unknown as ReadableStream<Uint8Array>;
-    }
-
-    const u8 = await uint8ArrayConverter().convert(input, options);
-    if (u8) {
-      return createReadableStream(
-        bufferSize,
-        await uint8ArrayConverter().getStartEnd(u8, options),
-        (s, e) => u8.slice(s, e),
-        (chunk) => chunk.byteLength
-      );
     }
 
     if (readableConverter().typeEquals(input)) {
@@ -198,6 +196,15 @@ class ReadableStreamConverter extends AbstractConverter<
         input,
         await this.getStartEnd(input, options)
       );
+    }
+
+    const u8 = await uint8ArrayConverter().convert(input, options);
+    if (u8) {
+      const { start, end } = await uint8ArrayConverter().getStartEnd(
+        u8,
+        options
+      );
+      return createReadableStream(u8.slice(start, end));
     }
 
     return undefined;
