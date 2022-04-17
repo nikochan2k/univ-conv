@@ -16,7 +16,7 @@ import {
   isReadable,
 } from "./util";
 
-class ReadableOfReadable extends Readable {
+export class PartialReadable extends Readable {
   private index = 0;
 
   constructor(
@@ -150,7 +150,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
         input,
         options
       );
-      return new ReadableOfReadable(input, start, end);
+      return new PartialReadable(input, start, end);
     }
     if (readableStreamConverter().typeEquals(input)) {
       const { start, end } = await readableStreamConverter().getStartEnd(

@@ -181,11 +181,14 @@ export class DefaultConverter {
   public slice(input: Data, options: Partial<ConvertOptions>): Promise<Data> {
     if (
       typeof options.start !== "number" &&
-      typeof options.length === "number"
+      typeof options.length !== "number"
     ) {
       throw new Error(
         "Illegal argument: options.start and options.length are undefined."
       );
+    }
+    if (options.length === 0) {
+      return Promise.resolve(this.emptyOf(input));
     }
 
     let to: DataType | undefined;
