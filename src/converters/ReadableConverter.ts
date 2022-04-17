@@ -17,12 +17,12 @@ import {
 } from "./util";
 
 export class PartialReadable extends Readable {
-  private index = 0;
+  private iStart = 0;
 
   constructor(
     private src: Readable,
     private start: number,
-    private end: number | undefined
+    private end = Number.MAX_SAFE_INTEGER
   ) {
     super();
     src.once("readable", () => this.setup());
@@ -30,16 +30,33 @@ export class PartialReadable extends Readable {
 
   private setup() {
     const onData = (value: unknown) => {
-      const chunk = value as Uint8Array;
-      const size = chunk.byteLength;
-      let e = this.index + size;
-      if (this.end != null && this.end < e) e = this.end;
-      if (this.index < this.start && this.start < e) {
-        this.push(chunk.slice(this.start, e));
-      } else if (this.start <= this.index) {
+      const u8 = value as Uint8Array;
+      const size = u8.byteLength;
+      const iEnd = this.iStart + size;
+      let chunk: Uint8Array | undefined;
+      if (this.iStart <= this.start && this.start < iEnd) {
+        /*
+        range :   |-------|
+        buffer: |-------|
+        range :   |-----|
+        buffer: |-------|
+        range :   |--|
+        buffer: |-------|
+        */
+        chunk = u8.slice(this.start, iEnd < this.end ? iEnd : this.end);
+      } else if (this.start < this.iStart && this.iStart < this.end) {
+        /*
+        range : |-------|
+        buffer:   |-------|
+        range : |-------|
+        buffer:   |-----|
+        */
+        chunk = u8.slice(this.iStart, this.end);
+      }
+      if (chunk) {
         this.push(chunk);
       }
-      this.index += size;
+      this.iStart += size;
     };
 
     const src = this.src;
@@ -63,7 +80,7 @@ class ReadableOfReadableStream extends Readable {
   constructor(
     private stream: ReadableStream<Uint8Array>,
     private start: number,
-    private end: number | undefined
+    private end = Number.MAX_SAFE_INTEGER
   ) {
     super();
     this.setup(); // eslint-disable-line @typescript-eslint/no-floating-promises
@@ -73,25 +90,42 @@ class ReadableOfReadableStream extends Readable {
     const reader = this.stream.getReader();
     try {
       const converter = bufferConverter();
-      let index = 0;
+      let iStart = 0;
       let done: boolean;
       do {
         const res = await reader.read();
         const value = res.value;
         done = res.done;
         if (value) {
-          const chunk = await converter.convert(value as Data);
-          const size = chunk.byteLength;
-          let e = index + size;
-          if (this.end != null && this.end < e) e = this.end;
-          if (index < this.start && this.start < e) {
-            this.push(chunk.slice(this.start, e));
-          } else if (this.start <= index) {
+          const u8 = await converter.convert(value as Data);
+          const size = u8.byteLength;
+          const iEnd = iStart + size;
+          let chunk: Uint8Array | undefined;
+          if (iStart <= this.start && this.start < iEnd) {
+            /*
+            range :   |-------|
+            buffer: |-------|
+            range :   |-----|
+            buffer: |-------|
+            range :   |--|
+            buffer: |-------|
+            */
+            chunk = u8.slice(this.start, iEnd < this.end ? iEnd : this.end);
+          } else if (this.start < iStart && iStart < this.end) {
+            /*
+            range : |-------|
+            buffer:   |-------|
+            range : |-------|
+            buffer:   |-----|
+            */
+            chunk = u8.slice(iStart, this.end);
+          }
+          if (chunk) {
             this.push(chunk);
           }
-          index += size;
+          iStart += size;
         }
-      } while (!done && (this.end == null || index < this.end));
+      } while (!done && iStart < this.end);
       this.push(null);
     } catch (e) {
       this.destroy(e as Error);
