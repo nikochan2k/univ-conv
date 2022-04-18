@@ -9,14 +9,9 @@ export type BlockType = StringType | BinaryType;
 export type StreamType = "readable" | "readablestream";
 export type DataType = BlockType | StreamType;
 
-export type Data =
-  | string
-  | ArrayBuffer
-  | Uint8Array
-  | Buffer
-  | Blob
-  | Readable
-  | ReadableStream<Uint8Array>;
+export type BlockData = string | ArrayBuffer | Uint8Array | Buffer | Blob;
+export type StreamData = Readable | ReadableStream<Uint8Array>;
+export type Data = BlockData | StreamData;
 
 export interface Options {
   bufferSize: number;
