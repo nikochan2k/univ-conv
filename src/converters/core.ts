@@ -68,7 +68,7 @@ export abstract class AbstractConverter<T extends Data>
     input: Data,
     options?: Partial<ConvertOptions>
   ): Promise<T> {
-    if (!input) {
+    if (this.isEmpty(input, options)) {
       return this.empty();
     }
 
@@ -86,6 +86,10 @@ export abstract class AbstractConverter<T extends Data>
   }
 
   public getSize(input: T, options?: Partial<Options>): Promise<number> {
+    if (this.isEmpty(input, options)) {
+      return Promise.resolve(0);
+    }
+
     return this._getSize(input, this._initOptions(input, options));
   }
 
@@ -104,28 +108,28 @@ export abstract class AbstractConverter<T extends Data>
     input: T,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    if (!input || this._isEmpty(input)) {
+    if (this.isEmpty(input, options) || this._isEmpty(input)) {
       return Promise.resolve(EMPTY_ARRAY_BUFFER);
     }
     return this._toArrayBuffer(input, options);
   }
 
   public toBase64(input: T, options: ConvertOptions): Promise<string> {
-    if (!input || this._isEmpty(input)) {
+    if (this.isEmpty(input, options) || this._isEmpty(input)) {
       return Promise.resolve("");
     }
     return this._toBase64(input, options);
   }
 
   public toText(input: T, options: ConvertOptions): Promise<string> {
-    if (!input || this._isEmpty(input)) {
+    if (this.isEmpty(input, options) || this._isEmpty(input)) {
       return Promise.resolve("");
     }
     return this._toText(input, options);
   }
 
   public toUint8Array(input: T, options: ConvertOptions): Promise<Uint8Array> {
-    if (!input || this._isEmpty(input)) {
+    if (this.isEmpty(input, options) || this._isEmpty(input)) {
       return Promise.resolve(EMPTY_UINT8_ARRAY);
     }
     return this._toUint8Array(input, options);
@@ -168,6 +172,10 @@ export abstract class AbstractConverter<T extends Data>
     delete options.start;
     delete options.length;
     return options;
+  }
+
+  protected isEmpty(input: Data, options?: Partial<ConvertOptions>) {
+    return !input || options?.length === 0;
   }
 
   protected abstract _convert(
