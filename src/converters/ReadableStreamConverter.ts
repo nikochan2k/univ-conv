@@ -103,6 +103,7 @@ async function createReadableStreamOfReader(
         const u8 = await converter.convert(value, { bufferSize });
         const size = u8.byteLength;
         const iEnd = iStart + size;
+        const u8End = (iEnd < end ? iEnd : end) - iStart;
         let chunk: Uint8Array | undefined;
         if (iStart <= start && start < iEnd) {
           /*
@@ -113,7 +114,7 @@ async function createReadableStreamOfReader(
           range :   |--|
           buffer: |-------|
           */
-          chunk = u8.slice(start, iEnd < end ? iEnd : end);
+          chunk = u8.slice(start - iStart, u8End);
         } else if (start < iStart && iStart < end) {
           /*
           range : |-------|
@@ -121,7 +122,7 @@ async function createReadableStreamOfReader(
           range : |-------|
           buffer:   |-----|
           */
-          chunk = u8.slice(iStart, end);
+          chunk = u8.slice(0, u8End);
         }
         if (chunk) {
           controller.enqueue(chunk);

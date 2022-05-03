@@ -17,8 +17,6 @@ import {
 } from "./util";
 
 export class PartialReadable extends Readable {
-  private iStart = 0;
-
   constructor(
     private src: Readable,
     private start: number,
@@ -29,12 +27,14 @@ export class PartialReadable extends Readable {
   }
 
   private setup() {
+    let iStart = 0;
     const onData = (value: unknown) => {
       const u8 = value as Uint8Array;
       const size = u8.byteLength;
-      const iEnd = this.iStart + size;
+      const iEnd = iStart + size;
+      const u8End = (iEnd < this.end ? iEnd : this.end) - iStart;
       let chunk: Uint8Array | undefined;
-      if (this.iStart <= this.start && this.start < iEnd) {
+      if (iStart <= this.start && this.start < iEnd) {
         /*
         range :   |-------|
         buffer: |-------|
@@ -43,20 +43,20 @@ export class PartialReadable extends Readable {
         range :   |--|
         buffer: |-------|
         */
-        chunk = u8.slice(this.start, iEnd < this.end ? iEnd : this.end);
-      } else if (this.start < this.iStart && this.iStart < this.end) {
+        chunk = u8.slice(this.start - iStart, u8End);
+      } else if (this.start < iStart && iStart < this.end) {
         /*
         range : |-------|
         buffer:   |-------|
         range : |-------|
         buffer:   |-----|
         */
-        chunk = u8.slice(this.iStart, this.end);
+        chunk = u8.slice(0, u8End);
       }
       if (chunk) {
         this.push(chunk);
       }
-      this.iStart += size;
+      iStart += size;
     };
 
     const src = this.src;
@@ -100,6 +100,7 @@ class ReadableOfReadableStream extends Readable {
           const u8 = await converter.convert(value as Data);
           const size = u8.byteLength;
           const iEnd = iStart + size;
+          const u8End = (iEnd < this.end ? iEnd : this.end) - iStart;
           let chunk: Uint8Array | undefined;
           if (iStart <= this.start && this.start < iEnd) {
             /*
@@ -110,7 +111,7 @@ class ReadableOfReadableStream extends Readable {
             range :   |--|
             buffer: |-------|
             */
-            chunk = u8.slice(this.start, iEnd < this.end ? iEnd : this.end);
+            chunk = u8.slice(this.start - iStart, u8End);
           } else if (this.start < iStart && iStart < this.end) {
             /*
             range : |-------|
@@ -118,7 +119,7 @@ class ReadableOfReadableStream extends Readable {
             range : |-------|
             buffer:   |-----|
             */
-            chunk = u8.slice(iStart, this.end);
+            chunk = u8.slice(0, u8End);
           }
           if (chunk) {
             this.push(chunk);
