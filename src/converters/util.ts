@@ -98,18 +98,17 @@ export async function handleReadableStream(
 ): Promise<void> {
   const reader = source.getReader();
   try {
-    let res = await reader.read();
-    while (!res.done) {
-      const chunk = res.value as Data;
-      if (chunk == null) {
-        break;
-      }
-      const result = await onData(chunk);
-      if (!result) {
-        break;
-      }
+    let res: ReadableStreamDefaultReadResult<unknown>;
+    do {
       res = await reader.read();
-    }
+      const chunk = res.value as Data;
+      if (chunk) {
+        const result = await onData(chunk);
+        if (!result) {
+          break;
+        }
+      }
+    } while (!res.done);
     reader.releaseLock();
     closeStream(source);
   } catch (e) {
