@@ -63,15 +63,15 @@ class BlobConverter extends AbstractConverter<Blob> {
 
       let index = 0;
       const chunks: Blob[] = [];
-      await handleReadableStream(input, async (chunk) => {
-        const blob = await this.convert(chunk, { bufferSize });
-        const size = blob.size;
+      await handleReadableStream(input, async (u8) => {
+        const chunk = await this.convert(u8, { bufferSize });
+        const size = chunk.size;
         let e = index + size;
         if (end != null && end < e) e = end;
         if (index < start && start < e) {
-          chunks.push(blob.slice(start, e));
+          chunks.push(chunk.slice(start, e));
         } else if (start <= index) {
-          chunks.push(blob);
+          chunks.push(chunk);
         }
         index += size;
         return end == null || e < end;
