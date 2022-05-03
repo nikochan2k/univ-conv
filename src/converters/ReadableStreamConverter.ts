@@ -27,7 +27,6 @@ function createReadableStream(u8: Uint8Array) {
   return new ReadableStream<Uint8Array>({
     start: (controller) => {
       controller.enqueue(u8);
-      controller.close();
     },
   });
 }
@@ -42,12 +41,11 @@ export function createPartialReadableStream(
   return new ReadableStream({
     start: async (controller) => {
       let iStart = 0;
-      let done: boolean;
+      let res: ReadableStreamDefaultReadResult<unknown>;
       do {
-        const res = await reader.read();
+        res = await reader.read();
         const value = res.value;
-        done = res.done;
-        if (!done) {
+        if (value) {
           const u8 = value as Uint8Array;
           const size = u8.byteLength;
           const iEnd = iStart + size;
@@ -76,7 +74,7 @@ export function createPartialReadableStream(
           }
           iStart += size;
         }
-      } while (!done && iStart < end);
+      } while (!res.done && iStart < end);
       controller.close();
       reader.releaseLock();
       closeStream(source);
@@ -305,14 +303,12 @@ class ReadableStreamConverter extends AbstractConverter<
     input: ReadableStream<Uint8Array>,
     options: ConvertOptions
   ): Promise<Uint8Array> {
-    const converter = uint8ArrayConverter();
     const chunks: Uint8Array[] = [];
     await handleReadableStream(input, async (chunk) => {
-      const bufferSize = options.bufferSize;
-      const u8 = await converter.convert(chunk, { bufferSize });
-      chunks.push(u8);
-      return true;
+      chunks.push(chunk);
+      return Promise.resolve(true);
     });
+    const converter = uint8ArrayConverter();
     return converter.merge(chunks, options);
   }
 }

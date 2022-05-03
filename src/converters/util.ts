@@ -94,14 +94,14 @@ export function handleFileReader<T extends string | ArrayBuffer>(
 
 export async function handleReadableStream(
   source: ReadableStream,
-  onData: (chunk: Data) => Promise<boolean>
+  onData: (chunk: Uint8Array) => Promise<boolean>
 ): Promise<void> {
   const reader = source.getReader();
   try {
     let res: ReadableStreamDefaultReadResult<unknown>;
     do {
       res = await reader.read();
-      const chunk = res.value as Data;
+      const chunk = res.value as Uint8Array;
       if (chunk) {
         const result = await onData(chunk);
         if (!result) {
