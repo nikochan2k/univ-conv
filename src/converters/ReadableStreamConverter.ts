@@ -47,8 +47,9 @@ export function createPartialReadableStream(
         const value = res.value;
         if (value) {
           const u8 = value as Uint8Array;
-          const size = u8.byteLength;
-          const iEnd = iStart + size;
+          const length = u8.byteLength;
+          const iEnd = iStart + length;
+          const u8End = (iEnd < end ? iEnd : end) - iStart;
           let chunk: Uint8Array | undefined;
           if (iStart <= start && start < iEnd) {
             /*
@@ -59,7 +60,7 @@ export function createPartialReadableStream(
             range :   |--|
             buffer: |-------|
             */
-            chunk = u8.slice(start, iEnd < end ? iEnd : end);
+            chunk = u8.slice(start - iStart, u8End);
           } else if (start < iStart && iStart < end) {
             /*
             range : |-------|
@@ -67,12 +68,12 @@ export function createPartialReadableStream(
             range : |-------|
             buffer:   |-----|
             */
-            chunk = u8.slice(iStart, end);
+            chunk = u8.slice(0, u8End);
           }
           if (chunk) {
             controller.enqueue(chunk);
           }
-          iStart += size;
+          iStart += length;
         }
       } while (!res.done && iStart < end);
       controller.close();
@@ -180,13 +181,13 @@ class ReadableStreamConverter extends AbstractConverter<
       }
     }
 
-    if (hasStreamOnBlob) {
-      const blob = await blobConverter().convert(input, options);
-      input = blob.stream() as unknown as ReadableStream<Uint8Array>;
-    }
-
     if (readableConverter().typeEquals(input)) {
       return createReadableStreamOfReader(input, options);
+    }
+
+    if (!this.typeEquals(input) && hasStreamOnBlob) {
+      const blob = await blobConverter().convert(input, options);
+      input = blob.stream() as unknown as ReadableStream<Uint8Array>;
     }
 
     if (this.typeEquals(input)) {
