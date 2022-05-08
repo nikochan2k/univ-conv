@@ -55,14 +55,12 @@ class HexConverter extends AbstractConverter<string> {
     input: Data,
     options: ConvertOptions
   ): Promise<string | undefined> {
-    if (typeof input === "string") {
-      if (options.srcStringType === "hex") {
-        if (options.start == null && options.length == null) {
-          return input;
-        }
-        const { start, end } = await this.getStartEnd(input, options);
-        return input.slice(start * 2, end ? end * 2 : undefined);
+    if (typeof input === "string" && options.srcStringType === "hex") {
+      if (this._hasNoStartLength(options)) {
+        return input;
       }
+      const { start, end } = await this.getStartEnd(input, options);
+      return input.slice(start * 2, end ? end * 2 : undefined);
     }
 
     const u8 = await uint8ArrayConverter().convert(input, options);

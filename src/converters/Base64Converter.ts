@@ -49,8 +49,7 @@ class Base64Converter extends AbstractConverter<string> {
       if (
         typeof atob === "function" &&
         options.textToBufferCharset === "utf8" &&
-        options.start == null &&
-        options.length == null
+        this._hasNoStartLength(options)
       ) {
         return atob(input);
       }
@@ -121,7 +120,7 @@ class Base64Converter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const ab = decode(input);
-    if (options.start == null && options.length == null) {
+    if (this._hasNoStartLength(options)) {
       return ab;
     }
     const { start, end } = await arrayBufferConverter().getStartEnd(
@@ -135,7 +134,7 @@ class Base64Converter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<string> {
-    if (options.start == null && options.length == null) {
+    if (this._hasNoStartLength(options)) {
       return input;
     }
     const u8 = await this.toUint8Array(input, options);
@@ -149,8 +148,7 @@ class Base64Converter extends AbstractConverter<string> {
     if (
       typeof btoa === "function" &&
       options.bufferToTextCharset === "utf8" &&
-      options.start == null &&
-      options.length == null
+      this._hasNoStartLength(options)
     ) {
       return btoa(input);
     }

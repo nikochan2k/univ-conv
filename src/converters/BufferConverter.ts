@@ -127,7 +127,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
     input: Buffer,
     options: ConvertOptions
   ): Promise<Uint8Array> {
-    if (options.start == null && input.length == null) {
+    if (this._hasNoStartLength(options)) {
       return input;
     }
     const { start, end } = await this.getStartEnd(input, options);

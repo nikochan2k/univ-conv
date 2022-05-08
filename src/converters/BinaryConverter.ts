@@ -27,14 +27,12 @@ class BinaryConverter extends AbstractConverter<string> {
     input: Data,
     options: ConvertOptions
   ): Promise<string | undefined> {
-    if (typeof input === "string") {
-      if (options.srcStringType === "binary") {
-        if (options.start == null && options.length == null) {
-          return input;
-        }
-        const { start, end } = await this.getStartEnd(input, options);
-        return input.substring(start, end);
+    if (typeof input === "string" && options.srcStringType === "binary") {
+      if (this._hasNoStartLength(options)) {
+        return input;
       }
+      const { start, end } = await this.getStartEnd(input, options);
+      return input.substring(start, end);
     }
 
     if (blobConverter().typeEquals(input)) {

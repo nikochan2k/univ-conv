@@ -167,6 +167,10 @@ export abstract class AbstractConverter<T extends Data>
     return { start, end };
   }
 
+  protected _hasNoStartLength(options: ConvertOptions) {
+    return options.start == null && options.length == null;
+  }
+
   protected deleteStartLength(options: ConvertOptions) {
     options = { ...options };
     delete options.start;

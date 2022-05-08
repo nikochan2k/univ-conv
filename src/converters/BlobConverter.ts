@@ -47,7 +47,7 @@ class BlobConverter extends AbstractConverter<Blob> {
     options: ConvertOptions
   ): Promise<Blob | undefined> {
     if (this.typeEquals(input)) {
-      if (options.start == null && options.length == null) {
+      if (this._hasNoStartLength(options)) {
         return input;
       }
       const { start, end } = await this.getStartEnd(input, options);

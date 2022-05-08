@@ -110,7 +110,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     input: ArrayBuffer,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    if (options.start == null && options.length == null) {
+    if (this._hasNoStartLength(options)) {
       return input;
     }
     const { start, end } = await this.getStartEnd(input, options);

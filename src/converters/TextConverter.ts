@@ -107,9 +107,8 @@ class TextConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     if (
-      options.start == null &&
-      options.length == null &&
-      options.bufferToTextCharset === options.textToBufferCharset
+      options.bufferToTextCharset === options.textToBufferCharset &&
+      this._hasNoStartLength(options)
     ) {
       return input;
     }
