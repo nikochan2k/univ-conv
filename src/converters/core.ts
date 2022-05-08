@@ -29,10 +29,6 @@ export interface Converter<T extends Data> {
   convert(input: Data, options?: Partial<ConvertOptions>): Promise<T>;
   empty(): T;
   getSize(input: T, options?: Partial<Options>): Promise<number>;
-  getStartEnd(
-    input: T,
-    options: ConvertOptions
-  ): Promise<{ start: number; end: number | undefined }>;
   merge(chunks: T[], options?: Partial<Options>): Promise<T>;
   toArrayBuffer(input: T, options: ConvertOptions): Promise<ArrayBuffer>;
   toBase64(input: T, options: ConvertOptions): Promise<string>;
@@ -176,10 +172,6 @@ export abstract class AbstractConverter<T extends Data>
   }
 
   public abstract empty(): T;
-  public abstract getStartEnd(
-    input: T,
-    options: ConvertOptions
-  ): Promise<{ start: number; end: number | undefined }>;
   public abstract typeEquals(input: Data): input is T;
 
   protected abstract _convert(
@@ -205,6 +197,10 @@ export abstract class AbstractConverter<T extends Data>
     input: T,
     options: ConvertOptions
   ): Promise<Uint8Array>;
+  protected abstract _getStartEnd(
+    input: T,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }>;
 
   private _initOptions<T extends Options>(
     input: Data,

@@ -25,14 +25,6 @@ class TextConverter extends AbstractConverter<string> {
     return "";
   }
 
-  public async getStartEnd(
-    input: string,
-    options: ConvertOptions
-  ): Promise<{ start: number; end: number | undefined }> {
-    const u8 = await this.toUint8Array(input, deleteStartLength(options));
-    return getStartEnd(options, u8.byteLength);
-  }
-
   public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }
@@ -83,6 +75,14 @@ class TextConverter extends AbstractConverter<string> {
   protected async _getSize(input: string, options: Options): Promise<number> {
     const u8 = await this.toUint8Array(input, options);
     return u8.byteLength;
+  }
+
+  protected async _getStartEnd(
+    input: string,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    const u8 = await this.toUint8Array(input, deleteStartLength(options));
+    return getStartEnd(options, u8.byteLength);
   }
 
   protected _isEmpty(input: string): boolean {

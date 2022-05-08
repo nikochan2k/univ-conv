@@ -20,13 +20,6 @@ class BufferConverter extends AbstractConverter<Buffer> {
     return EMPTY_BUFFER;
   }
 
-  public getStartEnd(
-    input: ArrayBuffer,
-    options: ConvertOptions
-  ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(getStartEnd(options, input.byteLength));
-  }
-
   public typeEquals(input: unknown): input is Buffer {
     return (
       input instanceof Buffer || toString.call(input) === "[object Buffer]"
@@ -58,7 +51,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
         buffer = u8 as Buffer;
       }
       if (buffer) {
-        const { start, end } = await this.getStartEnd(buffer, options);
+        const { start, end } = await this._getStartEnd(buffer, options);
         return buffer.slice(start, end);
       }
       // 'type === "url"' is handled by arrayBufferConverter().convert();
@@ -95,6 +88,13 @@ class BufferConverter extends AbstractConverter<Buffer> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _getSize(input: Buffer, _: Options): Promise<number> {
     return Promise.resolve(input.byteLength);
+  }
+
+  protected _getStartEnd(
+    input: ArrayBuffer,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(getStartEnd(options, input.byteLength));
   }
 
   protected _isEmpty(input: Buffer): boolean {
@@ -137,7 +137,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
     if (hasNoStartLength(options)) {
       return input;
     }
-    const { start, end } = await this.getStartEnd(input, options);
+    const { start, end } = await this._getStartEnd(input, options);
     return input.slice(start, end);
   }
 }

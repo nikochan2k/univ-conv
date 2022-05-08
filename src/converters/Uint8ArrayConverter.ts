@@ -26,13 +26,6 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     return EMPTY_UINT8_ARRAY;
   }
 
-  public getStartEnd(
-    input: ArrayBuffer,
-    options: ConvertOptions
-  ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(getStartEnd(options, input.byteLength));
-  }
-
   public typeEquals(input: unknown): input is Uint8Array {
     return (
       bufferConverter().typeEquals(input) ||
@@ -85,6 +78,13 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _getSize(input: Uint8Array, _: Options): Promise<number> {
     return Promise.resolve(input.byteLength);
+  }
+
+  protected _getStartEnd(
+    input: ArrayBuffer,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(getStartEnd(options, input.byteLength));
   }
 
   protected _isEmpty(input: Uint8Array): boolean {
@@ -140,7 +140,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     if (hasNoStartLength(options)) {
       return input;
     }
-    const { start, end } = await this.getStartEnd(input, options);
+    const { start, end } = await this._getStartEnd(input, options);
     return input.slice(start, end);
   }
 }

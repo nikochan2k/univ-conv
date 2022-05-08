@@ -88,11 +88,11 @@ export function createPartialReadableStream(
   });
 }
 
-async function createReadableStreamOfReader(
+function createReadableStreamOfReader(
   readable: Readable,
   options: ConvertOptions
 ) {
-  const startEnd = await readableConverter().getStartEnd(readable, options);
+  const startEnd = getStartEnd(options);
   const start = startEnd.start;
   const end = startEnd.end ?? Number.MAX_SAFE_INTEGER;
   const bufferSize = options.bufferSize;
@@ -150,13 +150,6 @@ class ReadableStreamConverter extends AbstractConverter<
     });
   }
 
-  public getStartEnd(
-    _input: ReadableStream<Uint8Array>,
-    options: ConvertOptions
-  ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(getStartEnd(options));
-  }
-
   public typeEquals(input: unknown): input is ReadableStream<Uint8Array> {
     return isReadableStream(input);
   }
@@ -195,16 +188,13 @@ class ReadableStreamConverter extends AbstractConverter<
     if (this.typeEquals(input)) {
       return createPartialReadableStream(
         input,
-        await this.getStartEnd(input, options)
+        await this._getStartEnd(input, options)
       );
     }
 
     const u8 = await uint8ArrayConverter().convert(input, options);
     if (u8) {
-      const { start, end } = await uint8ArrayConverter().getStartEnd(
-        u8,
-        options
-      );
+      const { start, end } = getStartEnd(options, u8.byteLength);
       return createReadableStream(u8.slice(start, end));
     }
 
@@ -216,6 +206,13 @@ class ReadableStreamConverter extends AbstractConverter<
     _options: Options // eslint-disable-line
   ): Promise<number> {
     throw new Error("Cannot get size of ReadableStream");
+  }
+
+  protected _getStartEnd(
+    _input: ReadableStream<Uint8Array>,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(getStartEnd(options));
   }
 
   protected _isEmpty(): boolean {

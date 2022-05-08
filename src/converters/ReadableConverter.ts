@@ -2,7 +2,6 @@ import { Duplex, PassThrough, Readable } from "stream";
 import {
   blobConverter,
   bufferConverter,
-  readableConverter,
   readableStreamConverter,
 } from "./converters";
 import {
@@ -154,13 +153,6 @@ class ReadableConverter extends AbstractConverter<Readable> {
     });
   }
 
-  public getStartEnd(
-    _input: Readable,
-    options: ConvertOptions
-  ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(getStartEnd(options));
-  }
-
   public typeEquals(input: unknown): input is Readable {
     return isReadable(input);
   }
@@ -188,17 +180,11 @@ class ReadableConverter extends AbstractConverter<Readable> {
     }
 
     if (this.typeEquals(input)) {
-      const { start, end } = await readableConverter().getStartEnd(
-        input,
-        options
-      );
+      const { start, end } = getStartEnd(options);
       return new PartialReadable(input, start, end);
     }
     if (readableStreamConverter().typeEquals(input)) {
-      const { start, end } = await readableStreamConverter().getStartEnd(
-        input,
-        options
-      );
+      const { start, end } = getStartEnd(options);
       return new ReadableOfReadableStream(input, start, end);
     }
 
@@ -216,6 +202,13 @@ class ReadableConverter extends AbstractConverter<Readable> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _getSize(_input: Readable, _options: Options): Promise<number> {
     throw new Error("Cannot get size of Readable");
+  }
+
+  protected _getStartEnd(
+    _input: Readable,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(getStartEnd(options));
   }
 
   protected _isEmpty(input: Readable): boolean {
@@ -282,7 +275,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     input: Readable,
     options: ConvertOptions
   ): Promise<Uint8Array> {
-    const { start, end } = await this.getStartEnd(input, options);
+    const { start, end } = await this._getStartEnd(input, options);
     const bufferSize = options.bufferSize;
 
     let index = 0;

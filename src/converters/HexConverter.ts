@@ -48,13 +48,6 @@ class HexConverter extends AbstractConverter<string> {
     return "";
   }
 
-  public getStartEnd(
-    input: string, // eslint-disable-line
-    options: ConvertOptions // eslint-disable-line
-  ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(getStartEnd(options, input.length / 2));
-  }
-
   public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }
@@ -67,7 +60,7 @@ class HexConverter extends AbstractConverter<string> {
       if (hasNoStartLength(options)) {
         return input;
       }
-      const { start, end } = await this.getStartEnd(input, options);
+      const { start, end } = await this._getStartEnd(input, options);
       return input.slice(start * 2, end ? end * 2 : undefined);
     }
 
@@ -87,6 +80,13 @@ class HexConverter extends AbstractConverter<string> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _getSize(input: string, _: Options): Promise<number> {
     return Promise.resolve(input.length / 2);
+  }
+
+  protected _getStartEnd(
+    input: string, // eslint-disable-line
+    options: ConvertOptions // eslint-disable-line
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(getStartEnd(options, input.length / 2));
   }
 
   protected _isEmpty(input: string): boolean {
@@ -126,7 +126,7 @@ class HexConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<Uint8Array> {
-    const startEnd = await this.getStartEnd(input, options);
+    const startEnd = await this._getStartEnd(input, options);
     let start = startEnd.start;
     const end = startEnd.end as number;
 

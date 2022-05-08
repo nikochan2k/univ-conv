@@ -19,7 +19,7 @@ class BinaryConverter extends AbstractConverter<string> {
     return "";
   }
 
-  public getStartEnd(
+  protected _getStartEnd(
     input: string,
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
@@ -38,13 +38,13 @@ class BinaryConverter extends AbstractConverter<string> {
       if (hasNoStartLength(options)) {
         return input;
       }
-      const { start, end } = await this.getStartEnd(input, options);
+      const { start, end } = await this._getStartEnd(input, options);
       return input.substring(start, end);
     }
 
     if (blobConverter().typeEquals(input)) {
       if (hasReadAsBinaryStringOnBlob) {
-        const startEnd = await blobConverter().getStartEnd(input, options);
+        const startEnd = getStartEnd(options, input.size);
         let start = startEnd.start;
         const end = startEnd.end as number;
 

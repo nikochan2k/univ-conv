@@ -36,14 +36,6 @@ class URLConverter extends AbstractConverter<string> {
     return "";
   }
 
-  public async getStartEnd(
-    input: string,
-    options: ConvertOptions
-  ): Promise<{ start: number; end: number | undefined }> {
-    const size = await this._getSize(input, options);
-    return getStartEnd(options, size);
-  }
-
   public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }
@@ -87,6 +79,14 @@ class URLConverter extends AbstractConverter<string> {
       }
     }
     throw new Error(`Cannot get size of ${input}`);
+  }
+
+  protected async _getStartEnd(
+    input: string,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    const size = await this._getSize(input, options);
+    return getStartEnd(options, size);
   }
 
   protected _isEmpty(input: string): boolean {

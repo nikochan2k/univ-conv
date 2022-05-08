@@ -26,13 +26,6 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     return EMPTY_ARRAY_BUFFER;
   }
 
-  public getStartEnd(
-    input: ArrayBuffer,
-    options: ConvertOptions
-  ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(getStartEnd(options, input.byteLength));
-  }
-
   public typeEquals(input: unknown): input is ArrayBuffer {
     return (
       input instanceof ArrayBuffer ||
@@ -88,6 +81,13 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     return Promise.resolve(input.byteLength);
   }
 
+  protected _getStartEnd(
+    input: ArrayBuffer,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(getStartEnd(options, input.byteLength));
+  }
+
   protected _isEmpty(input: ArrayBuffer): boolean {
     return input.byteLength === 0;
   }
@@ -115,7 +115,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     if (hasNoStartLength(options)) {
       return input;
     }
-    const { start, end } = await this.getStartEnd(input, options);
+    const { start, end } = await this._getStartEnd(input, options);
     return input.slice(start, end);
   }
 

@@ -30,13 +30,6 @@ class BlobConverter extends AbstractConverter<Blob> {
     return EMPTY_BLOB;
   }
 
-  public getStartEnd(
-    input: Blob,
-    options: ConvertOptions
-  ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(getStartEnd(options, input.size));
-  }
-
   public typeEquals(input: unknown): input is Blob {
     return (
       input instanceof Blob ||
@@ -53,15 +46,12 @@ class BlobConverter extends AbstractConverter<Blob> {
       if (hasNoStartLength(options)) {
         return input;
       }
-      const { start, end } = await this.getStartEnd(input, options);
+      const { start, end } = await this._getStartEnd(input, options);
       return input.slice(start, end);
     }
 
     if (readableStreamConverter().typeEquals(input)) {
-      const { start, end } = await readableStreamConverter().getStartEnd(
-        input,
-        options
-      );
+      const start = options.start ?? 0;
       const bufferSize = options.bufferSize;
 
       let index = 0;
@@ -69,15 +59,14 @@ class BlobConverter extends AbstractConverter<Blob> {
       await handleReadableStream(input, async (u8) => {
         const chunk = await this.convert(u8, { bufferSize });
         const size = chunk.size;
-        let e = index + size;
-        if (end != null && end < e) e = end;
-        if (index < start && start < e) {
-          chunks.push(chunk.slice(start, e));
-        } else if (start <= index) {
+        const end = index + size;
+        if (index < start) {
+          chunks.push(chunk.slice(start, end));
+        } else {
           chunks.push(chunk);
         }
         index += size;
-        return end == null || e < end;
+        return true;
       });
 
       return this.merge(chunks, options);
@@ -94,6 +83,13 @@ class BlobConverter extends AbstractConverter<Blob> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _getSize(input: Blob, _: Options): Promise<number> {
     return Promise.resolve(input.size);
+  }
+
+  protected _getStartEnd(
+    input: Blob,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(getStartEnd(options, input.size));
   }
 
   protected _isEmpty(input: Blob): boolean {
@@ -117,7 +113,7 @@ class BlobConverter extends AbstractConverter<Blob> {
     input: Blob,
     options: ConvertOptions
   ): Promise<string> {
-    const startEnd = await this.getStartEnd(input, options);
+    const startEnd = await this._getStartEnd(input, options);
     let start = startEnd.start;
     const end = startEnd.end as number;
     const chunks: string[] = [];
@@ -165,7 +161,7 @@ class BlobConverter extends AbstractConverter<Blob> {
       return arrayBufferConverter().toUint8Array(ab, options);
     }
 
-    const startEnd = await this.getStartEnd(input, options);
+    const startEnd = await this._getStartEnd(input, options);
     let start = startEnd.start;
     const end = startEnd.end as number;
 

@@ -27,14 +27,6 @@ class Base64Converter extends AbstractConverter<string> {
     return "";
   }
 
-  public async getStartEnd(
-    input: string,
-    options: ConvertOptions
-  ): Promise<{ start: number; end: number | undefined }> {
-    const size = await this.getSize(input);
-    return getStartEnd(options, size);
-  }
-
   public typeEquals(input: unknown): input is string {
     return typeof input === "string";
   }
@@ -100,6 +92,14 @@ class Base64Converter extends AbstractConverter<string> {
     return Promise.resolve(size);
   }
 
+  protected async _getStartEnd(
+    input: string,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    const size = await this.getSize(input);
+    return getStartEnd(options, size);
+  }
+
   protected _isEmpty(input: string): boolean {
     return !input;
   }
@@ -123,19 +123,16 @@ class Base64Converter extends AbstractConverter<string> {
     }
   }
 
-  protected async _toArrayBuffer(
+  protected _toArrayBuffer(
     input: string,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const ab = decode(input);
     if (hasNoStartLength(options)) {
-      return ab;
+      return Promise.resolve(ab);
     }
-    const { start, end } = await arrayBufferConverter().getStartEnd(
-      ab,
-      options
-    );
-    return ab.slice(start, end);
+    const { start, end } = getStartEnd(options, ab.byteLength);
+    return Promise.resolve(ab.slice(start, end));
   }
 
   protected async _toBase64(
