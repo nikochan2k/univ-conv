@@ -9,7 +9,6 @@ import {
   Data,
   getStartEnd,
   hasNoStartLength,
-  Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
 import { handleFileReader, hasReadAsBinaryStringOnBlob, isNode } from "./util";
@@ -69,8 +68,7 @@ class BinaryConverter extends AbstractConverter<string> {
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _getSize(input: string, _: Options): Promise<number> {
+  protected _getSize(input: string): Promise<number> {
     return Promise.resolve(input.length);
   }
 
@@ -78,8 +76,7 @@ class BinaryConverter extends AbstractConverter<string> {
     return !input;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _merge(chunks: string[], _: Options): Promise<string> {
+  protected _merge(chunks: string[]): Promise<string> {
     return Promise.resolve(chunks.join(""));
   }
 

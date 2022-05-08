@@ -10,7 +10,6 @@ import {
   Data,
   deleteStartLength,
   getStartEnd,
-  Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
 import {
@@ -199,8 +198,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _getSize(_input: Readable, _options: Options): Promise<number> {
+  protected _getSize(): Promise<number> {
     throw new Error("Cannot get size of Readable");
   }
 
@@ -215,8 +213,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     return !input.readable;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _merge(readables: Readable[], _: Options): Promise<Readable> {
+  protected _merge(readables: Readable[]): Promise<Readable> {
     const end = readables.length;
     if (!readables || end === 0) {
       return Promise.resolve(this.empty());

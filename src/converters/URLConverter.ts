@@ -59,8 +59,7 @@ class URLConverter extends AbstractConverter<string> {
     return url;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected async _getSize(input: string, _options: Options): Promise<number> {
+  protected async _getSize(input: string): Promise<number> {
     if (input.startsWith("file:") && getFileSize) {
       return getFileSize(input);
     } else if (input.startsWith("blob:") && isBrowser) {
@@ -85,7 +84,7 @@ class URLConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
-    const size = await this._getSize(input, options);
+    const size = await this._getSize(input);
     return getStartEnd(options, size);
   }
 
@@ -93,7 +92,6 @@ class URLConverter extends AbstractConverter<string> {
     return !isURL(input);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected async _merge(urls: string[], options: Options): Promise<string> {
     if (isNode) {
       const converter = readableConverter();

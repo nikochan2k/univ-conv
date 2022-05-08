@@ -11,7 +11,6 @@ import {
   Data,
   EMPTY_UINT8_ARRAY,
   getStartEnd,
-  Options,
 } from "./core";
 import {
   closeStream,
@@ -201,10 +200,7 @@ class ReadableStreamConverter extends AbstractConverter<
     return undefined;
   }
 
-  protected _getSize(
-    _input: ReadableStream<Uint8Array>, // eslint-disable-line
-    _options: Options // eslint-disable-line
-  ): Promise<number> {
+  protected _getSize(): Promise<number> {
     throw new Error("Cannot get size of ReadableStream");
   }
 
@@ -220,8 +216,7 @@ class ReadableStreamConverter extends AbstractConverter<
   }
 
   protected _merge(
-    streams: ReadableStream<Uint8Array>[],
-    _: Options // eslint-disable-line @typescript-eslint/no-unused-vars
+    streams: ReadableStream<Uint8Array>[]
   ): Promise<ReadableStream<Uint8Array>> {
     const end = streams.length;
     const process = (

@@ -73,7 +73,7 @@ class TextConverter extends AbstractConverter<string> {
   }
 
   protected async _getSize(input: string, options: Options): Promise<number> {
-    const u8 = await this.toUint8Array(input, options);
+    const u8 = await this.toUint8Array(input, deleteStartLength(options));
     return u8.byteLength;
   }
 
@@ -81,16 +81,15 @@ class TextConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
-    const u8 = await this.toUint8Array(input, deleteStartLength(options));
-    return getStartEnd(options, u8.byteLength);
+    const size = await this.getSize(input, options);
+    return getStartEnd(options, size);
   }
 
   protected _isEmpty(input: string): boolean {
     return !input;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _merge(chunks: string[], _: Options): Promise<string> {
+  protected _merge(chunks: string[]): Promise<string> {
     return Promise.resolve(chunks.join(""));
   }
 

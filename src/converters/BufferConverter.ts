@@ -10,7 +10,6 @@ import {
   Data,
   getStartEnd,
   hasNoStartLength,
-  Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
 import { EMPTY_BUFFER } from "./util";
@@ -85,8 +84,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _getSize(input: Buffer, _: Options): Promise<number> {
+  protected _getSize(input: Buffer): Promise<number> {
     return Promise.resolve(input.byteLength);
   }
 
@@ -101,8 +99,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
     return input.byteLength === 0;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _merge(chunks: Buffer[], _: Options): Promise<Buffer> {
+  protected _merge(chunks: Buffer[]): Promise<Buffer> {
     return Promise.resolve(Buffer.concat(chunks));
   }
 

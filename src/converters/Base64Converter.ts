@@ -80,8 +80,7 @@ class Base64Converter extends AbstractConverter<string> {
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _getSize(input: string, _: Options): Promise<number> {
+  protected _getSize(input: string): Promise<number> {
     const len = input.length;
     const baseLen = (len * 3) / 4;
     let padding = 0;

@@ -16,7 +16,6 @@ import {
   EMPTY_ARRAY_BUFFER,
   getStartEnd,
   hasNoStartLength,
-  Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
 import { isNode } from "./util";
@@ -76,8 +75,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _getSize(input: ArrayBuffer, _: Options): Promise<number> {
+  protected _getSize(input: ArrayBuffer): Promise<number> {
     return Promise.resolve(input.byteLength);
   }
 
@@ -92,8 +90,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     return input.byteLength === 0;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _merge(chunks: ArrayBuffer[], _: Options): Promise<ArrayBuffer> {
+  protected _merge(chunks: ArrayBuffer[]): Promise<ArrayBuffer> {
     const byteLength = chunks.reduce((sum, chunk) => {
       return sum + chunk.byteLength;
     }, 0);

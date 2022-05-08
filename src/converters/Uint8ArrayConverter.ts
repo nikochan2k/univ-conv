@@ -17,7 +17,6 @@ import {
   EMPTY_UINT8_ARRAY,
   getStartEnd,
   hasNoStartLength,
-  Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
 import { isNode } from "./util";
@@ -75,8 +74,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _getSize(input: Uint8Array, _: Options): Promise<number> {
+  protected _getSize(input: Uint8Array): Promise<number> {
     return Promise.resolve(input.byteLength);
   }
 
@@ -91,11 +89,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     return input.byteLength === 0;
   }
 
-  protected async _merge(
-    chunks: Uint8Array[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: Options
-  ): Promise<Uint8Array> {
+  protected async _merge(chunks: Uint8Array[]): Promise<Uint8Array> {
     const byteLength = chunks.reduce((sum, chunk) => {
       return sum + chunk.byteLength;
     }, 0);

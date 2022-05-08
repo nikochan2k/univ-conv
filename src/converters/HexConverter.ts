@@ -6,7 +6,6 @@ import {
   deleteStartLength,
   getStartEnd,
   hasNoStartLength,
-  Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
 import { isNode } from "./util";
@@ -77,14 +76,13 @@ class HexConverter extends AbstractConverter<string> {
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _getSize(input: string, _: Options): Promise<number> {
+  protected _getSize(input: string): Promise<number> {
     return Promise.resolve(input.length / 2);
   }
 
   protected _getStartEnd(
-    input: string, // eslint-disable-line
-    options: ConvertOptions // eslint-disable-line
+    input: string,
+    options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
     return Promise.resolve(getStartEnd(options, input.length / 2));
   }
@@ -93,8 +91,7 @@ class HexConverter extends AbstractConverter<string> {
     return !input;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected async _merge(chunks: string[], _: Options): Promise<string> {
+  protected async _merge(chunks: string[]): Promise<string> {
     return Promise.resolve(chunks.join(""));
   }
 

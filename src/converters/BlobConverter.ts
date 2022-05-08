@@ -11,7 +11,6 @@ import {
   EMPTY_UINT8_ARRAY,
   getStartEnd,
   hasNoStartLength,
-  Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
 import {
@@ -80,8 +79,7 @@ class BlobConverter extends AbstractConverter<Blob> {
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _getSize(input: Blob, _: Options): Promise<number> {
+  protected _getSize(input: Blob): Promise<number> {
     return Promise.resolve(input.size);
   }
 
@@ -96,8 +94,7 @@ class BlobConverter extends AbstractConverter<Blob> {
     return input.size === 0;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _merge(chunks: Blob[], _: Options): Promise<Blob> {
+  protected _merge(chunks: Blob[]): Promise<Blob> {
     return Promise.resolve(new Blob(chunks));
   }
 
