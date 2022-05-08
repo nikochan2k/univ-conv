@@ -218,8 +218,7 @@ class ReadableStreamConverter extends AbstractConverter<
     throw new Error("Cannot get size of ReadableStream");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _isEmpty(_: ReadableStream<Uint8Array>): boolean {
+  protected _isEmpty(): boolean {
     return false;
   }
 

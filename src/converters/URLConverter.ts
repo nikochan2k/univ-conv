@@ -14,6 +14,7 @@ import {
   Data,
   deleteStartLength,
   getStartEnd,
+  isURL,
   Options,
 } from "./core";
 import {
@@ -89,7 +90,7 @@ class URLConverter extends AbstractConverter<string> {
   }
 
   protected _isEmpty(input: string): boolean {
-    return !input;
+    return !isURL(input);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

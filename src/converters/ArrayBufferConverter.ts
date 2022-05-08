@@ -89,7 +89,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
   }
 
   protected _isEmpty(input: ArrayBuffer): boolean {
-    return 0 === input.byteLength;
+    return input.byteLength === 0;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
