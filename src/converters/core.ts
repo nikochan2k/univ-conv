@@ -126,7 +126,7 @@ export abstract class AbstractConverter<T extends Data>
   }
 
   public getSize(input: T, options?: Partial<Options>): Promise<number> {
-    if (isEmpty(input, options)) {
+    if (isEmpty(input, options) || this._isEmpty(input)) {
       return Promise.resolve(0);
     }
 
