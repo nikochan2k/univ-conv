@@ -18,15 +18,18 @@ class BinaryConverter extends AbstractConverter<string> {
     return "";
   }
 
-  protected _getStartEnd(
-    input: string,
-    options: ConvertOptions
-  ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(getStartEnd(options, input.length));
-  }
-
   public typeEquals(input: unknown): input is string {
     return typeof input === "string";
+  }
+
+  protected _binaryToUint8Array(input: string): Uint8Array {
+    let u8: Uint8Array;
+    if (isNode) {
+      u8 = Buffer.from(input, "binary");
+    } else {
+      u8 = Uint8Array.from(input.split(""), (e) => e.charCodeAt(0));
+    }
+    return u8;
   }
 
   protected async _convert(
@@ -72,6 +75,13 @@ class BinaryConverter extends AbstractConverter<string> {
     return Promise.resolve(input.length);
   }
 
+  protected _getStartEnd(
+    input: string,
+    options: ConvertOptions
+  ): Promise<{ start: number; end: number | undefined }> {
+    return Promise.resolve(getStartEnd(options, input.length));
+  }
+
   protected _isEmpty(input: string): boolean {
     return !input;
   }
@@ -84,7 +94,7 @@ class BinaryConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    const u8 = this._toUint8ArrayInternal(input);
+    const u8 = this._binaryToUint8Array(input);
     return arrayBufferConverter().toArrayBuffer(u8, options);
   }
 
@@ -92,7 +102,7 @@ class BinaryConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<string> {
-    const u8 = this._toUint8ArrayInternal(input);
+    const u8 = this._binaryToUint8Array(input);
     return uint8ArrayConverter().toBase64(u8, options);
   }
 
@@ -108,18 +118,8 @@ class BinaryConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<Uint8Array> {
-    const u8 = this._toUint8ArrayInternal(input);
+    const u8 = this._binaryToUint8Array(input);
     return uint8ArrayConverter().toUint8Array(u8, options);
-  }
-
-  protected _toUint8ArrayInternal(input: string): Uint8Array {
-    let u8: Uint8Array;
-    if (isNode) {
-      u8 = Buffer.from(input, "binary");
-    } else {
-      u8 = Uint8Array.from(input.split(""), (e) => e.charCodeAt(0));
-    }
-    return u8;
   }
 }
 

@@ -13,6 +13,7 @@ import {
   AbstractConverter,
   ConvertOptions,
   Data,
+  deleteStartLength,
   EMPTY_ARRAY_BUFFER,
   getStartEnd,
   hasNoStartLength,
@@ -121,7 +122,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return uint8ArrayConverter().toBase64(u8, options);
+    return uint8ArrayConverter().toBase64(u8, deleteStartLength(options));
   }
 
   protected async _toText(
