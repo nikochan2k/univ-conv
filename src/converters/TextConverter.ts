@@ -9,7 +9,15 @@ import {
   readableStreamConverter,
   uint8ArrayConverter,
 } from "./converters";
-import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  Data,
+  deleteStartLength,
+  getStartEnd,
+  hasNoStartLength,
+  Options,
+} from "./core";
 import { textHelper } from "./TextHelper";
 
 class TextConverter extends AbstractConverter<string> {
@@ -21,8 +29,8 @@ class TextConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
-    const u8 = await this.toUint8Array(input, this.deleteStartLength(options));
-    return this._getStartEnd(options, u8.byteLength);
+    const u8 = await this.toUint8Array(input, deleteStartLength(options));
+    return getStartEnd(options, u8.byteLength);
   }
 
   public typeEquals(input: unknown): input is string {
@@ -44,7 +52,7 @@ class TextConverter extends AbstractConverter<string> {
       } else if (srcStringType === "url") {
         input = await uint8ArrayConverter().convert(
           input,
-          this.deleteStartLength(options)
+          deleteStartLength(options)
         );
       } else {
         return this.toText(input, options);
@@ -99,7 +107,7 @@ class TextConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return uint8ArrayConverter().toBase64(u8, this.deleteStartLength(options));
+    return uint8ArrayConverter().toBase64(u8, deleteStartLength(options));
   }
 
   protected async _toText(
@@ -108,7 +116,7 @@ class TextConverter extends AbstractConverter<string> {
   ): Promise<string> {
     if (
       options.bufferToTextCharset === options.textToBufferCharset &&
-      this.hasNoStartLength(options)
+      hasNoStartLength(options)
     ) {
       return input;
     }

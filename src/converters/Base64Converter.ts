@@ -10,7 +10,15 @@ import {
   uint8ArrayConverter,
   urlConverter,
 } from "./converters";
-import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  Data,
+  deleteStartLength,
+  getStartEnd,
+  hasNoStartLength,
+  Options,
+} from "./core";
 import { textHelper } from "./TextHelper";
 import { isBrowser, isNode } from "./util";
 
@@ -24,7 +32,7 @@ class Base64Converter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
     const size = await this.getSize(input);
-    return this._getStartEnd(options, size);
+    return getStartEnd(options, size);
   }
 
   public typeEquals(input: unknown): input is string {
@@ -49,7 +57,7 @@ class Base64Converter extends AbstractConverter<string> {
       if (
         typeof atob === "function" &&
         options.textToBufferCharset === "utf8" &&
-        this.hasNoStartLength(options)
+        hasNoStartLength(options)
       ) {
         return atob(input);
       }
@@ -120,7 +128,7 @@ class Base64Converter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const ab = decode(input);
-    if (this.hasNoStartLength(options)) {
+    if (hasNoStartLength(options)) {
       return ab;
     }
     const { start, end } = await arrayBufferConverter().getStartEnd(
@@ -134,11 +142,11 @@ class Base64Converter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<string> {
-    if (this.hasNoStartLength(options)) {
+    if (hasNoStartLength(options)) {
       return input;
     }
     const u8 = await this.toUint8Array(input, options);
-    return this.convert(u8, this.deleteStartLength(options));
+    return this.convert(u8, deleteStartLength(options));
   }
 
   protected async _toText(
@@ -148,7 +156,7 @@ class Base64Converter extends AbstractConverter<string> {
     if (
       typeof btoa === "function" &&
       options.bufferToTextCharset === "utf8" &&
-      this.hasNoStartLength(options)
+      hasNoStartLength(options)
     ) {
       return btoa(input);
     }

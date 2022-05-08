@@ -10,6 +10,7 @@ import {
   ConvertOptions,
   Data,
   EMPTY_UINT8_ARRAY,
+  getStartEnd,
   Options,
 } from "./core";
 import {
@@ -153,7 +154,7 @@ class ReadableStreamConverter extends AbstractConverter<
     _input: ReadableStream<Uint8Array>,
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(this._getStartEnd(options));
+    return Promise.resolve(getStartEnd(options));
   }
 
   public typeEquals(input: unknown): input is ReadableStream<Uint8Array> {

@@ -4,7 +4,14 @@ import {
   readableStreamConverter,
   uint8ArrayConverter,
 } from "./converters";
-import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  Data,
+  getStartEnd,
+  hasNoStartLength,
+  Options,
+} from "./core";
 import { textHelper } from "./TextHelper";
 import { EMPTY_BUFFER } from "./util";
 
@@ -17,7 +24,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
     input: ArrayBuffer,
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(this._getStartEnd(options, input.byteLength));
+    return Promise.resolve(getStartEnd(options, input.byteLength));
   }
 
   public typeEquals(input: unknown): input is Buffer {
@@ -127,7 +134,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
     input: Buffer,
     options: ConvertOptions
   ): Promise<Uint8Array> {
-    if (this.hasNoStartLength(options)) {
+    if (hasNoStartLength(options)) {
       return input;
     }
     const { start, end } = await this.getStartEnd(input, options);

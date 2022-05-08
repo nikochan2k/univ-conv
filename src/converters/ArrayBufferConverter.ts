@@ -14,6 +14,8 @@ import {
   ConvertOptions,
   Data,
   EMPTY_ARRAY_BUFFER,
+  getStartEnd,
+  hasNoStartLength,
   Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
@@ -28,7 +30,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     input: ArrayBuffer,
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(this._getStartEnd(options, input.byteLength));
+    return Promise.resolve(getStartEnd(options, input.byteLength));
   }
 
   public typeEquals(input: unknown): input is ArrayBuffer {
@@ -110,7 +112,7 @@ class ArrayBufferConverter extends AbstractConverter<ArrayBuffer> {
     input: ArrayBuffer,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    if (this.hasNoStartLength(options)) {
+    if (hasNoStartLength(options)) {
       return input;
     }
     const { start, end } = await this.getStartEnd(input, options);

@@ -61,6 +61,46 @@ export function isURL(input: string) {
   return /^(file|http|https|blob|data):/.test(input);
 }
 
+export function getStartEnd(
+  options: ConvertOptions,
+  size?: number
+): { start: number; end: number | undefined } {
+  let start = options.start ?? 0;
+  if (size != null && size < start) {
+    start = size;
+  }
+  let end: number | undefined;
+  if (options.length == null) {
+    if (size != null) {
+      end = size;
+    }
+  } else {
+    end = start + options.length;
+  }
+  if (size != null && end != null && size < end) {
+    end = size;
+  }
+  if (end != null && end < start) {
+    end = start;
+  }
+  return { start, end };
+}
+
+export function deleteStartLength(options: ConvertOptions) {
+  options = { ...options };
+  delete options.start;
+  delete options.length;
+  return options;
+}
+
+export function hasNoStartLength(options: ConvertOptions) {
+  return options.start == null && options.length == null;
+}
+
+export function isEmpty(input: Data, options?: Partial<ConvertOptions>) {
+  return !input || options?.length === 0;
+}
+
 export abstract class AbstractConverter<T extends Data>
   implements Converter<T>
 {
@@ -68,7 +108,7 @@ export abstract class AbstractConverter<T extends Data>
     input: Data,
     options?: Partial<ConvertOptions>
   ): Promise<T> {
-    if (this.isEmpty(input, options)) {
+    if (isEmpty(input, options)) {
       return this.empty();
     }
 
@@ -86,7 +126,7 @@ export abstract class AbstractConverter<T extends Data>
   }
 
   public getSize(input: T, options?: Partial<Options>): Promise<number> {
-    if (this.isEmpty(input, options)) {
+    if (isEmpty(input, options)) {
       return Promise.resolve(0);
     }
 
@@ -108,28 +148,28 @@ export abstract class AbstractConverter<T extends Data>
     input: T,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    if (this.isEmpty(input, options) || this._isEmpty(input)) {
+    if (isEmpty(input, options) || this._isEmpty(input)) {
       return Promise.resolve(EMPTY_ARRAY_BUFFER);
     }
     return this._toArrayBuffer(input, options);
   }
 
   public toBase64(input: T, options: ConvertOptions): Promise<string> {
-    if (this.isEmpty(input, options) || this._isEmpty(input)) {
+    if (isEmpty(input, options) || this._isEmpty(input)) {
       return Promise.resolve("");
     }
     return this._toBase64(input, options);
   }
 
   public toText(input: T, options: ConvertOptions): Promise<string> {
-    if (this.isEmpty(input, options) || this._isEmpty(input)) {
+    if (isEmpty(input, options) || this._isEmpty(input)) {
       return Promise.resolve("");
     }
     return this._toText(input, options);
   }
 
   public toUint8Array(input: T, options: ConvertOptions): Promise<Uint8Array> {
-    if (this.isEmpty(input, options) || this._isEmpty(input)) {
+    if (isEmpty(input, options) || this._isEmpty(input)) {
       return Promise.resolve(EMPTY_UINT8_ARRAY);
     }
     return this._toUint8Array(input, options);
@@ -141,46 +181,6 @@ export abstract class AbstractConverter<T extends Data>
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }>;
   public abstract typeEquals(input: Data): input is T;
-
-  protected _getStartEnd(
-    options: ConvertOptions,
-    size?: number
-  ): { start: number; end: number | undefined } {
-    let start = options.start ?? 0;
-    if (size != null && size < start) {
-      start = size;
-    }
-    let end: number | undefined;
-    if (options.length == null) {
-      if (size != null) {
-        end = size;
-      }
-    } else {
-      end = start + options.length;
-    }
-    if (size != null && end != null && size < end) {
-      end = size;
-    }
-    if (end != null && end < start) {
-      end = start;
-    }
-    return { start, end };
-  }
-
-  protected deleteStartLength(options: ConvertOptions) {
-    options = { ...options };
-    delete options.start;
-    delete options.length;
-    return options;
-  }
-
-  protected hasNoStartLength(options: ConvertOptions) {
-    return options.start == null && options.length == null;
-  }
-
-  protected isEmpty(input: Data, options?: Partial<ConvertOptions>) {
-    return !input || options?.length === 0;
-  }
 
   protected abstract _convert(
     input: Data,

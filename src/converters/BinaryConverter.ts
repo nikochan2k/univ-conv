@@ -3,7 +3,14 @@ import {
   blobConverter,
   uint8ArrayConverter,
 } from "./converters";
-import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  Data,
+  getStartEnd,
+  hasNoStartLength,
+  Options,
+} from "./core";
 import { textHelper } from "./TextHelper";
 import { handleFileReader, hasReadAsBinaryStringOnBlob, isNode } from "./util";
 
@@ -16,7 +23,7 @@ class BinaryConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(this._getStartEnd(options, input.length));
+    return Promise.resolve(getStartEnd(options, input.length));
   }
 
   public typeEquals(input: unknown): input is string {
@@ -28,7 +35,7 @@ class BinaryConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string" && options.srcStringType === "binary") {
-      if (this.hasNoStartLength(options)) {
+      if (hasNoStartLength(options)) {
         return input;
       }
       const { start, end } = await this.getStartEnd(input, options);

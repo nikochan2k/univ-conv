@@ -8,7 +8,14 @@ import {
   textConverter,
   uint8ArrayConverter,
 } from "./converters";
-import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  Data,
+  deleteStartLength,
+  getStartEnd,
+  Options,
+} from "./core";
 import {
   dataUrlToBase64,
   fileURLToReadable,
@@ -33,7 +40,7 @@ class URLConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
     const size = await this._getSize(input, options);
-    return this._getStartEnd(options, size);
+    return getStartEnd(options, size);
   }
 
   public typeEquals(input: unknown): input is string {
@@ -146,7 +153,7 @@ class URLConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return uint8ArrayConverter().toBase64(u8, this.deleteStartLength(options));
+    return uint8ArrayConverter().toBase64(u8, deleteStartLength(options));
   }
 
   protected async _toText(
@@ -154,7 +161,7 @@ class URLConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const ab = await this.toArrayBuffer(input, options);
-    return textConverter().convert(ab, this.deleteStartLength(options));
+    return textConverter().convert(ab, deleteStartLength(options));
   }
 
   protected async _toUint8Array(

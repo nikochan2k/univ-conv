@@ -1,5 +1,13 @@
 import { base64Converter, uint8ArrayConverter } from "./converters";
-import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  Data,
+  deleteStartLength,
+  getStartEnd,
+  hasNoStartLength,
+  Options,
+} from "./core";
 import { textHelper } from "./TextHelper";
 import { isNode } from "./util";
 
@@ -44,7 +52,7 @@ class HexConverter extends AbstractConverter<string> {
     input: string, // eslint-disable-line
     options: ConvertOptions // eslint-disable-line
   ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(this._getStartEnd(options, input.length / 2));
+    return Promise.resolve(getStartEnd(options, input.length / 2));
   }
 
   public typeEquals(input: unknown): input is string {
@@ -56,7 +64,7 @@ class HexConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string" && options.srcStringType === "hex") {
-      if (this.hasNoStartLength(options)) {
+      if (hasNoStartLength(options)) {
         return input;
       }
       const { start, end } = await this.getStartEnd(input, options);
@@ -103,7 +111,7 @@ class HexConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return base64Converter().convert(u8, this.deleteStartLength(options));
+    return base64Converter().convert(u8, deleteStartLength(options));
   }
 
   protected async _toText(

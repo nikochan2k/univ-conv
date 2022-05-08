@@ -7,7 +7,10 @@ import {
   AbstractConverter,
   ConvertOptions,
   Data,
+  deleteStartLength,
   EMPTY_UINT8_ARRAY,
+  getStartEnd,
+  hasNoStartLength,
   Options,
 } from "./core";
 import { textHelper } from "./TextHelper";
@@ -31,7 +34,7 @@ class BlobConverter extends AbstractConverter<Blob> {
     input: Blob,
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(this._getStartEnd(options, input.size));
+    return Promise.resolve(getStartEnd(options, input.size));
   }
 
   public typeEquals(input: unknown): input is Blob {
@@ -47,7 +50,7 @@ class BlobConverter extends AbstractConverter<Blob> {
     options: ConvertOptions
   ): Promise<Blob | undefined> {
     if (this.typeEquals(input)) {
-      if (this.hasNoStartLength(options)) {
+      if (hasNoStartLength(options)) {
         return input;
       }
       const { start, end } = await this.getStartEnd(input, options);
@@ -107,10 +110,7 @@ class BlobConverter extends AbstractConverter<Blob> {
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const u8 = await this.toUint8Array(input, options);
-    return arrayBufferConverter().toArrayBuffer(
-      u8,
-      this.deleteStartLength(options)
-    );
+    return arrayBufferConverter().toArrayBuffer(u8, deleteStartLength(options));
   }
 
   protected async _toBase64(

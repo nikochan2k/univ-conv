@@ -5,7 +5,14 @@ import {
   readableConverter,
   readableStreamConverter,
 } from "./converters";
-import { AbstractConverter, ConvertOptions, Data, Options } from "./core";
+import {
+  AbstractConverter,
+  ConvertOptions,
+  Data,
+  deleteStartLength,
+  getStartEnd,
+  Options,
+} from "./core";
 import { textHelper } from "./TextHelper";
 import {
   EMPTY_BUFFER,
@@ -151,7 +158,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     _input: Readable,
     options: ConvertOptions
   ): Promise<{ start: number; end: number | undefined }> {
-    return Promise.resolve(this._getStartEnd(options));
+    return Promise.resolve(getStartEnd(options));
   }
 
   public typeEquals(input: unknown): input is Readable {
@@ -260,7 +267,7 @@ class ReadableConverter extends AbstractConverter<Readable> {
     options: ConvertOptions
   ): Promise<string> {
     const buffer = (await this.toUint8Array(input, options)) as Buffer;
-    return bufferConverter().toBase64(buffer, this.deleteStartLength(options));
+    return bufferConverter().toBase64(buffer, deleteStartLength(options));
   }
 
   protected async _toText(
