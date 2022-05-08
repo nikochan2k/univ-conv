@@ -167,15 +167,15 @@ export abstract class AbstractConverter<T extends Data>
     return { start, end };
   }
 
-  protected _hasNoStartLength(options: ConvertOptions) {
-    return options.start == null && options.length == null;
-  }
-
   protected deleteStartLength(options: ConvertOptions) {
     options = { ...options };
     delete options.start;
     delete options.length;
     return options;
+  }
+
+  protected hasNoStartLength(options: ConvertOptions) {
+    return options.start == null && options.length == null;
   }
 
   protected isEmpty(input: Data, options?: Partial<ConvertOptions>) {

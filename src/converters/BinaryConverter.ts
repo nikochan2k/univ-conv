@@ -28,7 +28,7 @@ class BinaryConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string | undefined> {
     if (typeof input === "string" && options.srcStringType === "binary") {
-      if (this._hasNoStartLength(options)) {
+      if (this.hasNoStartLength(options)) {
         return input;
       }
       const { start, end } = await this.getStartEnd(input, options);

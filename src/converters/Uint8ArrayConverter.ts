@@ -135,7 +135,7 @@ class Uint8ArrayConverter extends AbstractConverter<Uint8Array> {
     input: Uint8Array,
     options: ConvertOptions
   ): Promise<Uint8Array> {
-    if (this._hasNoStartLength(options)) {
+    if (this.hasNoStartLength(options)) {
       return input;
     }
     const { start, end } = await this.getStartEnd(input, options);
