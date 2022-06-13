@@ -7,8 +7,6 @@ import {
   AbstractConverter,
   ConvertOptions,
   Data,
-  deleteStartLength,
-  EMPTY_UINT8_ARRAY,
   getStartEnd,
   hasNoStartLength,
 } from "./core";
@@ -68,7 +66,7 @@ class BlobConverter extends AbstractConverter<Blob> {
         return true;
       });
 
-      return this.merge(chunks, options);
+      return await this.merge(chunks, options);
     }
 
     const u8 = await uint8ArrayConverter().convert(input, options);
@@ -103,7 +101,7 @@ class BlobConverter extends AbstractConverter<Blob> {
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     const u8 = await this.toUint8Array(input, options);
-    return arrayBufferConverter().toArrayBuffer(u8, deleteStartLength(options));
+    return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
   }
 
   protected async _toBase64(
@@ -134,25 +132,21 @@ class BlobConverter extends AbstractConverter<Blob> {
   ): Promise<string> {
     if (options.bufferToTextCharset === "utf8") {
       if (hasTextOnBlob) {
-        return input.text();
+        return await input.text();
       }
-      return handleFileReader(
+      return await handleFileReader(
         (reader) => reader.readAsText(input),
         (data) => data as string
       );
     }
     const u8 = await this.toUint8Array(input, options);
-    return textHelper().bufferToText(u8, options.bufferToTextCharset);
+    return await textHelper().bufferToText(u8, options.bufferToTextCharset);
   }
 
   protected async _toUint8Array(
     input: Blob,
     options: ConvertOptions
   ): Promise<Uint8Array> {
-    if (input.size === 0) {
-      return EMPTY_UINT8_ARRAY;
-    }
-
     if (hasArrayBufferOnBlob) {
       const ab = await input.arrayBuffer();
       return arrayBufferConverter().toUint8Array(ab, options);
@@ -164,9 +158,8 @@ class BlobConverter extends AbstractConverter<Blob> {
 
     const bufferSize = options.bufferSize;
     if (hasReadAsArrayBufferOnBlob) {
-      let index = 0;
-      const chunks: ArrayBuffer[] = [];
-      for (; start < end; start += bufferSize) {
+      const u8 = new Uint8Array(end - start);
+      for (let index = 0; start < end; start += bufferSize) {
         let e = start + bufferSize;
         if (end < e) e = end;
         const blobChunk = input.slice(start, e);
@@ -174,36 +167,29 @@ class BlobConverter extends AbstractConverter<Blob> {
           (reader) => reader.readAsArrayBuffer(blobChunk),
           (data) => data as ArrayBuffer
         );
-        chunks.push(chunk);
+        u8.set(new Uint8Array(chunk), index);
         index += chunk.byteLength;
       }
 
-      const u8 = new Uint8Array(index);
-      let pos = 0;
-      for (const chunk of chunks) {
-        u8.set(new Uint8Array(chunk), pos);
-        pos += chunk.byteLength;
-      }
       return u8;
     }
     if (hasStreamOnBlob) {
-      const converter = uint8ArrayConverter();
       const readable = input.stream() as unknown as ReadableStream<Uint8Array>;
       const chunks: Uint8Array[] = [];
       let index = 0;
-      await handleReadableStream(readable, async (chunk) => {
-        const bufferSize = options.bufferSize;
-        const u8 = await converter.convert(chunk, { bufferSize });
+      await handleReadableStream(readable, (u8) => {
         const size = u8.byteLength;
-        let e = index + size;
-        if (end < e) e = end;
-        if (index < start && start < e) {
-          chunks.push(u8.slice(start, e));
-        } else if (start <= index) {
-          chunks.push(u8);
+        if (start < index + size) {
+          let e = index + size;
+          if (end < e) e = end;
+          if (index < start && start < e) {
+            chunks.push(u8.slice(start, e));
+          } else if (start <= index) {
+            chunks.push(u8);
+          }
         }
         index += size;
-        return end == null || index < end;
+        return Promise.resolve(end == null || index < end);
       });
       return uint8ArrayConverter().merge(chunks, options);
     }

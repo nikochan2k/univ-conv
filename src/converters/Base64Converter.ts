@@ -122,7 +122,7 @@ class Base64Converter extends AbstractConverter<string> {
     }
   }
 
-  protected _toArrayBuffer(
+  protected async _toArrayBuffer(
     input: string,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
@@ -130,8 +130,8 @@ class Base64Converter extends AbstractConverter<string> {
     if (hasNoStartLength(options)) {
       return Promise.resolve(ab);
     }
-    const { start, end } = getStartEnd(options, ab.byteLength);
-    return Promise.resolve(ab.slice(start, end));
+    const { start, end } = await this._getStartEnd(input, options);
+    return ab.slice(start, end);
   }
 
   protected async _toBase64(

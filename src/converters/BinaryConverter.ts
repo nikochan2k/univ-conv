@@ -1,8 +1,5 @@
-import {
-  arrayBufferConverter,
-  blobConverter,
-  uint8ArrayConverter,
-} from "./converters";
+import { encode } from "base64-arraybuffer";
+import { blobConverter, uint8ArrayConverter } from "./converters";
 import {
   AbstractConverter,
   ConvertOptions,
@@ -20,16 +17,6 @@ class BinaryConverter extends AbstractConverter<string> {
 
   public typeEquals(input: unknown): input is string {
     return typeof input === "string";
-  }
-
-  protected _binaryToUint8Array(input: string): Uint8Array {
-    let u8: Uint8Array;
-    if (isNode) {
-      u8 = Buffer.from(input, "binary");
-    } else {
-      u8 = Uint8Array.from(input.split(""), (e) => e.charCodeAt(0));
-    }
-    return u8;
   }
 
   protected async _convert(
@@ -94,16 +81,16 @@ class BinaryConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
-    const u8 = this._binaryToUint8Array(input);
-    return arrayBufferConverter().toArrayBuffer(u8, options);
+    const u8 = await this.toUint8Array(input, options);
+    return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
   }
 
   protected async _toBase64(
     input: string,
     options: ConvertOptions
   ): Promise<string> {
-    const u8 = this._binaryToUint8Array(input);
-    return uint8ArrayConverter().toBase64(u8, options);
+    const u8 = await this.toUint8Array(input, options);
+    return encode(u8);
   }
 
   protected async _toText(
@@ -118,8 +105,20 @@ class BinaryConverter extends AbstractConverter<string> {
     input: string,
     options: ConvertOptions
   ): Promise<Uint8Array> {
-    const u8 = this._binaryToUint8Array(input);
-    return uint8ArrayConverter().toUint8Array(u8, options);
+    if (!hasNoStartLength(options)) {
+      const startEnd = await this._getStartEnd(input, options);
+      const start = startEnd.start;
+      const end = startEnd.end as number;
+      input = input.substring(start, end);
+    }
+
+    let u8: Uint8Array;
+    if (isNode) {
+      u8 = Buffer.from(input, "binary");
+    } else {
+      u8 = Uint8Array.from(input.split(""), (e) => e.charCodeAt(0));
+    }
+    return u8;
   }
 }
 
