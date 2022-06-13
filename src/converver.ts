@@ -149,7 +149,7 @@ export class DefaultConverter {
     to: T,
     options?: Partial<Options>
   ): Promise<ReturnData<T>> {
-    return this._merge(chunks, to, options) as Promise<ReturnData<T>>;
+    return (await this._merge(chunks, to, options)) as ReturnData<T>;
   }
 
   public async pipe(
@@ -401,30 +401,36 @@ export class DefaultConverter {
 
     switch (to) {
       case "arraybuffer":
-        return arrayBufferConverter().merge(results as ArrayBuffer[], options);
+        return await arrayBufferConverter().merge(
+          results as ArrayBuffer[],
+          options
+        );
       case "buffer":
-        return bufferConverter().merge(results as Buffer[], options);
+        return await bufferConverter().merge(results as Buffer[], options);
       case "uint8array":
-        return uint8ArrayConverter().merge(results as Uint8Array[], options);
+        return await uint8ArrayConverter().merge(
+          results as Uint8Array[],
+          options
+        );
       case "blob":
-        return blobConverter().merge(results as Blob[], options);
+        return await blobConverter().merge(results as Blob[], options);
       case "readable":
-        return readableConverter().merge(results as Readable[], options);
+        return await readableConverter().merge(results as Readable[], options);
       case "readablestream":
-        return readableStreamConverter().merge(
+        return await readableStreamConverter().merge(
           results as ReadableStream<Uint8Array>[],
           options
         );
       case "text":
-        return textConverter().merge(results as string[], options);
+        return await textConverter().merge(results as string[], options);
       case "base64":
-        return base64Converter().merge(results as string[], options);
+        return await base64Converter().merge(results as string[], options);
       case "binary":
-        return binaryConverter().merge(results as string[], options);
+        return await binaryConverter().merge(results as string[], options);
       case "hex":
-        return hexConverter().merge(results as string[], options);
+        return await hexConverter().merge(results as string[], options);
       case "url":
-        return urlConverter().merge(results as string[], options);
+        return await urlConverter().merge(results as string[], options);
     }
 
     throw new Error("Illegal output type: " + to);

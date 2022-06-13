@@ -36,37 +36,37 @@ class TextConverter extends AbstractConverter<string> {
     if (typeof input === "string") {
       const srcStringType = options.srcStringType;
       if (srcStringType === "base64") {
-        return base64Converter().toText(input, options);
+        return await base64Converter().toText(input, options);
       } else if (srcStringType === "binary") {
-        return binaryConverter().toText(input, options);
+        return await binaryConverter().toText(input, options);
       } else if (srcStringType === "hex") {
-        return hexConverter().toText(input, options);
+        return await hexConverter().toText(input, options);
       } else if (srcStringType === "url") {
         input = await uint8ArrayConverter().convert(
           input,
           deleteStartLength(options)
         );
       } else {
-        return this.toText(input, options);
+        return await this.toText(input, options);
       }
     }
     if (arrayBufferConverter().typeEquals(input)) {
-      return arrayBufferConverter().toText(input, options);
+      return await arrayBufferConverter().toText(input, options);
     }
     if (bufferConverter().typeEquals(input)) {
-      return bufferConverter().toText(input, options);
+      return await bufferConverter().toText(input, options);
     }
     if (uint8ArrayConverter().typeEquals(input)) {
-      return uint8ArrayConverter().toText(input, options);
+      return await uint8ArrayConverter().toText(input, options);
     }
     if (blobConverter().typeEquals(input)) {
-      return blobConverter().toText(input, options);
+      return await blobConverter().toText(input, options);
     }
     if (readableConverter().typeEquals(input)) {
-      return readableConverter().toText(input, options);
+      return await readableConverter().toText(input, options);
     }
     if (readableStreamConverter().typeEquals(input)) {
-      return readableStreamConverter().toText(input, options);
+      return await readableStreamConverter().toText(input, options);
     }
 
     return undefined;
@@ -106,7 +106,7 @@ class TextConverter extends AbstractConverter<string> {
     options: ConvertOptions
   ): Promise<string> {
     const u8 = await this.toUint8Array(input, options);
-    return uint8ArrayConverter().toBase64(u8, deleteStartLength(options));
+    return await uint8ArrayConverter().toBase64(u8, deleteStartLength(options));
   }
 
   protected async _toText(
@@ -120,7 +120,7 @@ class TextConverter extends AbstractConverter<string> {
       return input;
     }
     const u8 = await this.toUint8Array(input, options);
-    return textHelper().bufferToText(u8, options.bufferToTextCharset);
+    return await textHelper().bufferToText(u8, options.bufferToTextCharset);
   }
 
   protected async _toUint8Array(
@@ -131,7 +131,7 @@ class TextConverter extends AbstractConverter<string> {
       input,
       options.textToBufferCharset
     );
-    return uint8ArrayConverter().toUint8Array(u8, options);
+    return await uint8ArrayConverter().toUint8Array(u8, options);
   }
 }
 

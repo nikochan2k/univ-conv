@@ -38,13 +38,13 @@ class Base64Converter extends AbstractConverter<string> {
     if (typeof input === "string") {
       const srcStringType = options.srcStringType;
       if (srcStringType === "base64") {
-        return this.toBase64(input, options);
+        return await this.toBase64(input, options);
       } else if (srcStringType === "binary") {
-        return binaryConverter().toBase64(input, options);
+        return await binaryConverter().toBase64(input, options);
       } else if (srcStringType === "hex") {
-        return hexConverter().toBase64(input, options);
+        return await hexConverter().toBase64(input, options);
       } else if (srcStringType === "url") {
-        return urlConverter().toBase64(input, options);
+        return await urlConverter().toBase64(input, options);
       }
       if (
         typeof atob === "function" &&
@@ -59,22 +59,22 @@ class Base64Converter extends AbstractConverter<string> {
       );
     }
     if (arrayBufferConverter().typeEquals(input)) {
-      return arrayBufferConverter().toBase64(input, options);
+      return await arrayBufferConverter().toBase64(input, options);
     }
     if (bufferConverter().typeEquals(input)) {
-      return bufferConverter().toBase64(input, options);
+      return await bufferConverter().toBase64(input, options);
     }
     if (uint8ArrayConverter().typeEquals(input)) {
-      return uint8ArrayConverter().toBase64(input, options);
+      return await uint8ArrayConverter().toBase64(input, options);
     }
     if (blobConverter().typeEquals(input)) {
-      return blobConverter().toBase64(input, options);
+      return await blobConverter().toBase64(input, options);
     }
     if (readableStreamConverter().typeEquals(input)) {
-      return readableStreamConverter().toBase64(input, options);
+      return await readableStreamConverter().toBase64(input, options);
     }
     if (readableConverter().typeEquals(input)) {
-      return readableConverter().toBase64(input, options);
+      return await readableConverter().toBase64(input, options);
     }
 
     return undefined;
@@ -111,14 +111,14 @@ class Base64Converter extends AbstractConverter<string> {
         blobs.push(await converter.convert(chunk, options));
       }
       const blob = await converter.merge(blobs, options);
-      return this.convert(blob);
+      return await this.convert(blob);
     } else {
       const buffers: Uint8Array[] = [];
       for (const chunk of chunks) {
         buffers.push(await this.toUint8Array(chunk, options));
       }
       const u8 = await uint8ArrayConverter().merge(buffers, options);
-      return this.convert(u8);
+      return await this.convert(u8);
     }
   }
 
@@ -142,7 +142,7 @@ class Base64Converter extends AbstractConverter<string> {
       return input;
     }
     const u8 = await this.toUint8Array(input, options);
-    return this.convert(u8, deleteStartLength(options));
+    return await this.convert(u8, deleteStartLength(options));
   }
 
   protected async _toText(
@@ -157,7 +157,7 @@ class Base64Converter extends AbstractConverter<string> {
       return btoa(input);
     }
     const u8 = await this.toUint8Array(input, options);
-    return textHelper().bufferToText(u8, options.bufferToTextCharset);
+    return await textHelper().bufferToText(u8, options.bufferToTextCharset);
   }
 
   protected async _toUint8Array(

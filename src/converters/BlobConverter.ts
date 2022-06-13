@@ -149,7 +149,7 @@ class BlobConverter extends AbstractConverter<Blob> {
   ): Promise<Uint8Array> {
     if (hasArrayBufferOnBlob) {
       const ab = await input.arrayBuffer();
-      return arrayBufferConverter().toUint8Array(ab, options);
+      return await arrayBufferConverter().toUint8Array(ab, options);
     }
 
     const startEnd = await this._getStartEnd(input, options);
@@ -191,11 +191,11 @@ class BlobConverter extends AbstractConverter<Blob> {
         index += size;
         return Promise.resolve(end == null || index < end);
       });
-      return uint8ArrayConverter().merge(chunks, options);
+      return await uint8ArrayConverter().merge(chunks, options);
     }
 
     const base64 = await this.toBase64(input, options);
-    return uint8ArrayConverter().convert(base64);
+    return await uint8ArrayConverter().convert(base64);
   }
 }
 

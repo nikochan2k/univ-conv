@@ -124,7 +124,7 @@ class BufferConverter extends AbstractConverter<Buffer> {
     options: ConvertOptions
   ): Promise<string> {
     const buffer = await this.toUint8Array(input, options);
-    return textHelper().bufferToText(buffer, options.bufferToTextCharset);
+    return await textHelper().bufferToText(buffer, options.bufferToTextCharset);
   }
 
   protected async _toUint8Array(

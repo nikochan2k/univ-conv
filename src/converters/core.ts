@@ -121,54 +121,60 @@ export abstract class AbstractConverter<T extends Data>
     );
   }
 
-  public getSize(input: T, options?: Partial<Options>): Promise<number> {
+  public async getSize(input: T, options?: Partial<Options>): Promise<number> {
     if (isEmpty(input, options) || this._isEmpty(input)) {
-      return Promise.resolve(0);
+      return 0;
     }
 
-    return this._getSize(input, this._initOptions(input, options));
+    return await this._getSize(input, this._initOptions(input, options));
   }
 
-  public merge(chunks: T[], options?: Partial<Options>): Promise<T> {
+  public async merge(chunks: T[], options?: Partial<Options>): Promise<T> {
     if (!chunks || chunks.length === 0) {
-      return Promise.resolve(this.empty());
+      return this.empty();
     }
     if (chunks.length === 1) {
-      return Promise.resolve(chunks[0] as T);
+      return chunks[0] as T;
     }
 
-    return this._merge(chunks, this._initOptions(chunks[0] as Data, options));
+    return await this._merge(
+      chunks,
+      this._initOptions(chunks[0] as Data, options)
+    );
   }
 
-  public toArrayBuffer(
+  public async toArrayBuffer(
     input: T,
     options: ConvertOptions
   ): Promise<ArrayBuffer> {
     if (isEmpty(input, options) || this._isEmpty(input)) {
-      return Promise.resolve(EMPTY_ARRAY_BUFFER);
+      return EMPTY_ARRAY_BUFFER;
     }
-    return this._toArrayBuffer(input, options);
+    return await this._toArrayBuffer(input, options);
   }
 
-  public toBase64(input: T, options: ConvertOptions): Promise<string> {
+  public async toBase64(input: T, options: ConvertOptions): Promise<string> {
     if (isEmpty(input, options) || this._isEmpty(input)) {
-      return Promise.resolve("");
+      return "";
     }
-    return this._toBase64(input, options);
+    return await this._toBase64(input, options);
   }
 
-  public toText(input: T, options: ConvertOptions): Promise<string> {
+  public async toText(input: T, options: ConvertOptions): Promise<string> {
     if (isEmpty(input, options) || this._isEmpty(input)) {
-      return Promise.resolve("");
+      return "";
     }
-    return this._toText(input, options);
+    return await this._toText(input, options);
   }
 
-  public toUint8Array(input: T, options: ConvertOptions): Promise<Uint8Array> {
+  public async toUint8Array(
+    input: T,
+    options: ConvertOptions
+  ): Promise<Uint8Array> {
     if (isEmpty(input, options) || this._isEmpty(input)) {
-      return Promise.resolve(EMPTY_UINT8_ARRAY);
+      return EMPTY_UINT8_ARRAY;
     }
-    return this._toUint8Array(input, options);
+    return await this._toUint8Array(input, options);
   }
 
   public abstract empty(): T;
